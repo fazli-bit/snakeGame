@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Snake Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* Basic styling for the game page */
+        body {
+            background-color: #1a1a1a; /* Dark background */
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Press Start 2P', cursive; /* Retro game font */
+            overflow: hidden; /* Prevent scrollbars */
+        }
+
+        /* Main game container */
+        .game-container {
+            text-align: center;
+            border: 4px solid #555;
+            border-radius: 15px;
+            padding: 20px;
+            background-color: #2b2b2b;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative; /* Needed for modal positioning */
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #00ff00; /* Bright green title */
+            text-shadow: 2px 2px #000;
+        }
+
+        /* Score display */
+        #score-container {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        #score-value {
+            color: #ffff00; /* Yellow score */
+        }
+
+        /* The game board itself */
+        #game-board {
+            background-color: #000;
+            width: 400px; /* 20 cells * 20px */
+            height: 400px; /* 20 cells * 20px */
+            border: 2px solid #00ff00;
+            position: relative;
+            border-radius: 5px;
+            margin: 0 auto; /* Center the board */
+        }
+
+        /* Snake segment styling */
+        .snake {
+            background-color: #00ff00; /* Bright green snake */
+            border: 1px solid #000;
+            box-sizing: border-box;
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            border-radius: 3px;
+        }
+
+        /* Food styling */
+        .food {
+            background-color: #ff0000; /* Bright red food */
+            border: 1px solid #000;
+            box-sizing: border-box;
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            border-radius: 50%; /* Make food round */
+            box-shadow: 0 0 10px #ff0000;
+        }
+        
+        /* Instructions text */
+        p.instructions {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        /* --- Level Selection & Highscore Styles --- */
+        .main-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            align-items: center;
+        }
+
+        #level-selection {
+            padding: 10px 20px;
+            min-width: 300px;
+        }
+
+        #level-selection h2, #highscore-container h3, #game-over-scores h3 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #ffff00;
+        }
+        
+        .level-control {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        #level-display {
+            font-size: 2.5rem;
+            color: #00ff00;
+            margin: 0 25px;
+            width: 50px;
+            text-align: center;
+        }
+        
+        .level-adjust-button {
+            background-color: transparent;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .level-adjust-button:hover {
+            background-color: #00ff00;
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        #start-game-button {
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+            width: 200px;
+        }
+
+        #start-game-button:hover {
+            background-color: #ffff00;
+            transform: scale(1.05);
+        }
+
+        #highscore-container {
+            text-align: center;
+            width: 100%;
+            font-size: 0.7rem;
+        }
+
+        .highscore-columns-shared {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            text-align: left;
+        }
+
+        .highscore-columns-shared ol {
+            list-style-type: none; /* Let JS handle numbering */
+            padding-left: 0;
+            margin: 0;
+            min-width: 170px; /* Give columns a width */
+        }
+        
+        .highscore-columns-shared li {
+            margin-bottom: 8px;
+            color: #f0f0f0;
+        }
+
+        .highscore-columns-shared li span {
+            color: #ffff00;
+            float: right;
+        }
+
+        /* --- Game Over & Pause Modal Styles --- */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-radius: 10px;
+        }
+
+        .modal-content {
+            color: #f0f0f0;
+            background-color: #1a1a1a;
+            padding: 30px;
+            border-radius: 15px;
+            border: 4px solid #555;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            max-width: 450px;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            font-size: 1.8rem;
+        }
+        
+        #new-highscore-entry { margin: 20px 0; }
+        #player-name {
+            background-color: #333;
+            border: 2px solid #00ff00;
+            color: #f0f0f0;
+            padding: 8px;
+            font-family: 'Press Start 2P', cursive;
+            text-align: center;
+            width: 150px;
+            text-transform: uppercase;
+        }
+
+        .modal-content button {
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .modal-content button:hover {
+            background-color: #ffff00;
+            transform: scale(1.05);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>SNAKE</h1>
+        <!-- Main Menu Screen -->
+        <div class="main-menu" id="main-menu">
+            <div id="level-selection">
+                <h2>SELECT LEVEL</h2>
+                <div class="level-control">
+                    <button id="level-down-button" class="level-adjust-button">-</button>
+                    <span id="level-display">3</span>
+                    <button id="level-up-button" class="level-adjust-button">+</button>
+                </div>
+                <button id="start-game-button">Start Game</button>
+            </div>
+            <div id="highscore-container">
+                <h3>HIGH SCORES</h3>
+                <div id="highscore-columns" class="highscore-columns-shared">
+                    <ol id="highscore-list-1"></ol>
+                    <ol id="highscore-list-2"></ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Area (hidden initially) -->
+        <div id="game-area" style="display: none;">
+            <div id="score-container">Score: <span id="score-value">0</span></div>
+            <div id="game-board"></div>
+            <p class="instructions">Use Arrow Keys to Move, Spacebar to Pause</p>
+             <!-- Pause Screen Modal -->
+            <div id="pause-screen" class="modal-overlay" style="display: none;">
+                <div class="modal-content">
+                    <h2 style="color: #ffff00;">PAUSED</h2>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Over Modal (hidden by default) -->
+        <div id="game-over-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <h2 style="color: #ff4136;">GAME OVER</h2>
+                <p>Your Score: <span id="final-score">0</span></p>
+
+                <!-- For New High Score -->
+                <div id="new-highscore-entry" style="display: none;">
+                    <p>New High Score!</p>
+                    <input type="text" id="player-name" maxlength="12" placeholder="ENTER NAME">
+                    <button id="save-score-button">Save</button>
+                </div>
+
+                <!-- For showing context when not a high score -->
+                <div id="game-over-scores" style="display: none;">
+                    <h3>HIGH SCORES</h3>
+                    <div id="highscore-columns-gameover" class="highscore-columns-shared" style="font-size: 0.7rem;">
+                        <ol id="gos-list-1"></ol>
+                        <ol id="gos-list-2"></ol>
+                    </div>
+                    <p style="margin-top: 20px; font-size: 0.9rem; color: #aaa;">TRY AGAIN!</p>
+                </div>
+
+                <button id="restart-button" style="display: none;">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Game Setup ---
+        const gameBoard = document.getElementById('game-board');
+        const scoreDisplay = document.getElementById('score-value');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const restartButton = document.getElementById('restart-button');
+        const mainMenuDiv = document.getElementById('main-menu');
+        const gameAreaDiv = document.getElementById('game-area');
+        const levelDisplay = document.getElementById('level-display');
+        const startGameButton = document.getElementById('start-game-button');
+        const newHighscoreEntry = document.getElementById('new-highscore-entry');
+        const playerNameInput = document.getElementById('player-name');
+        const saveScoreButton = document.getElementById('save-score-button');
+        const pauseScreen = document.getElementById('pause-screen');
+
+        const gridSize = 20, cellSize = 20;
+        const speedMap = { 1: 220, 2: 185, 3: 150, 4: 125, 5: 100, 6: 85, 7: 70, 8: 60, 9: 50 };
+
+        // --- Game State Variables ---
+        let snake, food, direction, score, gameOver, gameInterval, inputQueue, gameSpeed, gameStarted, isPaused;
+        let currentLevel = 3;
+        let highScores = [];
+
+        // --- Core Game Functions ---
+        function mainLoop() {
+            if (gameOver) {
+                clearInterval(gameInterval);
+                showGameOverScreen();
+                return;
+            }
+            updateGameState();
+            drawGame();
+        }
+
+        function updateGameState() {
+            while (inputQueue.length > 0) {
+                const nextDirection = inputQueue.shift();
+                const goingUp = (direction === 'up'), goingDown = (direction === 'down');
+                const goingLeft = (direction === 'left'), goingRight = (direction === 'right');
+                if ((nextDirection === 'up' && !goingDown) || (nextDirection === 'down' && !goingUp) ||
+                    (nextDirection === 'left' && !goingRight) || (nextDirection === 'right' && !goingLeft)) {
+                    direction = nextDirection;
+                    break;
+                }
+            }
+            if (!direction) return;
+            
+            const head = { x: snake[0].x, y: snake[0].y };
+            switch (direction) {
+                case 'up': head.y--; break;
+                case 'down': head.y++; break;
+                case 'left': head.x--; break;
+                case 'right': head.x++; break;
+            }
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score += currentLevel;
+                scoreDisplay.textContent = score;
+                generateFood();
+            } else {
+                snake.pop();
+            }
+            if (hasHitWall(head) || hasHitSelf(head)) gameOver = true;
+        }
+
+        function drawGame() {
+            gameBoard.innerHTML = '';
+            snake.forEach(segment => {
+                const snakeElement = createGameElement('div', 'snake');
+                setPosition(snakeElement, segment);
+                gameBoard.appendChild(snakeElement);
+            });
+            const foodElement = createGameElement('div', 'food');
+            setPosition(foodElement, food);
+            gameBoard.appendChild(foodElement);
+        }
+
+        // --- Helper Functions ---
+        function createGameElement(tag, className) {
+            const element = document.createElement(tag);
+            element.className = className;
+            return element;
+        }
+        function setPosition(element, pos) {
+            element.style.left = `${pos.x * cellSize}px`;
+            element.style.top = `${pos.y * cellSize}px`;
+        }
+        function generateFood() {
+            food = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
+            while (snake.some(s => s.x === food.x && s.y === food.y)) {
+                food = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
+            }
+        }
+        function hasHitWall(head) { return head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize; }
+        function hasHitSelf(head) { return snake.slice(1).some(s => s.x === head.x && s.y === head.y); }
+
+        function handleKeyDown(event) {
+            const key = event.key;
+            const isMainMenuVisible = mainMenuDiv.style.display !== 'none';
+            const isGameAreaVisible = gameAreaDiv.style.display !== 'none';
+            const isGameOverVisible = gameOverModal.style.display !== 'none';
+
+            // --- State 1: Main Menu ---
+            if (isMainMenuVisible) {
+                event.preventDefault(); // Prevent default browser actions for keys used in menu
+                if (key === 'Enter') {
+                    startGame();
+                } else if (key === 'ArrowUp') {
+                    currentLevel = Math.min(9, currentLevel + 1);
+                    levelDisplay.textContent = currentLevel;
+                } else if (key === 'ArrowDown') {
+                    currentLevel = Math.max(1, currentLevel - 1);
+                    levelDisplay.textContent = currentLevel;
+                }
+                return;
+            }
+
+            // --- State 2: Game Over Screen ---
+            if (isGameOverVisible) {
+                // Check if the 'Play Again' button is visible (not the name input)
+                if (restartButton.style.display !== 'none' && (key === 'Enter' || key === ' ' || key === 'Spacebar')) {
+                    event.preventDefault();
+                    returnToMainMenu();
+                }
+                // Other keys are handled by the name input's own event listener
+                return;
+            }
+
+            // --- State 3: In-Game ---
+            if (isGameAreaVisible && !gameOver) {
+                 if (key === ' ' || key === 'Spacebar') {
+                    event.preventDefault();
+                    togglePause();
+                    return; // Stop processing further for spacebar
+                }
+
+                if (isPaused) return; // Ignore movement keys if paused
+
+                let newDirection = null;
+                if (key === 'ArrowUp') newDirection = 'up';
+                else if (key === 'ArrowDown') newDirection = 'down';
+                else if (key === 'ArrowLeft') newDirection = 'left';
+                else if (key === 'ArrowRight') newDirection = 'right';
+                
+                if (!newDirection) return;
+
+                if (!gameStarted) {
+                    gameStarted = true;
+                    direction = newDirection;
+                    gameInterval = setInterval(mainLoop, gameSpeed);
+                } else if (inputQueue.length < 2) {
+                    inputQueue.push(newDirection);
+                }
+            }
+        }
+
+        // --- High Score Functions ---
+        function loadHighScores() {
+            const scores = localStorage.getItem('snakeHighScores');
+            highScores = scores ? JSON.parse(scores) : [];
+        }
+
+        function displayHighScores() {
+            const list1 = document.getElementById('highscore-list-1');
+            const list2 = document.getElementById('highscore-list-2');
+            list1.innerHTML = highScores.slice(0, 5).map((s, i) => `<li>${i + 1}. ${s.name} <span>${s.score}</span></li>`).join('');
+            list2.innerHTML = highScores.slice(5, 10).map((s, i) => `<li>${i + 6}. ${s.name} <span>${s.score}</span></li>`).join('');
+        }
+
+        function saveHighScore() {
+            const playerName = playerNameInput.value.trim().toUpperCase() || 'AAA';
+            highScores.push({ name: playerName, score: score });
+            highScores.sort((a, b) => b.score - a.score);
+            highScores = highScores.slice(0, 10);
+            localStorage.setItem('snakeHighScores', JSON.stringify(highScores));
+            newHighscoreEntry.style.display = 'none';
+            restartButton.style.display = 'block';
+            displayHighScores();
+        }
+
+        // --- Screen and Game State Management ---
+        function showGameOverScreen() {
+            finalScoreDisplay.textContent = score;
+            const gameOverScoresDiv = document.getElementById('game-over-scores');
+
+            const lowestHighScore = highScores.length < 10 ? 0 : highScores[highScores.length - 1].score;
+            const isNewHighScore = score > 0 && (highScores.length < 10 || score >= lowestHighScore);
+
+            if (isNewHighScore) {
+                newHighscoreEntry.style.display = 'block';
+                gameOverScoresDiv.style.display = 'none';
+                setTimeout(() => playerNameInput.focus(), 100);
+                restartButton.style.display = 'none';
+            } else {
+                newHighscoreEntry.style.display = 'none';
+                restartButton.style.display = 'block';
+
+                if (highScores.length > 0) {
+                    gameOverScoresDiv.style.display = 'block';
+                    const list1 = document.getElementById('gos-list-1');
+                    const list2 = document.getElementById('gos-list-2');
+                    list1.innerHTML = highScores.slice(0, 5).map((s, i) => `<li>${i + 1}. ${s.name} <span>${s.score}</span></li>`).join('');
+                    list2.innerHTML = highScores.slice(5, 10).map((s, i) => `<li>${i + 6}. ${s.name} <span>${s.score}</span></li>`).join('');
+                } else {
+                    gameOverScoresDiv.style.display = 'none';
+                }
+            }
+            gameOverModal.style.display = 'flex';
+        }
+        
+        function returnToMainMenu() {
+            gameOverModal.style.display = 'none';
+            gameAreaDiv.style.display = 'none';
+            mainMenuDiv.style.display = 'flex';
+            currentLevel = 3;
+            document.getElementById('level-display').textContent = currentLevel;
+            
+            // Reset message display for the next game.
+            document.getElementById('game-over-scores').style.display = 'none';
+        }
+
+        function togglePause() {
+            if (!gameStarted || gameOver) return;
+            isPaused = !isPaused;
+            if (isPaused) {
+                clearInterval(gameInterval);
+                pauseScreen.style.display = 'flex';
+            } else {
+                gameInterval = setInterval(mainLoop, gameSpeed);
+                pauseScreen.style.display = 'none';
+            }
+        }
+
+        function startGame() {
+            gameSpeed = speedMap[currentLevel];
+            mainMenuDiv.style.display = 'none';
+            gameAreaDiv.style.display = 'block';
+            
+            snake = [{ x: 10, y: 10 }];
+            direction = null; score = 0; gameOver = false; gameStarted = false; isPaused = false;
+            inputQueue = [];
+            scoreDisplay.textContent = score;
+            if(gameInterval) clearInterval(gameInterval);
+
+            generateFood();
+            drawGame();
+        }
+
+        // --- Event Listeners and Initializer ---
+        function init() {
+            document.addEventListener('keydown', handleKeyDown);
+            restartButton.addEventListener('click', returnToMainMenu);
+            saveScoreButton.addEventListener('click', saveHighScore);
+            
+            // Add listener for Enter key on name input
+            playerNameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveHighScore();
+                }
+            });
+            
+            document.getElementById('level-up-button').addEventListener('click', () => {
+                currentLevel = Math.min(9, currentLevel + 1);
+                levelDisplay.textContent = currentLevel;
+            });
+            document.getElementById('level-down-button').addEventListener('click', () => {
+                currentLevel = Math.max(1, currentLevel - 1);
+                levelDisplay.textContent = currentLevel;
+            });
+
+            startGameButton.addEventListener('click', startGame);
+
+            loadHighScores();
+            displayHighScores();
+        }
+
+        init(); // Start the application
+    </script>
+</body>
+</html>
+
