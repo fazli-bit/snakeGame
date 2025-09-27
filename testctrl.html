@@ -21,7 +21,7 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            pointer-events: auto; /* Allow touch events */
+            pointer-events: auto;
         }
         .d-pad { position: relative; width: 120px; height: 120px; }
         .d-pad-btn {
@@ -61,7 +61,6 @@
         .d-pad-btn.pressed, .action-btn.pressed {
             background-color: rgba(255, 255, 255, 0.5);
         }
-        /* DIUBAH: Gaya untuk paparan versi overlay */
         .version-display-overlay {
             position: absolute;
             top: 15px;
@@ -71,17 +70,45 @@
             text-shadow: 1px 1px #000;
             pointer-events: none;
         }
+        .menu {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #fff;
+            text-shadow: 3px 3px #000;
+        }
+        .menu h2 { font-size: 2.5rem; margin-bottom: 30px; }
+        .menu-option {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-top: 25px;
+            padding: 10px;
+            position: relative; /* For cursor positioning */
+        }
+        .menu-option.selected {
+            color: #ffff00;
+        }
     </style>
 </head>
 <body>
     <div class="main-container">
         <div class="game-column">
             <h1>Ice Climber (Dev Kawalan)</h1>
-            <p class="version-info-dev">v-dev-ctrl-0.4</p>
+            <p class="version-info-dev">v-dev-ctrl-0.5</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
-                <!-- DIUBAH: Paparan versi ditambah -->
-                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-0.4</div>
+                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-0.5</div>
+                <div id="start-menu" class="menu">
+                    <h2>ICE CLIMBER</h2>
+                    <div id="start-button" class="menu-option" data-index="0">MULA</div>
+                    <div id="instructions-button" class="menu-option" data-index="1">ARAHAN</div>
+                </div>
                 <div id="on-screen-controls">
                     <div class="d-pad">
                         <div id="btn-up" class="d-pad-btn up">&#9652;</div>
@@ -116,12 +143,15 @@
                 },
                 update: function() {
                     Game.State.globalAnimationTick++;
-                    if (Game.State.player.platformToDropThrough && Game.State.player.y > Game.State.player.platformToDropThrough.y + Game.Constants.PLATFORM_HEIGHT) {
-                        Game.State.player.platformToDropThrough = null;
+                    // In control dev, we only update player when menu is not visible
+                    if (!Game.State.isMenuVisible) {
+                        if (Game.State.player.platformToDropThrough && Game.State.player.y > Game.State.player.platformToDropThrough.y + Game.Constants.PLATFORM_HEIGHT) {
+                            Game.State.player.platformToDropThrough = null;
+                        }
+                        Game.Player.handlePlayerInput();
+                        Game.Player.updatePlayerPosition();
+                        Game.Player.checkPlayerCollisions();
                     }
-                    Game.Player.handlePlayerInput();
-                    Game.Player.updatePlayerPosition();
-                    Game.Player.checkPlayerCollisions();
                 },
                 resetStage: function() {
                     const player = Game.State.player;
@@ -148,6 +178,8 @@
             State: {
                 canvas: document.getElementById('game-canvas'),
                 ctx: document.getElementById('game-canvas').getContext('2d'),
+                startMenu: document.getElementById('start-menu'),
+                menuOptions: document.querySelectorAll('.menu-option'),
                 globalAnimationTick: 0,
                 player: { 
                     width: 30, height: 30, x: 20, y: 530, dx: 0, dy: 0, 
@@ -160,6 +192,8 @@
                 playerSpeed: 3,
                 canJump: true,
                 jumpDelay: 500,
+                isMenuVisible: true, // Menu is visible by default now
+                currentMenuSelection: 0,
             },
             
             // --- LEVEL MODULE (Simplified) ---
@@ -233,6 +267,43 @@
                     this.drawBackground();
                     Game.State.platforms.forEach(p => { Game.State.ctx.fillStyle = '#A8D8F0'; Game.State.ctx.fillRect(p.x, p.y, p.width, p.height); });
                     this.drawCharacter('ESKIMO', Game.State.player.x, Game.State.player.y, Game.State.player.isCrouching);
+                    
+                    if(Game.State.isMenuVisible) {
+                        this.drawMenuCursor();
+                    }
+                },
+                drawMenuCursor: function() {
+                    const S = Game.State;
+                    if (!S.menuOptions || S.menuOptions.length === 0) return;
+
+                    S.menuOptions.forEach((opt, index) => {
+                        opt.classList.toggle('selected', index === S.currentMenuSelection);
+                    });
+
+                    const selectedOption = S.menuOptions[S.currentMenuSelection];
+                    if (selectedOption) {
+                        const optionRect = selectedOption.getBoundingClientRect();
+                        const canvasRect = S.canvas.getBoundingClientRect();
+                        
+                        const x = selectedOption.offsetLeft - 30;
+                        const y = selectedOption.offsetTop + selectedOption.offsetHeight / 2 - 15;
+                        
+                        // Draw a simple Eskimo head as cursor
+                        const cursorX = x;
+                        const cursorY = y;
+                        const width = 20;
+                        const height = 20;
+
+                        S.ctx.fillStyle = '#8B4513';
+                        S.ctx.fillRect(cursorX + 1, cursorY, width - 2, height - 1);
+                        S.ctx.fillStyle = '#4682B4';
+                        S.ctx.fillRect(cursorX, cursorY + height - 5, width, 3);
+                        S.ctx.fillStyle = '#FFDAB9';
+                        S.ctx.fillRect(cursorX + 5, cursorY + 4, width - 10, 8);
+                        S.ctx.fillStyle = '#000000';
+                        S.ctx.fillRect(cursorX + 7, cursorY + 7, 2, 2);
+                        S.ctx.fillRect(cursorX + 11, cursorY + 7, 2, 2);
+                    }
                 },
                 drawCharacter: function(charType, x, y, isCrouching = false, targetCtx = Game.State.ctx) {
                     const player = Game.State.player;
@@ -264,12 +335,18 @@
             Controls: {
                 keys: { left: false, right: false, up: false, down: false },
                 setupEventListeners: function() {
-                    // Keyboard controls
                     document.addEventListener('keydown', (e) => {
-                        if (e.key === 'ArrowLeft') this.keys.left = true;
-                        if (e.key === 'ArrowRight') this.keys.right = true;
-                        if (e.key === 'ArrowUp') this.keys.up = true;
-                        if (e.key === 'ArrowDown') this.keys.down = true;
+                        const S = Game.State;
+                        if (S.isMenuVisible) {
+                            if (e.key === 'ArrowDown') { S.currentMenuSelection = (S.currentMenuSelection + 1) % S.menuOptions.length; }
+                            if (e.key === 'ArrowUp') { S.currentMenuSelection = (S.currentMenuSelection - 1 + S.menuOptions.length) % S.menuOptions.length; }
+                            if (e.key === 'Enter') { console.log("Selected:", S.menuOptions[S.currentMenuSelection].textContent); }
+                        } else {
+                            if (e.key === 'ArrowLeft') this.keys.left = true;
+                            if (e.key === 'ArrowRight') this.keys.right = true;
+                            if (e.key === 'ArrowUp') this.keys.up = true;
+                            if (e.key === 'ArrowDown') this.keys.down = true;
+                        }
                     });
                     document.addEventListener('keyup', (e) => {
                         if (e.key === 'ArrowLeft') this.keys.left = false;
@@ -278,35 +355,37 @@
                         if (e.key === 'ArrowDown') this.keys.down = false;
                     });
 
-                    // Touch controls
                     const btnLeft = document.getElementById('btn-left');
                     const btnRight = document.getElementById('btn-right');
                     const btnUp = document.getElementById('btn-up');
                     const btnDown = document.getElementById('btn-down');
                     const btnA = document.getElementById('btn-a');
+                    const btnB = document.getElementById('btn-b');
 
                     const handleTouch = (element, key, isPressed) => {
                         element.addEventListener(isPressed ? 'touchstart' : 'touchend', (e) => {
                             e.preventDefault();
-                            this.keys[key] = isPressed;
+                            if (Game.State.isMenuVisible) {
+                                if (isPressed) { // Only trigger on press
+                                    const S = Game.State;
+                                    if (key === 'up') S.currentMenuSelection = (S.currentMenuSelection - 1 + S.menuOptions.length) % S.menuOptions.length;
+                                    if (key === 'down') S.currentMenuSelection = (S.currentMenuSelection + 1) % S.menuOptions.length;
+                                    if (key === 'a') console.log("Selected:", S.menuOptions[S.currentMenuSelection].textContent);
+                                    if (key === 'b') console.log("Cancelled/Back");
+                                }
+                            } else {
+                                this.keys[key] = isPressed;
+                            }
                             element.classList.toggle('pressed', isPressed);
                         }, { passive: false });
                     };
 
-                    handleTouch(btnLeft, 'left', true);
-                    handleTouch(btnLeft, 'left', false);
-                    
-                    handleTouch(btnRight, 'right', true);
-                    handleTouch(btnRight, 'right', false);
-
-                    handleTouch(btnDown, 'down', true);
-                    handleTouch(btnDown, 'down', false);
-
-                    handleTouch(btnA, 'up', true);
-                    handleTouch(btnA, 'up', false);
-                    
-                     handleTouch(btnUp, 'up', true);
-                     handleTouch(btnUp, 'up', false);
+                    handleTouch(btnLeft, 'left', true); handleTouch(btnLeft, 'left', false);
+                    handleTouch(btnRight, 'right', true); handleTouch(btnRight, 'right', false);
+                    handleTouch(btnDown, 'down', true); handleTouch(btnDown, 'down', false);
+                    handleTouch(btnUp, 'up', true); handleTouch(btnUp, 'up', false);
+                    handleTouch(btnA, 'a', true); handleTouch(btnA, 'a', false);
+                    handleTouch(btnB, 'b', true); handleTouch(btnB, 'b', false);
                 }
             },
         };
