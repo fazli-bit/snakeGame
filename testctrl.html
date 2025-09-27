@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ice Climber - Dev Kawalan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #1a1a1a; color: #f0f0f0; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Press Start 2P', cursive; }
+        .main-container { display: flex; align-items: center; gap: 30px; }
+        .game-column { display: flex; flex-direction: column; align-items: center; }
+        .version-info-dev { font-size: 0.7rem; color: #888; margin-top: -15px; margin-bottom: 15px; }
+        .game-wrapper { position: relative; }
+        #game-canvas { background-color: #000; border: 4px solid #555; border-radius: 10px; display: block; }
+        
+        #on-screen-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: auto; /* Allow touch events */
+        }
+        .d-pad { position: relative; width: 120px; height: 120px; }
+        .d-pad-btn {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.5rem;
+            -webkit-user-select: none; user-select: none;
+            transition: background-color 0.1s;
+        }
+        .d-pad .up { top: 0; left: 40px; }
+        .d-pad .left { top: 40px; left: 0; }
+        .d-pad .right { top: 40px; left: 80px; }
+        .d-pad .down { top: 80px; left: 40px; }
+
+        .action-buttons { display: flex; gap: 15px; }
+        .action-btn {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+             -webkit-user-select: none; user-select: none;
+             transition: background-color 0.1s;
+        }
+        /* DIUBAH: Gaya visual apabila butang ditekan */
+        .d-pad-btn.pressed, .action-btn.pressed {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="game-column">
+            <h1>Ice Climber (Dev Kawalan)</h1>
+            <p class="version-info-dev">v-dev-ctrl-0.2</p>
+            <div class="game-wrapper">
+                <canvas id="game-canvas" width="400" height="600"></canvas>
+                <div id="on-screen-controls">
+                    <div class="d-pad">
+                        <div id="btn-up" class="d-pad-btn up">&#9652;</div>
+                        <div id="btn-left" class="d-pad-btn left">&#9664;</div>
+                        <div id="btn-right" class="d-pad-btn right">&#9654;</div>
+                        <div id="btn-down" class="d-pad-btn down">&#9662;</div>
+                    </div>
+                    <div class="action-buttons">
+                        <div id="btn-b" class="action-btn">B</div>
+                        <div id="btn-a" class="action-btn">A</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const Game = {
+            // --- CORE MODULE: Main game loop and state management ---
+            Core: {
+                animationFrameId: null,
+                init: function() {
+                    Game.Controls.setupEventListeners();
+                    Game.Level.generatePlatforms();
+                    this.resetStage();
+                    this.gameLoop();
+                },
+                gameLoop: function() {
+                    Game.Core.update();
+                    Game.Graphics.draw();
+                    Game.Core.animationFrameId = requestAnimationFrame(Game.Core.gameLoop);
+                },
+                update: function() {
+                    Game.State.globalAnimationTick++;
+                    Game.Player.handlePlayerInput();
+                    Game.Player.updatePlayerPosition();
+                    Game.Player.checkPlayerCollisions();
+                },
+                resetStage: function() {
+                    const player = Game.State.player;
+                    const floor = Game.State.platforms[0];
+                    player.x = 20;
+                    player.y = floor.y - player.height;
+                    player.dx = 0;
+                    player.dy = 0;
+                    player.onGround = true;
+                }
+            },
+
+            // --- CONSTANTS MODULE ---
+            Constants: {
+                GRAVITY: 0.5,
+                JUMP_POWER: -12,
+                PLATFORM_HEIGHT: 15,
+                VERTICAL_GAP: 120,
+            },
+
+            // --- STATE MODULE ---
+            State: {
+                canvas: document.getElementById('game-canvas'),
+                ctx: document.getElementById('game-canvas').getContext('2d'),
+                globalAnimationTick: 0,
+                player: { 
+                    width: 30, height: 30, x: 20, y: 530, dx: 0, dy: 0, 
+                    onGround: true, standingOnPlatform: null
+                },
+                platforms: [],
+                playerSpeed: 3,
+                canJump: true,
+                jumpDelay: 500,
+            },
+            
+            // --- LEVEL MODULE (Simplified) ---
+            Level: {
+                generatePlatforms: function() {
+                    const C = Game.Constants;
+                    Game.State.platforms = [
+                        { x: 0, y: 560, width: 400, height: 40 },
+                        { x: 150, y: 460, width: 200, height: C.PLATFORM_HEIGHT },
+                        { x: 50, y: 360, width: 150, height: C.PLATFORM_HEIGHT },
+                    ];
+                },
+            },
+
+            // --- PLAYER MODULE (Full logic) ---
+            Player: {
+                handlePlayerInput: function() {
+                    const player = Game.State.player;
+                    const keys = Game.Controls.keys;
+                    if (keys.left) { player.dx = -Game.State.playerSpeed; }
+                    else if (keys.right) { player.dx = Game.State.playerSpeed; }
+                    else { player.dx = 0; }
+                    if (keys.up && player.onGround && Game.State.canJump) {
+                        player.dy = Game.Constants.JUMP_POWER;
+                        player.onGround = false;
+                        Game.State.canJump = false;
+                        setTimeout(() => { Game.State.canJump = true; }, Game.State.jumpDelay);
+                    }
+                },
+                updatePlayerPosition: function() {
+                    const player = Game.State.player;
+                    player.dy += Game.Constants.GRAVITY;
+                    player.x += player.dx;
+                    player.y += player.dy;
+                    if (player.x + player.width < 0) { player.x = Game.State.canvas.width; }
+                    else if (player.x > Game.State.canvas.width) { player.x = -player.width; }
+                },
+                checkPlayerCollisions: function() {
+                    const player = Game.State.player;
+                    player.onGround = false;
+                    player.standingOnPlatform = null;
+                    
+                    for (const platform of Game.State.platforms) {
+                        if (player.x + player.width > platform.x && player.x < platform.x + platform.width && player.dy >= 0 && player.y + player.height >= platform.y && (player.y + player.height - player.dy) <= platform.y) {
+                            player.dy = 0;
+                            player.onGround = true;
+                            player.y = platform.y - player.height;
+                            player.standingOnPlatform = platform;
+                        }
+                    }
+                }
+            },
+
+            // --- GRAPHICS MODULE ---
+            Graphics: {
+                draw: function() {
+                    this.drawBackground();
+                    Game.State.platforms.forEach(p => { Game.State.ctx.fillStyle = '#A8D8F0'; Game.State.ctx.fillRect(p.x, p.y, p.width, p.height); });
+                    this.drawCharacter('ESKIMO', Game.State.player.x, Game.State.player.y);
+                },
+                drawCharacter: function(charType, x, y, isCrouching = false, targetCtx = Game.State.ctx) {
+                    const player = Game.State.player;
+                    switch (charType) {
+                        case 'ESKIMO':
+                            targetCtx.fillStyle = '#8B4513'; targetCtx.fillRect(x + 2, y, player.width - 4, player.height - 2);
+                            targetCtx.fillStyle = '#4682B4'; targetCtx.fillRect(x, y + player.height - 8, player.width, 5);
+                            targetCtx.fillStyle = '#FFDAB9'; targetCtx.fillRect(x + 7, y + 5, player.width - 14, 12);
+                            targetCtx.fillStyle = '#000000'; targetCtx.fillRect(x + 10, y + 10, 3, 3); targetCtx.fillRect(x + 17, y + 10, 3, 3);
+                            targetCtx.fillStyle = '#8B4513'; const armY = y + 15; const animOffset = Math.sin(Game.State.globalAnimationTick * 0.2) * 3;
+                            targetCtx.fillRect(x - 2, armY + animOffset, 4, 8); targetCtx.fillRect(x + player.width - 2, armY - animOffset, 4, 8);
+                            const legY = y + player.height - 2; targetCtx.fillRect(x + 5, legY, 8, 5); targetCtx.fillRect(x + player.width - 13, legY, 8, 5);
+                            break;
+                    }
+                },
+                drawBackground: function() {
+                    const ctx = Game.State.ctx; const canvas = Game.State.canvas;
+                    const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    sky.addColorStop(0, '#0c1445'); sky.addColorStop(1, '#346888');
+                    ctx.fillStyle = sky; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                },
+            },
+            
+            // --- CONTROLS MODULE ---
+            Controls: {
+                keys: { left: false, right: false, up: false, down: false },
+                setupEventListeners: function() {
+                    // Keyboard controls
+                    document.addEventListener('keydown', (e) => {
+                        if (e.key === 'ArrowLeft') this.keys.left = true;
+                        if (e.key === 'ArrowRight') this.keys.right = true;
+                        if (e.key === 'ArrowUp') this.keys.up = true;
+                        if (e.key === 'ArrowDown') this.keys.down = true;
+                    });
+                    document.addEventListener('keyup', (e) => {
+                        if (e.key === 'ArrowLeft') this.keys.left = false;
+                        if (e.key === 'ArrowRight') this.keys.right = false;
+                        if (e.key === 'ArrowUp') this.keys.up = false;
+                        if (e.key === 'ArrowDown') this.keys.down = false;
+                    });
+
+                    // DIUBAH: Penambahan kawalan sentuh
+                    const btnLeft = document.getElementById('btn-left');
+                    const btnRight = document.getElementById('btn-right');
+                    const btnUp = document.getElementById('btn-up');
+                    const btnDown = document.getElementById('btn-down');
+                    const btnA = document.getElementById('btn-a');
+
+                    const handleTouch = (element, key, isPressed) => {
+                        element.addEventListener(isPressed ? 'touchstart' : 'touchend', (e) => {
+                            e.preventDefault();
+                            this.keys[key] = isPressed;
+                            element.classList.toggle('pressed', isPressed);
+                        });
+                    };
+
+                    handleTouch(btnLeft, 'left', true);
+                    handleTouch(btnLeft, 'left', false);
+                    
+                    handleTouch(btnRight, 'right', true);
+                    handleTouch(btnRight, 'right', false);
+
+                    handleTouch(btnDown, 'down', true);
+                    handleTouch(btnDown, 'down', false);
+
+                    // Butang A berfungsi sebagai lompat, sama seperti butang atas
+                    handleTouch(btnA, 'up', true);
+                    handleTouch(btnA, 'up', false);
+                    
+                    // Butang atas juga boleh digunakan untuk melompat
+                     handleTouch(btnUp, 'up', true);
+                     handleTouch(btnUp, 'up', false);
+                }
+            },
+        };
+
+        window.onload = function() { Game.Core.init(); };
+    </script>
+</body>
+</html>
+
