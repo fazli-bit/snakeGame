@@ -104,7 +104,7 @@
         .instructions-text span {
             color: #ffff00;
             display: inline-block;
-            width: 120px; /* Lebarkan sedikit untuk teks baru */
+            width: 120px;
         }
         #menu-cursor {
             position: absolute;
@@ -118,10 +118,10 @@
     <div class="main-container">
         <div class="game-column">
             <h1>Ice Climber (Dev Kawalan)</h1>
-            <p class="version-info-dev">v-dev-ctrl-0.9</p>
+            <p class="version-info-dev">v-dev-ctrl-1.0</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
-                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-0.9</div>
+                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-1.0</div>
                 <div id="start-menu" class="menu">
                     <h2>ICE CLIMBER</h2>
                     <div id="start-button" class="menu-option" data-index="0">MULA</div>
@@ -265,7 +265,7 @@
                     else if (keys.right) { player.dx = Game.State.playerSpeed; }
                     else { player.dx = 0; }
 
-                    if (keys.up && player.onGround && Game.State.canJump) {
+                    if ((keys.up || keys.a) && player.onGround && Game.State.canJump) { // DIUBAH: Tambah keys.a untuk lompat
                         if (player.isCrouching && player.standingOnPlatform && player.standingOnPlatform !== Game.State.platforms[0] && player.canDropDown) {
                             player.dy = -2;
                             player.onGround = false;
@@ -469,7 +469,7 @@
                     handleTouch(btnRight, 'right', true); handleTouch(btnRight, 'right', false);
                     handleTouch(btnDown, 'down', true); handleTouch(btnDown, 'down', false);
                     handleTouch(btnUp, 'up', true); handleTouch(btnUp, 'up', false);
-                    handleTouch(btnA, 'up', true); handleTouch(btnA, 'up', false); // DIUBAH: Butang A kini memetakan kepada 'up' untuk lompat
+                    handleTouch(btnA, 'a', true); handleTouch(btnA, 'a', false);
                     handleTouch(btnB, 'b', true); handleTouch(btnB, 'b', false);
                 }
             },
