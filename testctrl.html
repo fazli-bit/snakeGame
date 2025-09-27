@@ -101,6 +101,11 @@
             text-align: left;
             margin-bottom: 30px;
         }
+        .instructions-text span {
+            color: #ffff00;
+            display: inline-block;
+            width: 120px; /* Lebarkan sedikit untuk teks baru */
+        }
         #menu-cursor {
             position: absolute;
             width: 20px;
@@ -113,10 +118,10 @@
     <div class="main-container">
         <div class="game-column">
             <h1>Ice Climber (Dev Kawalan)</h1>
-            <p class="version-info-dev">v-dev-ctrl-0.7</p>
+            <p class="version-info-dev">v-dev-ctrl-0.8</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
-                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-0.7</div>
+                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-0.8</div>
                 <div id="start-menu" class="menu">
                     <h2>ICE CLIMBER</h2>
                     <div id="start-button" class="menu-option" data-index="0">MULA</div>
@@ -125,9 +130,9 @@
                 <div id="instructions-menu" class="menu" style="display: none;">
                     <h2>ARAHAN</h2>
                     <div class="instructions-text">
-                        <p><span>Anak Panah &#8592; &#8594;</span> : Bergerak</p>
-                        <p><span>Anak Panah &#8593;</span> : Lompat</p>
-                        <p><span>Anak Panah &#8595;</span> : Tunduk</p>
+                        <p><span>Anak Panah</span> : Bergerak/Lompat</p>
+                        <p><span>D / Butang A</span> : Pilih</p>
+                        <p><span>S / Butang B</span> : Kembali</p>
                     </div>
                     <button class="menu-option" data-index="0">KEMBALI</button>
                 </div>
@@ -170,6 +175,11 @@
                     if (!Game.State.isMenuVisible) {
                         if (Game.State.player.platformToDropThrough && Game.State.player.y > Game.State.player.platformToDropThrough.y + Game.Constants.PLATFORM_HEIGHT) {
                             Game.State.player.platformToDropThrough = null;
+                        }
+                        if (Game.State.player.actionBlinkTimer > 0) {
+                            Game.State.player.actionBlinkTimer--;
+                        } else {
+                            Game.State.player.isActionBlinking = false;
                         }
                         Game.Player.handlePlayerInput();
                         Game.Player.updatePlayerPosition();
@@ -214,7 +224,9 @@
                     onGround: true, standingOnPlatform: null,
                     isCrouching: false,
                     canDropDown: true,
-                    platformToDropThrough: null
+                    platformToDropThrough: null,
+                    isActionBlinking: false,
+                    actionBlinkTimer: 0
                 },
                 platforms: [],
                 playerSpeed: 3,
@@ -261,6 +273,12 @@
                             Game.State.canJump = false;
                             setTimeout(() => { Game.State.canJump = true; }, Game.State.jumpDelay);
                         }
+                    }
+                    
+                    if (keys.b && !player.isActionBlinking) {
+                        // TODO: Gantikan dengan mekanik block/pound
+                        player.isActionBlinking = true;
+                        player.actionBlinkTimer = 15; // Blink for 15 frames
                     }
                 },
                 updatePlayerPosition: function() {
@@ -319,6 +337,9 @@
                 },
                 drawCharacter: function(charType, x, y, isCrouching = false, targetCtx = Game.State.ctx) {
                     const player = Game.State.player;
+                    if (player.isActionBlinking && Math.floor(Game.State.globalAnimationTick / 4) % 2 === 0) {
+                        return; // Skip drawing to create a blink effect
+                    }
                     let heightModifier = isCrouching ? 6 : 0;
                     let yOffset = isCrouching ? 6 : 0;
                     switch (charType) {
@@ -345,7 +366,7 @@
             
             // --- CONTROLS MODULE ---
             Controls: {
-                keys: { left: false, right: false, up: false, down: false },
+                keys: { left: false, right: false, up: false, down: false, a: false, b: false },
                 updateActiveMenu: function() {
                     const S = Game.State;
                     if (S.startMenu.style.display !== 'none') {
@@ -369,12 +390,12 @@
                     if (!selectedOption) return;
 
                     if (S.activeMenu === S.startMenu) {
-                        if (selectedOption.textContent === 'MULA') {
+                        if (selectedOption.id === 'start-button') {
                             S.isMenuVisible = false;
                             S.startMenu.style.display = 'none';
                             S.menuCursor.style.display = 'none';
                             Game.Core.resetStage();
-                        } else if (selectedOption.textContent === 'ARAHAN') {
+                        } else if (selectedOption.id === 'instructions-button') {
                             S.startMenu.style.display = 'none';
                             S.instructionsMenu.style.display = 'flex';
                             this.updateActiveMenu();
@@ -390,24 +411,28 @@
                 setupEventListeners: function() {
                     document.addEventListener('keydown', (e) => {
                         const S = Game.State;
+                        const key = e.key.toLowerCase();
                         if (S.isMenuVisible) {
                             e.preventDefault();
-                            if (e.key === 'ArrowDown') { S.currentMenuSelection = (S.currentMenuSelection + 1) % S.menuOptions.length; }
-                            if (e.key === 'ArrowUp') { S.currentMenuSelection = (S.currentMenuSelection - 1 + S.menuOptions.length) % S.menuOptions.length; }
-                            if (e.key === 'Enter' || e.key === ' ') { this.handleMenuAction(); }
-                            if (e.key === 'Escape' && S.activeMenu === S.instructionsMenu) { this.handleMenuAction(); }
+                            if (key === 'arrowdown') { S.currentMenuSelection = (S.currentMenuSelection + 1) % S.menuOptions.length; }
+                            if (key === 'arrowup') { S.currentMenuSelection = (S.currentMenuSelection - 1 + S.menuOptions.length) % S.menuOptions.length; }
+                            if (key === 'd' || key === 'enter') { this.handleMenuAction(); }
+                            if (key === 's' && S.activeMenu === S.instructionsMenu) { this.handleMenuAction(); }
                         } else {
-                            if (e.key === 'ArrowLeft') this.keys.left = true;
-                            if (e.key === 'ArrowRight') this.keys.right = true;
-                            if (e.key === 'ArrowUp' || e.key === ' ') { e.preventDefault(); this.keys.up = true; }
-                            if (e.key === 'ArrowDown') this.keys.down = true;
+                            if (key === 'arrowleft') this.keys.left = true;
+                            if (key === 'arrowright') this.keys.right = true;
+                            if (key === 'arrowup' || key === 'd') { e.preventDefault(); this.keys.up = true; }
+                            if (key === 'arrowdown') this.keys.down = true;
+                            if (key === 's') this.keys.b = true;
                         }
                     });
                     document.addEventListener('keyup', (e) => {
-                        if (e.key === 'ArrowLeft') this.keys.left = false;
-                        if (e.key === 'ArrowRight') this.keys.right = false;
-                        if (e.key === 'ArrowUp' || e.key === ' ') { this.keys.up = false; }
-                        if (e.key === 'ArrowDown') this.keys.down = false;
+                        const key = e.key.toLowerCase();
+                        if (key === 'arrowleft') this.keys.left = false;
+                        if (key === 'arrowright') this.keys.right = false;
+                        if (key === 'arrowup' || key === 'd') { this.keys.up = false; }
+                        if (key === 'arrowdown') this.keys.down = false;
+                        if (key === 's') this.keys.b = false;
                     });
 
                     const btnLeft = document.getElementById('btn-left');
