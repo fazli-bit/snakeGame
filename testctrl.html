@@ -58,9 +58,18 @@
              -webkit-user-select: none; user-select: none;
              transition: background-color 0.1s;
         }
-        /* DIUBAH: Gaya visual apabila butang ditekan */
         .d-pad-btn.pressed, .action-btn.pressed {
             background-color: rgba(255, 255, 255, 0.5);
+        }
+        /* DIUBAH: Gaya untuk paparan versi overlay */
+        .version-display-overlay {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-shadow: 1px 1px #000;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -68,9 +77,11 @@
     <div class="main-container">
         <div class="game-column">
             <h1>Ice Climber (Dev Kawalan)</h1>
-            <p class="version-info-dev">v-dev-ctrl-0.2</p>
+            <p class="version-info-dev">v-dev-ctrl-0.4</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
+                <!-- DIUBAH: Paparan versi ditambah -->
+                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-0.4</div>
                 <div id="on-screen-controls">
                     <div class="d-pad">
                         <div id="btn-up" class="d-pad-btn up">&#9652;</div>
@@ -105,6 +116,9 @@
                 },
                 update: function() {
                     Game.State.globalAnimationTick++;
+                    if (Game.State.player.platformToDropThrough && Game.State.player.y > Game.State.player.platformToDropThrough.y + Game.Constants.PLATFORM_HEIGHT) {
+                        Game.State.player.platformToDropThrough = null;
+                    }
                     Game.Player.handlePlayerInput();
                     Game.Player.updatePlayerPosition();
                     Game.Player.checkPlayerCollisions();
@@ -117,6 +131,8 @@
                     player.dx = 0;
                     player.dy = 0;
                     player.onGround = true;
+                    player.isCrouching = false;
+                    player.platformToDropThrough = null;
                 }
             },
 
@@ -135,7 +151,10 @@
                 globalAnimationTick: 0,
                 player: { 
                     width: 30, height: 30, x: 20, y: 530, dx: 0, dy: 0, 
-                    onGround: true, standingOnPlatform: null
+                    onGround: true, standingOnPlatform: null,
+                    isCrouching: false,
+                    canDropDown: true,
+                    platformToDropThrough: null
                 },
                 platforms: [],
                 playerSpeed: 3,
@@ -160,14 +179,26 @@
                 handlePlayerInput: function() {
                     const player = Game.State.player;
                     const keys = Game.Controls.keys;
+                    
+                    player.isCrouching = (keys.down && player.onGround);
+
                     if (keys.left) { player.dx = -Game.State.playerSpeed; }
                     else if (keys.right) { player.dx = Game.State.playerSpeed; }
                     else { player.dx = 0; }
+
                     if (keys.up && player.onGround && Game.State.canJump) {
-                        player.dy = Game.Constants.JUMP_POWER;
-                        player.onGround = false;
-                        Game.State.canJump = false;
-                        setTimeout(() => { Game.State.canJump = true; }, Game.State.jumpDelay);
+                        if (player.isCrouching && player.standingOnPlatform && player.standingOnPlatform !== Game.State.platforms[0] && player.canDropDown) {
+                            player.dy = -2;
+                            player.onGround = false;
+                            player.platformToDropThrough = player.standingOnPlatform;
+                            player.canDropDown = false;
+                            setTimeout(() => { player.canDropDown = true; }, 300);
+                        } else if (!player.isCrouching) {
+                            player.dy = Game.Constants.JUMP_POWER;
+                            player.onGround = false;
+                            Game.State.canJump = false;
+                            setTimeout(() => { Game.State.canJump = true; }, Game.State.jumpDelay);
+                        }
                     }
                 },
                 updatePlayerPosition: function() {
@@ -184,6 +215,8 @@
                     player.standingOnPlatform = null;
                     
                     for (const platform of Game.State.platforms) {
+                        if(player.platformToDropThrough === platform) continue;
+
                         if (player.x + player.width > platform.x && player.x < platform.x + platform.width && player.dy >= 0 && player.y + player.height >= platform.y && (player.y + player.height - player.dy) <= platform.y) {
                             player.dy = 0;
                             player.onGround = true;
@@ -199,18 +232,22 @@
                 draw: function() {
                     this.drawBackground();
                     Game.State.platforms.forEach(p => { Game.State.ctx.fillStyle = '#A8D8F0'; Game.State.ctx.fillRect(p.x, p.y, p.width, p.height); });
-                    this.drawCharacter('ESKIMO', Game.State.player.x, Game.State.player.y);
+                    this.drawCharacter('ESKIMO', Game.State.player.x, Game.State.player.y, Game.State.player.isCrouching);
                 },
                 drawCharacter: function(charType, x, y, isCrouching = false, targetCtx = Game.State.ctx) {
                     const player = Game.State.player;
+                    let heightModifier = isCrouching ? 6 : 0;
+                    let yOffset = isCrouching ? 6 : 0;
                     switch (charType) {
                         case 'ESKIMO':
-                            targetCtx.fillStyle = '#8B4513'; targetCtx.fillRect(x + 2, y, player.width - 4, player.height - 2);
+                            targetCtx.fillStyle = '#8B4513'; targetCtx.fillRect(x + 2, y + yOffset, player.width - 4, player.height - 2 - heightModifier);
                             targetCtx.fillStyle = '#4682B4'; targetCtx.fillRect(x, y + player.height - 8, player.width, 5);
-                            targetCtx.fillStyle = '#FFDAB9'; targetCtx.fillRect(x + 7, y + 5, player.width - 14, 12);
-                            targetCtx.fillStyle = '#000000'; targetCtx.fillRect(x + 10, y + 10, 3, 3); targetCtx.fillRect(x + 17, y + 10, 3, 3);
-                            targetCtx.fillStyle = '#8B4513'; const armY = y + 15; const animOffset = Math.sin(Game.State.globalAnimationTick * 0.2) * 3;
-                            targetCtx.fillRect(x - 2, armY + animOffset, 4, 8); targetCtx.fillRect(x + player.width - 2, armY - animOffset, 4, 8);
+                            targetCtx.fillStyle = '#FFDAB9'; targetCtx.fillRect(x + 7, y + 5 + yOffset, player.width - 14, 12 - heightModifier);
+                            targetCtx.fillStyle = '#000000'; targetCtx.fillRect(x + 10, y + 10 + yOffset, 3, 3); targetCtx.fillRect(x + 17, y + 10 + yOffset, 3, 3);
+                            if (!isCrouching) {
+                                targetCtx.fillStyle = '#8B4513'; const armY = y + 15; const animOffset = Math.sin(Game.State.globalAnimationTick * 0.2) * 3;
+                                targetCtx.fillRect(x - 2, armY + animOffset, 4, 8); targetCtx.fillRect(x + player.width - 2, armY - animOffset, 4, 8);
+                            }
                             const legY = y + player.height - 2; targetCtx.fillRect(x + 5, legY, 8, 5); targetCtx.fillRect(x + player.width - 13, legY, 8, 5);
                             break;
                     }
@@ -241,7 +278,7 @@
                         if (e.key === 'ArrowDown') this.keys.down = false;
                     });
 
-                    // DIUBAH: Penambahan kawalan sentuh
+                    // Touch controls
                     const btnLeft = document.getElementById('btn-left');
                     const btnRight = document.getElementById('btn-right');
                     const btnUp = document.getElementById('btn-up');
@@ -253,7 +290,7 @@
                             e.preventDefault();
                             this.keys[key] = isPressed;
                             element.classList.toggle('pressed', isPressed);
-                        });
+                        }, { passive: false });
                     };
 
                     handleTouch(btnLeft, 'left', true);
@@ -265,11 +302,9 @@
                     handleTouch(btnDown, 'down', true);
                     handleTouch(btnDown, 'down', false);
 
-                    // Butang A berfungsi sebagai lompat, sama seperti butang atas
                     handleTouch(btnA, 'up', true);
                     handleTouch(btnA, 'up', false);
                     
-                    // Butang atas juga boleh digunakan untuk melompat
                      handleTouch(btnUp, 'up', true);
                      handleTouch(btnUp, 'up', false);
                 }
