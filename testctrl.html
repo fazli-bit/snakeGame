@@ -265,7 +265,7 @@
                     else if (keys.right) { player.dx = Game.State.playerSpeed; }
                     else { player.dx = 0; }
 
-                    if ((keys.up || keys.a) && player.onGround && Game.State.canJump) { // DIUBAH: Tambah keys.a untuk lompat
+                    if ((keys.up || keys.a) && player.onGround && Game.State.canJump) {
                         if (player.isCrouching && player.standingOnPlatform && player.standingOnPlatform !== Game.State.platforms[0] && player.canDropDown) {
                             player.dy = -2;
                             player.onGround = false;
@@ -426,7 +426,7 @@
                         } else {
                             if (key === 'arrowleft') this.keys.left = true;
                             if (key === 'arrowright') this.keys.right = true;
-                            if (key === 'arrowup' || key === 'd') { e.preventDefault(); this.keys.up = true; }
+                            if (key === 'arrowup' || key === 'd') { e.preventDefault(); this.keys.a = true; this.keys.up = true; } // a is jump
                             if (key === 'arrowdown') this.keys.down = true;
                             if (key === 's') this.keys.b = true;
                         }
@@ -435,7 +435,7 @@
                         const key = e.key.toLowerCase();
                         if (key === 'arrowleft') this.keys.left = false;
                         if (key === 'arrowright') this.keys.right = false;
-                        if (key === 'arrowup' || key === 'd') { this.keys.up = false; }
+                        if (key === 'arrowup' || key === 'd') { this.keys.up = false; this.keys.a = false; }
                         if (key === 'arrowdown') this.keys.down = false;
                         if (key === 's') this.keys.b = false;
                     });
@@ -459,7 +459,8 @@
                                     if (key === 'b' && S.activeMenu === S.instructionsMenu) { this.handleMenuAction(); }
                                 }
                             } else {
-                                this.keys[key] = isPressed;
+                                if (key === 'a') this.keys['up'] = isPressed; // Map A button to 'up' for jumping
+                                else this.keys[key] = isPressed;
                             }
                             element.classList.toggle('pressed', isPressed);
                         }, { passive: false });
