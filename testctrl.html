@@ -118,10 +118,10 @@
     <div class="main-container">
         <div class="game-column">
             <h1>Ice Climber (Dev Kawalan)</h1>
-            <p class="version-info-dev">v-dev-ctrl-0.8</p>
+            <p class="version-info-dev">v-dev-ctrl-0.9</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
-                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-0.8</div>
+                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-0.9</div>
                 <div id="start-menu" class="menu">
                     <h2>ICE CLIMBER</h2>
                     <div id="start-button" class="menu-option" data-index="0">MULA</div>
@@ -130,9 +130,14 @@
                 <div id="instructions-menu" class="menu" style="display: none;">
                     <h2>ARAHAN</h2>
                     <div class="instructions-text">
-                        <p><span>Anak Panah</span> : Bergerak/Lompat</p>
-                        <p><span>D / Butang A</span> : Pilih</p>
-                        <p><span>S / Butang B</span> : Kembali</p>
+                        <p><span>Anak Panah</span> : Bergerak/Tunduk</p>
+                        <p><span>Anak Panah Atas</span> : Lompat</p>
+                        <p><span>S</span> : Aksi (B)</p>
+                        <p><span>D</span> : Lompat (A)</p>
+                        <hr style="border-color: #555; margin: 15px 0;">
+                        <p><span>Menu Atas/Bwh</span> : Anak Panah</p>
+                        <p><span>Menu Pilih</span> : D / Butang A</p>
+                        <p><span>Menu Kembali</span> : S / Butang B</p>
                     </div>
                     <button class="menu-option" data-index="0">KEMBALI</button>
                 </div>
@@ -464,7 +469,7 @@
                     handleTouch(btnRight, 'right', true); handleTouch(btnRight, 'right', false);
                     handleTouch(btnDown, 'down', true); handleTouch(btnDown, 'down', false);
                     handleTouch(btnUp, 'up', true); handleTouch(btnUp, 'up', false);
-                    handleTouch(btnA, 'a', true); handleTouch(btnA, 'a', false);
+                    handleTouch(btnA, 'up', true); handleTouch(btnA, 'up', false); // DIUBAH: Butang A kini memetakan kepada 'up' untuk lompat
                     handleTouch(btnB, 'b', true); handleTouch(btnB, 'b', false);
                 }
             },
