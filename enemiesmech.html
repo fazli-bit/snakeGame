@@ -1,1 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ice Climber - Dev Musuh</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* CSS penuh dari v0.7.0.7 untuk konsistensi visual */
+        body { background-color: #1a1a1a; color: #f0f0f0; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Press Start 2P', cursive; }
+        .main-container { display: flex; align-items: center; gap: 30px; }
+        .game-column { display: flex; flex-direction: column; align-items: center; }
+        .version-info-dev { font-size: 0.7rem; color: #888; margin-top: -15px; margin-bottom: 15px; }
+        .game-wrapper { position: relative; }
+        #game-canvas { background-color: #000; border: 4px solid #555; border-radius: 10px; display: block; }
+        .side-controls { display: flex; flex-direction: column; gap: 20px; background-color: #2b2b2b; padding: 20px; border-radius: 10px; border: 2px solid #555; width: 200px; }
+        .control-container { display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 0.7rem; }
+        .stage-presets { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 100%; }
+        .stage-presets button, #reset-stage-button { background-color: #1a1a1a; color: #fff; border: 1px solid #555; padding: 5px; font-size: 0.6rem; font-family: 'Press Start 2P', cursive; cursor: pointer; }
+        .stage-presets button:hover, #reset-stage-button:hover { background-color: #333; }
+        .stage-presets button.selected { background-color: #00ff00; color: #000; }
+        #reset-stage-button { width: 100%; padding: 8px; }
+        #debug-panel { font-size: 0.6rem; line-height: 1.5; }
+        #debug-panel h3 { font-size: 0.8rem; color: #ffff00; margin: 0 0 10px 0; text-align: center; width: 100%; border-bottom: 1px solid #555; padding-bottom: 10px; }
+        #debug-panel p { margin: 2px 0; display: flex; justify-content: space-between; width: 100%; }
+        #debug-panel span { color: #00ff00; min-width: 60px; text-align: right; }
+        p { font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div id="debug-panel" class="side-controls">
+            <h3>Maklumat Asas</h3>
+            <p>Posisi X: <span id="debug-player-x">0</span></p>
+            <p>Posisi Y: <span id="debug-player-y">0</span></p>
+            <p>Halaju X: <span id="debug-player-dx">0</span></p>
+            <p>Halaju Y: <span id="debug-player-dy">0</span></p>
+            <p>Di Atas Tanah: <span id="debug-player-onground">false</span></p>
+            <p>Pelanggaran: <span id="debug-collision">Tidak</span></p>
+        </div>
+        <div class="game-column">
+            <h1>Ice Climber (Dev Musuh)</h1>
+            <p class="version-info-dev">v-dev-1.0</p>
+            <div class="game-wrapper">
+                <canvas id="game-canvas" width="400" height="600"></canvas>
+            </div>
+        </div>
+        <div class="side-controls">
+             <div class="control-container">
+                <label>Pilih Musuh Ujian:</label>
+                <div id="enemy-selection" class="stage-presets">
+                    <button data-enemy="GROUND_MONSTER" class="selected">Monster</button>
+                    <button data-enemy="AWAN_HANTU">Hantu</button>
+                    <button data-enemy="ICICLE">Icicle</button>
+                    <button data-enemy="BAT">Kelawar</button>
+                </div>
+            </div>
+            <button id="reset-stage-button">Reset Stage</button>
+        </div>
+    </div>
+
+    <script>
+        const Game = {
+            // --- CORE MODULE: Main game loop and state management ---
+            Core: {
+                animationFrameId: null,
+                init: function() {
+                    Game.Controls.setupEventListeners();
+                    Game.Level.generatePlatforms();
+                    Game.Enemies.generateEnemies();
+                    this.gameLoop();
+                },
+                gameLoop: function() {
+                    Game.Core.update();
+                    Game.Graphics.draw();
+                    Game.Core.animationFrameId = requestAnimationFrame(Game.Core.gameLoop);
+                },
+                update: function() {
+                    Game.State.globalAnimationTick++;
+                    
+                    if (Game.State.player.hitTimer > 0) {
+                        Game.State.player.hitTimer--;
+                    } else {
+                        Game.State.player.isHit = false;
+                    }
+
+                    Game.Player.handlePlayerInput();
+                    Game.Player.updatePlayerPosition();
+                    Game.Enemies.updateEnemies();
+                    Game.Enemies.updateProjectiles();
+                    const collisionDetected = Game.Player.checkPlayerCollisions();
+                    Game.Debug.updateDebugInfo(collisionDetected);
+
+                    if (Game.State.player.y > Game.State.canvas.height) {
+                         const floor = Game.State.platforms[0];
+                         Game.State.player.y = floor.y - Game.State.player.height;
+                         Game.State.player.x = 20;
+                         Game.State.player.dy = 0;
+                         Game.State.player.dx = 0;
+                    }
+                },
+            },
+
+            // --- CONSTANTS MODULE ---
+            Constants: {
+                GRAVITY: 0.5, JUMP_POWER: -12, ENEMY_TURN_DELAY: 500, PLATFORM_HEIGHT: 15, VERTICAL_GAP: 120,
+                AWAN_HANTU_DETECTION_X_BASE: 80, AWAN_HANTU_DETECTION_Y: 50, AWAN_HANTU_PAUSE_DURATION: 30, AWAN_HANTU_DASH_SPEED: 8,
+                EYE_SWEEP_RANGE: 4, ICICLE_SHAKE_DURATION: 40, ICICLE_FALL_SPEED: 7,
+                ICICLE_DETECTION_RANGE: 120, // DIUBAH: Jarak pengesanan dilebarkan
+                BAT_WAKE_DURATION: 15, BAT_FLIGHT_RANGE: 90, BAT_FLIGHT_SPEED: 2,
+                BAT_DIP_HEIGHT: 70, BAT_FLIGHT_HEIGHT: 40, BAT_PATROL_END_DELAY: 120,
+                GROUND_MONSTER_ATTACK_RANGE: 120,
+                BAT_DETECTION_RANGE_X: 400, BAT_ATTACK_RANGE_X: 95, BAT_DETECTION_RANGE_Y: 100,
+                ICE_PLATFORM_SHAKE_DURATION: 60,
+                ICE_PLATFORM_FALL_SPEED: 4,
+                ICE_SHARD_LIFETIME: 90,
+                ICE_SHARD_BLINK_RATE: 8,
+            },
+
+            // --- STATE MODULE ---
+            State: {
+                canvas: document.getElementById('game-canvas'),
+                ctx: document.getElementById('game-canvas').getContext('2d'),
+                debugPlayerX: document.getElementById('debug-player-x'), debugPlayerY: document.getElementById('debug-player-y'),
+                debugPlayerDX: document.getElementById('debug-player-dx'), debugPlayerDY: document.getElementById('debug-player-dy'),
+                debugPlayerOnGround: document.getElementById('debug-player-onground'), debugCollision: document.getElementById('debug-collision'),
+                enemySelectionButtons: document.querySelectorAll('#enemy-selection button'),
+                resetStageButton: document.getElementById('reset-stage-button'),
+                globalAnimationTick: 0,
+                testEnemyType: 'GROUND_MONSTER',
+                player: {
+                    width: 30, height: 30, x: 20, y: 550, dx: 0, dy: 0, onGround: true,
+                    standingOnPlatform: null, isCrouching: false, canDropDown: true, platformToDropThrough: null,
+                    isHit: false, hitTimer: 0
+                },
+                enemies: [],
+                platforms: [],
+                projectiles: [],
+                playerSpeed: 3, friction: 0.97, jumpDelay: 500, canJump: true, enemySpeed: 1
+            },
+
+            // --- PLAYER MODULE ---
+            Player: {
+                handlePlayerInput: function() {
+                    const player = Game.State.player;
+                    const keys = Game.Controls.keys;
+                    player.isCrouching = (keys.down && player.onGround);
+                    if (keys.left) { player.dx = -Game.State.playerSpeed; }
+                    else if (keys.right) { player.dx = Game.State.playerSpeed; }
+                    else { player.dx = 0; }
+                    if (keys.up && player.onGround && Game.State.canJump) {
+                        player.dy = Game.Constants.JUMP_POWER;
+                        player.onGround = false;
+                        Game.State.canJump = false;
+                        setTimeout(() => { Game.State.canJump = true; }, Game.State.jumpDelay);
+                    }
+                },
+                updatePlayerPosition: function() {
+                    const player = Game.State.player;
+                    player.dy += Game.Constants.GRAVITY;
+                    player.x += player.dx;
+                    player.y += player.dy;
+                    if (player.x + player.width < 0) { player.x = Game.State.canvas.width; }
+                    else if (player.x > Game.State.canvas.width) { player.x = -player.width; }
+                },
+                checkPlayerCollisions: function() {
+                    const player = Game.State.player;
+                    let collisionDetected = false;
+                    player.onGround = false;
+                    player.standingOnPlatform = null;
+                    
+                    for (const platform of Game.State.platforms) {
+                        if (player.x + player.width > platform.x && player.x < platform.x + platform.width && player.dy >= 0 && player.y + player.height >= platform.y && (player.y + player.height - player.dy) <= platform.y) {
+                            player.dy = 0;
+                            player.onGround = true;
+                            player.y = platform.y - player.height;
+                            player.standingOnPlatform = platform;
+                        }
+                    }
+
+                    for (const enemy of Game.State.enemies) {
+                         const isColliding = player.x + player.width > enemy.x && player.x < enemy.x + enemy.width && player.y + player.height > enemy.y && player.y < enemy.y + enemy.height;
+                         
+                         if (isColliding) {
+                            if (enemy.type === 'ICE_PLATFORM') {
+                                if (enemy.state === 'FALLING') continue;
+                                if (player.dy >= 0 && (player.y + player.height - player.dy) <= enemy.y) {
+                                    player.dy = 0;
+                                    player.onGround = true;
+                                    player.y = enemy.y - player.height;
+                                    player.standingOnPlatform = enemy;
+                                    if (enemy.state === 'IDLE') {
+                                        enemy.state = 'SHAKING';
+                                        enemy.shakeTimer = Game.Constants.ICE_PLATFORM_SHAKE_DURATION;
+                                    }
+                                }
+                            }
+                            else if (enemy.type === 'ICICLE' && enemy.state === 'STUCK') {
+                                 if (player.dx > 0 && (player.x + player.width - player.dx) <= enemy.x) { player.x = enemy.x - player.width; player.dx = 0; }
+                                 else if (player.dx < 0 && (player.x - player.dx) >= (enemy.x + enemy.width)) { player.x = enemy.x + enemy.width; player.dx = 0; }
+                            } else if (enemy.type === 'ICICLE' && enemy.state !== 'FALLING') {
+                                /* No collision */
+                            } else { 
+                                 collisionDetected = true;
+                                 player.isHit = true;
+                                 player.hitTimer = 30;
+                            }
+                         } 
+                         if (enemy.type === 'ICE_PLATFORM') {
+                            if (player.x + player.width > enemy.x && player.x < enemy.x + enemy.width && player.dy < 0 && player.y <= enemy.y + enemy.height && (player.y - player.dy) > enemy.y + enemy.height) {
+                                player.dy *= -0.5;
+                                if (!enemy.hitCooldown) {
+                                    enemy.hits++;
+                                    enemy.hitCooldown = true;
+                                    setTimeout(() => { enemy.hitCooldown = false; }, 200);
+                                    if (enemy.hits >= 3) {
+                                        enemy.state = 'BREAKING';
+                                    }
+                                }
+                            }
+                         }
+                    }
+                    return collisionDetected;
+                }
+            },
+
+            // --- ENEMIES MODULE ---
+            Enemies: {
+                generateEnemies: function() {
+                    Game.State.enemies = [];
+                    const platforms = Game.State.platforms;
+                    const p_mid = platforms[1];
+                    const p_top = platforms[2];
+                    const p_highest = platforms[3];
+                    const testEnemyType = Game.State.testEnemyType;
+                    if(p_mid && testEnemyType === 'GROUND_MONSTER') { Game.State.enemies.push({ type: 'GROUND_MONSTER', width: 25, height: 25, x: p_mid.x + p_mid.width/2 - 12.5, y: p_mid.y - 25, dx: Game.State.enemySpeed, platform: p_mid, isTurning: false, animationTick: 0, facing: 'right', attackCooldown: 120, isAttacking: false }); }
+                    if(p_mid && testEnemyType === 'AWAN_HANTU') { const baseX = p_mid.x + p_mid.width/2 - 17.5; const baseY = p_mid.y - 40; Game.State.enemies.push({ type: 'AWAN_HANTU', width: 35, height: 25, x: baseX, y: baseY, originalX: baseX, originalY: baseY, baseY: baseY, dx: 0, platform: p_mid, animationAngle: 0, eyeAngle: 0, state: 'SCANNING', detectionTimer: 0, dashTargetX: 0 }); }
+                    if (p_top && testEnemyType === 'ICICLE') { Game.State.enemies.push({ type: 'ICICLE', width: 15, height: 30, x: p_top.x + p_top.width/2, y: p_top.y + Game.Constants.PLATFORM_HEIGHT, originalX: p_top.x + p_top.width/2, originalY: p_top.y + Game.Constants.PLATFORM_HEIGHT, state: 'IDLE', shakeTimer: 0 }); }
+                    if (p_top && testEnemyType === 'BAT') { Game.State.enemies.push({type: 'BAT', width: 30, height: 20, x: p_top.x + p_top.width/2, y: p_top.y + Game.Constants.PLATFORM_HEIGHT, originalX: p_top.x + p_top.width/2, originalY: p_top.y + Game.Constants.PLATFORM_HEIGHT, state: 'HANGING', wakeTimer: 0, dx: 0 }); }
+                
+                    const gapWidth = 120;
+                    const platformWidth = (Game.State.canvas.width - gapWidth) / 2;
+                    Game.State.enemies.push({
+                        type: 'ICE_PLATFORM', x: platformWidth, y: p_highest.y,
+                        width: gapWidth, height: Game.Constants.PLATFORM_HEIGHT,
+                        hits: 0, state: 'IDLE', shakeTimer: 0,
+                        originalX: platformWidth, hitCooldown: false
+                    });
+                },
+                updateEnemies: function() {
+                    const C = Game.Constants; const S = Game.State;
+                    for (let i = S.enemies.length - 1; i >= 0; i--) {
+                        const enemy = S.enemies[i];
+                         if (enemy.type === 'ICE_PLATFORM') {
+                            if (enemy.state === 'SHAKING') {
+                                enemy.shakeTimer--;
+                                if (enemy.shakeTimer <= 0) {
+                                    enemy.state = 'BREAKING';
+                                }
+                            } else if (enemy.state === 'BREAKING') {
+                                const shardCount = 5;
+                                const shardWidth = enemy.width / shardCount;
+                                for (let j = 0; j < shardCount; j++) {
+                                    S.enemies.push({
+                                        type: 'ICE_SHARD',
+                                        x: enemy.x + (j * shardWidth),
+                                        y: enemy.y,
+                                        width: shardWidth,
+                                        height: enemy.height,
+                                        dx: (Math.random() - 0.5) * 2,
+                                        dy: Math.random() * -2,
+                                        lifetime: C.ICE_SHARD_LIFETIME
+                                    });
+                                }
+                                S.enemies.splice(i, 1);
+                            }
+                         }
+                         else if (enemy.type === 'ICE_SHARD') {
+                             enemy.dy += C.GRAVITY * 0.5;
+                             enemy.x += enemy.dx;
+                             enemy.y += enemy.dy;
+                             enemy.lifetime--;
+                             if (enemy.lifetime <= 0) {
+                                 S.enemies.splice(i, 1);
+                             }
+                         }
+                         else if (enemy.type === 'GROUND_MONSTER') { /* Logik Ground Monster dari v0.7.0.7 */ if (!enemy.isAttacking && !enemy.isTurning && enemy.dx !== 0) { enemy.x += enemy.dx; enemy.animationTick++; const visiblePlatformStartX = Math.max(0, enemy.platform.x); const visiblePlatformEndX = Math.min(S.canvas.width, enemy.platform.x + enemy.platform.width); if (enemy.x <= visiblePlatformStartX || enemy.x + enemy.width >= visiblePlatformEndX) { enemy.isTurning = true; enemy.facing = enemy.dx > 0 ? 'left' : 'right'; enemy.dx = 0; setTimeout(() => { enemy.dx = enemy.facing === 'right' ? S.enemySpeed : -S.enemySpeed; enemy.isTurning = false; }, C.ENEMY_TURN_DELAY); } } if (enemy.attackCooldown > 0) { enemy.attackCooldown--; } const distanceToPlayer = Math.abs((S.player.x + S.player.width / 2) - (enemy.x + enemy.width / 2)); const onSamePlatform = S.player.standingOnPlatform === enemy.platform; const isPlayerInFront = (enemy.facing === 'right' && S.player.x > enemy.x) || (enemy.facing === 'left' && S.player.x < enemy.x); if (onSamePlatform && isPlayerInFront && !enemy.isAttacking && enemy.attackCooldown <= 0 && distanceToPlayer < C.GROUND_MONSTER_ATTACK_RANGE) { enemy.isAttacking = true; enemy.dx = 0; setTimeout(() => { if(!enemy.isTurning) { const projectileX = enemy.facing === 'right' ? enemy.x + enemy.width : enemy.x; const projectileY = enemy.y + 17; const projectileDX = enemy.facing === 'right' ? 4 : -4; S.projectiles.push({ x: projectileX, y: projectileY, dx: projectileDX, width: 8, height: 8 }); } enemy.isAttacking = false; enemy.attackCooldown = 180 + Math.random() * 120; if(!enemy.isTurning) enemy.dx = enemy.facing === 'right' ? S.enemySpeed : -S.enemySpeed; }, 300); } }
+                         else if (enemy.type === 'AWAN_HANTU') { /* Logik Awan Hantu dari v0.7.0.7 */ switch (enemy.state) { case 'SCANNING': enemy.animationAngle += 0.05; enemy.y = enemy.baseY + Math.sin(enemy.animationAngle) * 5; enemy.eyeAngle += 0.03; const detectionRangeX = C.AWAN_HANTU_DETECTION_X_BASE; const playerDistX = Math.abs((S.player.x + S.player.width/2) - (enemy.x + enemy.width/2)); const playerDistY = Math.abs(S.player.y - enemy.y); const eyeDirection = Math.sin(enemy.eyeAngle); if (playerDistX < detectionRangeX && playerDistY < C.AWAN_HANTU_DETECTION_Y) { const isPlayerRight = S.player.x > enemy.x; if ((isPlayerRight && eyeDirection > 0.3) || (!isPlayerRight && eyeDirection < -0.3)) { enemy.state = 'PAUSING'; enemy.detectionTimer = C.AWAN_HANTU_PAUSE_DURATION; enemy.dashTargetX = S.player.x + 10; } } break; case 'PAUSING': enemy.detectionTimer--; if (enemy.detectionTimer <= 0) { enemy.state = 'DASHING'; } break; case 'DASHING': const directionToTarget = Math.sign(enemy.dashTargetX - enemy.x); enemy.x += directionToTarget * C.AWAN_HANTU_DASH_SPEED; if (Math.abs(enemy.x - enemy.dashTargetX) < C.AWAN_HANTU_DASH_SPEED) { enemy.x = enemy.dashTargetX; enemy.state = 'RETURNING'; } break; case 'RETURNING': const directionToHome = Math.sign(enemy.originalX - enemy.x); enemy.x += directionToHome * (C.AWAN_HANTU_DASH_SPEED / 2); if (Math.abs(enemy.x - enemy.originalX) < (C.AWAN_HANTU_DASH_SPEED / 2)) { enemy.x = enemy.originalX; enemy.state = 'SCANNING'; } break; } }
+                         else if (enemy.type === 'ICICLE') {
+                             switch (enemy.state) {
+                                case 'IDLE':
+                                    const playerDistX = Math.abs((S.player.x + S.player.width/2) - (enemy.x + enemy.width/2));
+                                    const playerDistY = (S.player.y + S.player.height) - enemy.y;
+                                    if (playerDistX < C.ICICLE_DETECTION_RANGE && playerDistY > 0 && playerDistY < S.canvas.height) {
+                                         enemy.state = 'SHAKING';
+                                         enemy.shakeTimer = C.ICICLE_SHAKE_DURATION;
+                                    }
+                                    break;
+                                case 'SHAKING':
+                                    enemy.shakeTimer--;
+                                    enemy.x = enemy.originalX + Math.sin(S.globalAnimationTick * 0.8) * 2;
+                                    if (enemy.shakeTimer <= 0) {
+                                        enemy.state = 'FALLING';
+                                    }
+                                    break;
+                                case 'FALLING':
+                                    enemy.y += C.ICICLE_FALL_SPEED;
+                                    for (const p of S.platforms) {
+                                        const tipY = enemy.y + enemy.height;
+                                        if (tipY >= p.y && tipY - C.ICICLE_FALL_SPEED < p.y && enemy.x > p.x && enemy.x < p.x + p.width) {
+                                            enemy.y = p.y - enemy.height + 8; // DIUBAH: Direndahkan
+                                            enemy.state = 'STUCK';
+                                            break;
+                                        }
+                                    }
+                                    if (enemy.y > S.canvas.height) {
+                                        S.enemies.splice(i, 1);
+                                    }
+                                    break;
+                                case 'STUCK':
+                                    // DIUBAH: Tiada apa-apa berlaku, ia kekal di sini
+                                    break;
+                            }
+                         }
+                         else if (enemy.type === 'BAT') { 
+                            const xDist = Math.abs((S.player.x + S.player.width/2) - (enemy.x + enemy.width/2));
+                            const yDist = S.player.y - enemy.y;
+                            const isPlayerBelow = yDist > 0;
+                            const playerInDetectionRange = isPlayerBelow && yDist < C.BAT_DETECTION_RANGE_Y && xDist < C.BAT_DETECTION_RANGE_X;
+                            switch(enemy.state) {
+                                case 'HANGING': if (playerInDetectionRange) { enemy.state = 'DETECTED'; } break;
+                                case 'DETECTED': if (playerInDetectionRange && xDist < C.BAT_ATTACK_RANGE_X) { enemy.state = 'WAKING'; enemy.wakeTimer = C.BAT_WAKE_DURATION; } else if (!playerInDetectionRange) { enemy.state = 'HANGING'; } break;
+                                case 'WAKING': enemy.wakeTimer--; if(enemy.wakeTimer <= 0) { enemy.state = 'FLYING_DIP'; enemy.targetY = enemy.originalY + C.BAT_DIP_HEIGHT; enemy.dx = (S.player.x < enemy.x) ? -C.BAT_FLIGHT_SPEED : C.BAT_FLIGHT_SPEED; } break;
+                                case 'FLYING_DIP': enemy.y += (enemy.targetY - enemy.y) * 0.1; enemy.x += enemy.dx; if (Math.abs(enemy.y - enemy.targetY) < 1) { enemy.state = 'ASCENDING'; enemy.targetY = enemy.originalY + C.BAT_FLIGHT_HEIGHT; } break;
+                                case 'ASCENDING': enemy.y += (enemy.targetY - enemy.y) * 0.1; enemy.x += enemy.dx; if (Math.abs(enemy.y - enemy.targetY) < 1) { enemy.state = 'FLYING'; } if (enemy.x <= enemy.originalX - C.BAT_FLIGHT_RANGE || enemy.x >= enemy.originalX + C.BAT_FLIGHT_RANGE) { enemy.dx *= -1; } break;
+                                case 'FLYING':
+                                    if (!enemy.dx) { enemy.dx = C.BAT_FLIGHT_SPEED; }
+                                    enemy.x += enemy.dx;
+                                    if (enemy.x <= enemy.originalX - C.BAT_FLIGHT_RANGE || enemy.x >= enemy.originalX + C.BAT_FLIGHT_RANGE) {
+                                        enemy.dx *= -1;
+                                    }
+                                    if (!playerInDetectionRange) {
+                                        if (enemy.patrolEndTimer == null) { enemy.patrolEndTimer = C.BAT_PATROL_END_DELAY; }
+                                        enemy.patrolEndTimer--;
+                                        if (enemy.patrolEndTimer <= 0) {
+                                            enemy.state = 'RETURNING_HOME';
+                                            delete enemy.patrolEndTimer;
+                                        }
+                                    } else {
+                                        if (enemy.patrolEndTimer != null) { delete enemy.patrolEndTimer; }
+                                    }
+                                    break;
+                                case 'RETURNING_HOME': const distToHome = Math.hypot(enemy.x - enemy.originalX, enemy.y - enemy.originalY); if (distToHome < C.BAT_FLIGHT_SPEED * 2) { enemy.x = enemy.originalX; enemy.y = enemy.originalY; enemy.state = 'HANGING'; } else { const dirX = Math.sign(enemy.originalX - enemy.x); const dirY = Math.sign(enemy.originalY - enemy.y); enemy.x += dirX * C.BAT_FLIGHT_SPEED; enemy.y += dirY * C.BAT_FLIGHT_SPEED; } break;
+                            } 
+                        }
+                    }
+                },
+                updateProjectiles: function() {
+                    const S = Game.State;
+                    for (let i = S.projectiles.length - 1; i >= 0; i--) {
+                        const p = S.projectiles[i];
+                        p.x += p.dx;
+                        if (p.x < 0 || p.x > S.canvas.width) { S.projectiles.splice(i, 1); continue; }
+                        if (S.player.x < p.x + p.width && S.player.x + S.player.width > p.x && S.player.y < p.y + p.height && S.player.y + S.player.height > p.y) { S.projectiles.splice(i, 1); }
+                    }
+                }
+            },
+
+            // --- LEVEL MODULE ---
+            Level: {
+                generatePlatforms: function() {
+                    const C = Game.Constants;
+                    Game.State.platforms = [
+                        { x: 0, y: 560, width: 400, height: 40 },
+                        { x: 0, y: 560 - C.VERTICAL_GAP, width: 400, height: C.PLATFORM_HEIGHT },
+                        { x: 0, y: 560 - (C.VERTICAL_GAP * 2), width: 400, height: C.PLATFORM_HEIGHT }
+                    ];
+
+                    const gapWidth = 120;
+                    const platformWidth = (Game.State.canvas.width - gapWidth) / 2;
+                    const platformY = 560 - (C.VERTICAL_GAP * 3);
+                    Game.State.platforms.push({ x: 0, y: platformY, width: platformWidth, height: C.PLATFORM_HEIGHT });
+                    Game.State.platforms.push({ x: platformWidth + gapWidth, y: platformY, width: platformWidth, height: C.PLATFORM_HEIGHT });
+                },
+            },
+
+            // --- GRAPHICS MODULE ---
+            Graphics: {
+                draw: function() {
+                    const S = Game.State;
+                    S.ctx.fillStyle = '#1a2a4d';
+                    S.ctx.fillRect(0, 0, S.canvas.width, S.canvas.height);
+                    this.drawPlatforms();
+                    this.drawEnemies();
+                    this.drawProjectiles();
+                    this.drawPlayer();
+                },
+                drawPlatforms: function() { 
+                    Game.State.ctx.fillStyle = '#A8D8F0';
+                    Game.State.platforms.forEach(p => Game.State.ctx.fillRect(p.x, p.y, p.width, p.height));
+                },
+                drawPlayer: function() { 
+                    const player = Game.State.player;
+                    if (player.isHit) {
+                        Game.State.ctx.fillStyle = '#FF4136';
+                    } else {
+                        Game.State.ctx.fillStyle = '#00FF00';
+                    }
+                    Game.State.ctx.fillRect(player.x, player.y, player.width, player.height);
+                },
+                drawEnemies: function() {
+                    const ctx = Game.State.ctx; const C = Game.Constants;
+                    Game.State.enemies.forEach(e => {
+                         if (e.type === 'ICE_PLATFORM') {
+                            ctx.fillStyle = '#E0FFFF';
+                            let xPos = e.state === 'SHAKING' ? e.originalX + Math.sin(Game.State.globalAnimationTick * 0.8) * 2 : e.x;
+                            ctx.fillRect(xPos, e.y, e.width, e.height);
+                            if (e.hits > 0) {
+                                ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)'; ctx.lineWidth = 1; ctx.beginPath();
+                                if (e.hits >= 1) { ctx.moveTo(e.x + e.width * 0.5, e.y); ctx.lineTo(e.x + e.width * 0.5, e.y + e.height); }
+                                if (e.hits >= 2) { ctx.moveTo(e.x + e.width * 0.2, e.y); ctx.lineTo(e.x + e.width * 0.8, e.y + e.height); }
+                                ctx.stroke();
+                            }
+                         }
+                         else if (e.type === 'ICE_SHARD') {
+                            if (Math.floor(e.lifetime / C.ICE_SHARD_BLINK_RATE) % 2 === 0) {
+                                ctx.fillStyle = '#E0FFFF';
+                                ctx.fillRect(e.x, e.y, e.width, e.height);
+                            }
+                         }
+                         else if (e.type === 'ICICLE') { if (e.state === 'STUCK' && e.y > Game.State.canvas.height) return; ctx.fillStyle = '#bdeeff'; ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + e.width, e.y); ctx.lineTo(e.x + e.width / 2, e.y + e.height); ctx.closePath(); ctx.fill(); }
+                         else if (e.type === 'AWAN_HANTU') { const isAngry = e.state === 'PAUSING' || e.state === 'DASHING' || e.state === 'RETURNING'; ctx.fillStyle = isAngry ? '#ff4136' : '#ADD8E6'; ctx.beginPath(); ctx.arc(e.x + e.width / 2, e.y + e.height / 2, e.width / 2, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(e.x, e.y + e.height/2, e.width, e.height/2); ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(e.x + e.width / 2, e.y + e.height / 2, 8, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#000000'; const pupilX = e.x + e.width / 2 + (Math.sin(e.eyeAngle) * C.EYE_SWEEP_RANGE); ctx.beginPath(); ctx.arc(pupilX, e.y + e.height / 2, 4, 0, Math.PI * 2); ctx.fill(); }
+                         else if (e.type === 'BAT') { const centerX = e.x + e.width / 2; ctx.fillStyle = '#3d5a80'; if (e.state === 'HANGING' || e.state === 'WAKING' || e.state === 'DETECTED') { ctx.beginPath(); ctx.moveTo(centerX - 8, e.y); ctx.lineTo(centerX, e.y + e.height); ctx.lineTo(centerX + 8, e.y); ctx.closePath(); ctx.fill(); if (e.state === 'DETECTED' || e.state === 'WAKING') { ctx.fillStyle = '#e71d36'; ctx.fillRect(centerX - 1.5, e.y + 8, 3, 3); } } else { const wingFlap = Math.sin(Game.State.globalAnimationTick * 0.4) * 12; ctx.fillStyle = '#293241'; ctx.fillRect(centerX - 5, e.y, 10, e.height); ctx.fillStyle = '#98c1d9'; ctx.beginPath(); ctx.moveTo(centerX, e.y + 5); ctx.lineTo(centerX - e.width / 2 - 5, e.y + wingFlap); ctx.lineTo(centerX - e.width / 2 + 5, e.y + e.height); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(centerX, e.y + 5); ctx.lineTo(centerX + e.width / 2 + 5, e.y + wingFlap); ctx.lineTo(centerX + e.width / 2 - 5, e.y + e.height); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#e71d36'; ctx.fillRect(centerX - 1.5, e.y + 3, 3, 3); } }
+                         else { ctx.fillStyle = '#ff80ed'; ctx.fillRect(e.x + 2, e.y, e.width - 4, e.height - 2); ctx.fillStyle = '#000000'; const eyeSize = 5; const eyeY = e.y + 7; let eyeX = (e.facing === 'right') ? e.x + e.width - eyeSize - 6 : e.x + 6; ctx.fillRect(eyeX, eyeY, eyeSize, eyeSize); const mouthY = e.y + 15; const mouthWidth = 10; let mouthX = (e.facing === 'right') ? e.x + e.width - mouthWidth - 2 : e.x + 2; ctx.fillStyle = '#000000'; if (e.isAttacking) { ctx.fillRect(mouthX - 2, mouthY - 2, mouthWidth + 4, 8); } else { ctx.fillRect(mouthX, mouthY, mouthWidth, 4); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(mouthX + 1, mouthY, 2, 2); ctx.fillRect(mouthX + 7, mouthY, 2, 2); } ctx.strokeStyle = '#ff80ed'; ctx.lineWidth = 3; const legState = Math.floor(e.animationTick / 8) % 2; const legY = e.y + e.height - 2; if (legState === 0) { ctx.beginPath(); ctx.moveTo(e.x + 8, legY); ctx.lineTo(e.x + 4, legY + 5); ctx.moveTo(e.x + 17, legY); ctx.lineTo(e.x + 21, legY + 5); ctx.stroke(); } else { ctx.beginPath(); ctx.moveTo(e.x + 8, legY); ctx.lineTo(e.x + 12, legY + 5); ctx.moveTo(e.x + 17, legY); ctx.lineTo(e.x + 13, legY + 5); ctx.stroke(); } }
+                    });
+                },
+                drawProjectiles: function() {
+                    Game.State.projectiles.forEach(p => { Game.State.ctx.fillStyle = '#bdeeff'; Game.State.ctx.fillRect(p.x, p.y, p.width, p.height); });
+                },
+            },
+
+            // --- CONTROLS MODULE ---
+            Controls: {
+                keys: { left: false, right: false, up: false, down: false },
+                setupEventListeners: function() {
+                    const S = Game.State;
+                    document.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') this.keys.left = true; if (e.key === 'ArrowRight') this.keys.right = true; if (e.key === 'ArrowUp') this.keys.up = true; if (e.key === 'ArrowDown') this.keys.down = true; });
+                    document.addEventListener('keyup', (e) => { if (e.key === 'ArrowLeft') this.keys.left = false; if (e.key === 'ArrowRight') this.keys.right = false; if (e.key === 'ArrowUp') this.keys.up = false; if (e.key === 'ArrowDown') this.keys.down = false; });
+                    S.enemySelectionButtons.forEach(button => {
+                        button.addEventListener('click', () => {
+                            S.enemySelectionButtons.forEach(btn => btn.classList.remove('selected'));
+                            button.classList.add('selected');
+                            S.testEnemyType = button.dataset.enemy;
+                            Game.Level.generatePlatforms();
+                            Game.Enemies.generateEnemies();
+                        });
+                    });
+                    S.resetStageButton.addEventListener('click', () => {
+                        Game.Level.generatePlatforms();
+                        Game.Enemies.generateEnemies();
+                    });
+                }
+            },
+
+            // --- DEBUG MODULE ---
+            Debug: {
+                updateDebugInfo: function(collisionDetected) {
+                    const S = Game.State;
+                    S.debugPlayerX.textContent = S.player.x.toFixed(2);
+                    S.debugPlayerY.textContent = S.player.y.toFixed(2);
+                    S.debugPlayerDX.textContent = S.player.dx.toFixed(2);
+                    S.debugPlayerDY.textContent = S.player.dy.toFixed(2);
+                    S.debugPlayerOnGround.textContent = S.player.onGround;
+                    S.debugCollision.textContent = collisionDetected ? 'YA' : 'Tidak';
+                }
+            }
+        };
+
+        window.onload = function() { Game.Core.init(); };
+    </script>
+</body>
+</html>
+
 
