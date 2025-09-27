@@ -89,10 +89,23 @@
             color: #fff;
             margin-top: 25px;
             padding: 10px;
-            position: relative; /* For cursor positioning */
+            position: relative;
         }
         .menu-option.selected {
             color: #ffff00;
+        }
+        .instructions-text {
+            font-size: 0.8rem;
+            line-height: 1.8;
+            max-width: 80%;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+        #menu-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            display: none; /* Hidden by default */
         }
     </style>
 </head>
@@ -100,14 +113,23 @@
     <div class="main-container">
         <div class="game-column">
             <h1>Ice Climber (Dev Kawalan)</h1>
-            <p class="version-info-dev">v-dev-ctrl-0.5</p>
+            <p class="version-info-dev">v-dev-ctrl-0.7</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
-                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-0.5</div>
+                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-0.7</div>
                 <div id="start-menu" class="menu">
                     <h2>ICE CLIMBER</h2>
                     <div id="start-button" class="menu-option" data-index="0">MULA</div>
                     <div id="instructions-button" class="menu-option" data-index="1">ARAHAN</div>
+                </div>
+                <div id="instructions-menu" class="menu" style="display: none;">
+                    <h2>ARAHAN</h2>
+                    <div class="instructions-text">
+                        <p><span>Anak Panah &#8592; &#8594;</span> : Bergerak</p>
+                        <p><span>Anak Panah &#8593;</span> : Lompat</p>
+                        <p><span>Anak Panah &#8595;</span> : Tunduk</p>
+                    </div>
+                    <button class="menu-option" data-index="0">KEMBALI</button>
                 </div>
                 <div id="on-screen-controls">
                     <div class="d-pad">
@@ -121,6 +143,7 @@
                         <div id="btn-a" class="action-btn">A</div>
                     </div>
                 </div>
+                <div id="menu-cursor"></div>
             </div>
         </div>
     </div>
@@ -134,6 +157,7 @@
                     Game.Controls.setupEventListeners();
                     Game.Level.generatePlatforms();
                     this.resetStage();
+                    Game.Controls.updateActiveMenu(); // Set initial menu
                     this.gameLoop();
                 },
                 gameLoop: function() {
@@ -143,7 +167,6 @@
                 },
                 update: function() {
                     Game.State.globalAnimationTick++;
-                    // In control dev, we only update player when menu is not visible
                     if (!Game.State.isMenuVisible) {
                         if (Game.State.player.platformToDropThrough && Game.State.player.y > Game.State.player.platformToDropThrough.y + Game.Constants.PLATFORM_HEIGHT) {
                             Game.State.player.platformToDropThrough = null;
@@ -151,6 +174,8 @@
                         Game.Player.handlePlayerInput();
                         Game.Player.updatePlayerPosition();
                         Game.Player.checkPlayerCollisions();
+                    } else {
+                        Game.Graphics.updateMenuCursor();
                     }
                 },
                 resetStage: function() {
@@ -179,7 +204,10 @@
                 canvas: document.getElementById('game-canvas'),
                 ctx: document.getElementById('game-canvas').getContext('2d'),
                 startMenu: document.getElementById('start-menu'),
-                menuOptions: document.querySelectorAll('.menu-option'),
+                instructionsMenu: document.getElementById('instructions-menu'),
+                menuCursor: document.getElementById('menu-cursor'),
+                menuOptions: null,
+                activeMenu: null,
                 globalAnimationTick: 0,
                 player: { 
                     width: 30, height: 30, x: 20, y: 530, dx: 0, dy: 0, 
@@ -192,7 +220,7 @@
                 playerSpeed: 3,
                 canJump: true,
                 jumpDelay: 500,
-                isMenuVisible: true, // Menu is visible by default now
+                isMenuVisible: true,
                 currentMenuSelection: 0,
             },
             
@@ -267,14 +295,13 @@
                     this.drawBackground();
                     Game.State.platforms.forEach(p => { Game.State.ctx.fillStyle = '#A8D8F0'; Game.State.ctx.fillRect(p.x, p.y, p.width, p.height); });
                     this.drawCharacter('ESKIMO', Game.State.player.x, Game.State.player.y, Game.State.player.isCrouching);
-                    
-                    if(Game.State.isMenuVisible) {
-                        this.drawMenuCursor();
-                    }
                 },
-                drawMenuCursor: function() {
+                updateMenuCursor: function() {
                     const S = Game.State;
-                    if (!S.menuOptions || S.menuOptions.length === 0) return;
+                    if (!S.menuOptions || S.menuOptions.length === 0) {
+                        S.menuCursor.style.display = 'none';
+                        return;
+                    }
 
                     S.menuOptions.forEach((opt, index) => {
                         opt.classList.toggle('selected', index === S.currentMenuSelection);
@@ -282,27 +309,12 @@
 
                     const selectedOption = S.menuOptions[S.currentMenuSelection];
                     if (selectedOption) {
+                        S.menuCursor.style.display = 'block';
                         const optionRect = selectedOption.getBoundingClientRect();
-                        const canvasRect = S.canvas.getBoundingClientRect();
+                        const wrapperRect = S.canvas.parentElement.getBoundingClientRect();
                         
-                        const x = selectedOption.offsetLeft - 30;
-                        const y = selectedOption.offsetTop + selectedOption.offsetHeight / 2 - 15;
-                        
-                        // Draw a simple Eskimo head as cursor
-                        const cursorX = x;
-                        const cursorY = y;
-                        const width = 20;
-                        const height = 20;
-
-                        S.ctx.fillStyle = '#8B4513';
-                        S.ctx.fillRect(cursorX + 1, cursorY, width - 2, height - 1);
-                        S.ctx.fillStyle = '#4682B4';
-                        S.ctx.fillRect(cursorX, cursorY + height - 5, width, 3);
-                        S.ctx.fillStyle = '#FFDAB9';
-                        S.ctx.fillRect(cursorX + 5, cursorY + 4, width - 10, 8);
-                        S.ctx.fillStyle = '#000000';
-                        S.ctx.fillRect(cursorX + 7, cursorY + 7, 2, 2);
-                        S.ctx.fillRect(cursorX + 11, cursorY + 7, 2, 2);
+                        S.menuCursor.style.left = `${selectedOption.offsetLeft - 30}px`;
+                        S.menuCursor.style.top = `${selectedOption.offsetTop + selectedOption.offsetHeight / 2 - 10}px`;
                     }
                 },
                 drawCharacter: function(charType, x, y, isCrouching = false, targetCtx = Game.State.ctx) {
@@ -334,24 +346,67 @@
             // --- CONTROLS MODULE ---
             Controls: {
                 keys: { left: false, right: false, up: false, down: false },
+                updateActiveMenu: function() {
+                    const S = Game.State;
+                    if (S.startMenu.style.display !== 'none') {
+                        S.activeMenu = S.startMenu;
+                    } else if (S.instructionsMenu.style.display !== 'none') {
+                        S.activeMenu = S.instructionsMenu;
+                    } else {
+                        S.activeMenu = null;
+                    }
+
+                    if (S.activeMenu) {
+                        S.menuOptions = S.activeMenu.querySelectorAll('.menu-option');
+                        S.currentMenuSelection = 0;
+                    }
+                },
+                handleMenuAction: function() {
+                    const S = Game.State;
+                    if (!S.isMenuVisible || !S.menuOptions) return;
+                    
+                    const selectedOption = S.menuOptions[S.currentMenuSelection];
+                    if (!selectedOption) return;
+
+                    if (S.activeMenu === S.startMenu) {
+                        if (selectedOption.textContent === 'MULA') {
+                            S.isMenuVisible = false;
+                            S.startMenu.style.display = 'none';
+                            S.menuCursor.style.display = 'none';
+                            Game.Core.resetStage();
+                        } else if (selectedOption.textContent === 'ARAHAN') {
+                            S.startMenu.style.display = 'none';
+                            S.instructionsMenu.style.display = 'flex';
+                            this.updateActiveMenu();
+                        }
+                    } else if (S.activeMenu === S.instructionsMenu) {
+                        if (selectedOption.textContent === 'KEMBALI') {
+                            S.instructionsMenu.style.display = 'none';
+                            S.startMenu.style.display = 'flex';
+                            this.updateActiveMenu();
+                        }
+                    }
+                },
                 setupEventListeners: function() {
                     document.addEventListener('keydown', (e) => {
                         const S = Game.State;
                         if (S.isMenuVisible) {
+                            e.preventDefault();
                             if (e.key === 'ArrowDown') { S.currentMenuSelection = (S.currentMenuSelection + 1) % S.menuOptions.length; }
                             if (e.key === 'ArrowUp') { S.currentMenuSelection = (S.currentMenuSelection - 1 + S.menuOptions.length) % S.menuOptions.length; }
-                            if (e.key === 'Enter') { console.log("Selected:", S.menuOptions[S.currentMenuSelection].textContent); }
+                            if (e.key === 'Enter' || e.key === ' ') { this.handleMenuAction(); }
+                            if (e.key === 'Escape' && S.activeMenu === S.instructionsMenu) { this.handleMenuAction(); }
                         } else {
                             if (e.key === 'ArrowLeft') this.keys.left = true;
                             if (e.key === 'ArrowRight') this.keys.right = true;
-                            if (e.key === 'ArrowUp') this.keys.up = true;
+                            if (e.key === 'ArrowUp' || e.key === ' ') { e.preventDefault(); this.keys.up = true; }
                             if (e.key === 'ArrowDown') this.keys.down = true;
                         }
                     });
                     document.addEventListener('keyup', (e) => {
                         if (e.key === 'ArrowLeft') this.keys.left = false;
                         if (e.key === 'ArrowRight') this.keys.right = false;
-                        if (e.key === 'ArrowUp') this.keys.up = false;
+                        if (e.key === 'ArrowUp' || e.key === ' ') { this.keys.up = false; }
                         if (e.key === 'ArrowDown') this.keys.down = false;
                     });
 
@@ -366,12 +421,12 @@
                         element.addEventListener(isPressed ? 'touchstart' : 'touchend', (e) => {
                             e.preventDefault();
                             if (Game.State.isMenuVisible) {
-                                if (isPressed) { // Only trigger on press
+                                if (isPressed) {
                                     const S = Game.State;
                                     if (key === 'up') S.currentMenuSelection = (S.currentMenuSelection - 1 + S.menuOptions.length) % S.menuOptions.length;
                                     if (key === 'down') S.currentMenuSelection = (S.currentMenuSelection + 1) % S.menuOptions.length;
-                                    if (key === 'a') console.log("Selected:", S.menuOptions[S.currentMenuSelection].textContent);
-                                    if (key === 'b') console.log("Cancelled/Back");
+                                    if (key === 'a') this.handleMenuAction();
+                                    if (key === 'b' && S.activeMenu === S.instructionsMenu) { this.handleMenuAction(); }
                                 }
                             } else {
                                 this.keys[key] = isPressed;
