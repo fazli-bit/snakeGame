@@ -6,7 +6,7 @@
     <title>Ice Climber - Dev Peringkat</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #1a1a1a; color: #f0f0f0; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Press Start 2P', cursive; }
+        body { background-color: #1a1a1a; color: #f0f0f0; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Press Start+2P', cursive; }
         .main-container { display: flex; align-items: center; gap: 30px; }
         .game-column { display: flex; flex-direction: column; align-items: center; }
         .version-info-dev { font-size: 0.7rem; color: #888; margin-top: -15px; margin-bottom: 15px; }
@@ -21,7 +21,7 @@
     <div class="main-container">
         <div class="game-column">
             <h1>Ice Climber (Dev Peringkat)</h1>
-            <p class="version-info-dev">v-dev-level-3.0</p>
+            <p class="version-info-dev">v-dev-level-1.0</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
             </div>
@@ -41,11 +41,79 @@
                     this.gameLoop();
                 },
                 gameLoop: function() {
+                    Game.Core.update();
                     Game.Graphics.draw();
                     requestAnimationFrame(Game.Core.gameLoop);
                 },
+                update: function() {
+                    const S = Game.State;
+                    S.globalAnimationTick++;
+                    
+                    Game.Player.handlePlayerInput();
+                    Game.Player.updatePlayerPosition();
+                    Game.Player.checkPlayerCollisions();
+                    
+                    // Crumbling platform logic
+                    const standingPlat = S.player.standingOnPlatform;
+                    if (standingPlat && standingPlat.subType === 'crumbling' && S.player.dx === 0) {
+                        if (standingPlat !== S.crumblingPlatformCandidate) {
+                            S.crumblingPlatformCandidate = standingPlat;
+                            S.crumbleCounter = 0;
+                        }
+                        S.crumbleCounter++;
+                        if (S.crumbleCounter > 60) { // 1 second at 60fps
+                            standingPlat.isFalling = true;
+                            S.crumblingPlatformCandidate = null;
+                        }
+                    } else {
+                        S.crumblingPlatformCandidate = null;
+                        S.crumbleCounter = 0;
+                    }
+                    
+                    // Update moving and falling platforms
+                    for (let i = S.platforms.length - 1; i >= 0; i--) {
+                        const p = S.platforms[i];
+                        if (p.subType === 'moving') {
+                            const nextX = p.x + p.dx;
+                            let collision = false;
+
+                            // Check for collision with canvas boundaries
+                            if (nextX < 0 || nextX + p.width > S.canvas.width) {
+                                collision = true;
+                            } else {
+                                // Check for collision with other platforms
+                                for (let j = 0; j < S.platforms.length; j++) {
+                                    if (i === j) continue;
+                                    const other = S.platforms[j];
+                                    if (other.isFalling) continue;
+
+                                    if (nextX < other.x + other.width &&
+                                        nextX + p.width > other.x &&
+                                        p.y < other.y + other.height &&
+                                        p.y + p.height > other.y) {
+                                        collision = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            if (collision) {
+                                p.dx *= -1;
+                            }
+                            p.x += p.dx;
+                        }
+
+                        if (p.isFalling) {
+                            p.y += 5; // Falling speed
+                            if (p.y > S.canvas.height) {
+                                S.platforms.splice(i, 1);
+                            }
+                        }
+                    }
+                },
                 resetStage: function(basePlatforms = null) {
                     Game.Level.generatePlatforms(basePlatforms);
+                    Game.Player.reset();
                 }
             },
 
@@ -55,8 +123,13 @@
                 VERTICAL_GAP: 120,
                 BLOCK_WIDTH: 40,
                 LEVEL_SLOTS: 10,
-                GAP_PROBABILITY: 0.4,
-                NUM_NORMAL_LEVELS: 4,
+                GAP_PROBABILITY: 0.35, 
+                MOVING_PLATFORM_PROB: 0.25,
+                ICY_PLATFORM_PROB: 0.20,
+                GRAVITY: 0.5,
+                JUMP_POWER: -12,
+                PLAYER_SPEED: 3,
+                ICE_FRICTION: 0.98,
             },
 
             // --- STATE MODULE ---
@@ -65,16 +138,37 @@
                 ctx: document.getElementById('game-canvas').getContext('2d'),
                 resetLevelButton: document.getElementById('reset-level-button'),
                 platforms: [],
+                globalAnimationTick: 0,
+                 player: { 
+                    width: 30, height: 30, x: 0, y: 0, dx: 0, dy: 0,
+                    onGround: false, standingOnPlatform: null
+                },
+                crumblingPlatformCandidate: null,
+                crumbleCounter: 0,
             },
             
             // --- LEVEL MODULE ---
             Level: {
                 parseLayoutToPlatforms: function(layout, y, type = 'normal') {
                     const C = Game.Constants;
-                    const platforms = [];
+                    let platforms = [];
                     for (let i = 0; i < C.LEVEL_SLOTS; i++) {
-                        if (layout[i] === 'B') {
-                            platforms.push({ x: i * C.BLOCK_WIDTH, y: y, width: C.BLOCK_WIDTH, height: C.PLATFORM_HEIGHT, type: type });
+                        const char = layout[i];
+                        const x = i * C.BLOCK_WIDTH;
+                        let commonProps = { y: y, height: C.PLATFORM_HEIGHT, type: type };
+                        if (char === 'B' || char === 'I' || char === 'M') {
+                            let p = { ...commonProps, x: x, width: C.BLOCK_WIDTH, subType: 'normal' };
+                            if (char === 'I') p.subType = 'icy';
+                            if (char === 'M') {
+                                p.subType = 'moving';
+                                p.originalX = x;
+                                p.dx = (Math.random() < 0.5 ? 1 : -1) * 0.8;
+                            }
+                            platforms.push(p);
+                        } else if (char === 'C') {
+                            let crumblingProps = { ...commonProps, width: C.BLOCK_WIDTH / 2, subType: 'crumbling', isFalling: false };
+                            platforms.push({ ...crumblingProps, x: x, id: Math.random() });
+                            platforms.push({ ...crumblingProps, x: x + C.BLOCK_WIDTH / 2, id: Math.random() });
                         }
                     }
                     return platforms;
@@ -82,47 +176,72 @@
 
                 generatePlatformRow: function(isFirstRow) {
                     const C = Game.Constants;
-                    const newLayout = Array(C.LEVEL_SLOTS).fill('B');
-
+                    let newLayout = Array(C.LEVEL_SLOTS).fill('B');
+                    
                     if (isFirstRow) {
-                        const validGapStarts = [4, 5, 6];
-                        const gapStart = validGapStarts[Math.floor(Math.random() * validGapStarts.length)];
+                        const gapStart = 3 + Math.floor(Math.random() * 3);
                         newLayout[gapStart] = 'G';
-                    } else {
-                        // Implement new left-to-right generation with the anti-orphan rule
-                        for (let j = 2; j < C.LEVEL_SLOTS - 2; j++) {
-                            const previousSlot = newLayout[j - 1];
+                        newLayout[gapStart + 1] = 'G';
+                        return newLayout;
+                    }
+                    
+                    const patternRoll = Math.random();
+                    if (patternRoll < 0.15) { 
+                        const patterns = [['B','I','G','G','B','B','I','I','G','G'],['B','B','B','G','G','G','G','B','B','B'],['B','B','G','G','C','C','G','G','B','B']];
+                        return patterns[Math.floor(Math.random() * patterns.length)];
+                    }
 
-                            if (previousSlot === 'G') {
-                                // If the previous slot was a gap, there's a higher chance of placing a block to create a path
-                                if (Math.random() > 0.4) { // 60% chance for a Block after a Gap
-                                    newLayout[j] = 'B';
-                                    // --- ANTI-ORPHAN RULE ---
-                                    // If we just formed 'G' then 'B', the next one MUST be 'B'.
-                                    if (j + 1 < C.LEVEL_SLOTS - 2) { // Ensure we don't go out of bounds
-                                        newLayout[j + 1] = 'B';
-                                        j++; // We've now decided the next slot, so we skip it in the loop
-                                    }
-                                } else {
-                                    newLayout[j] = 'G'; // It's another gap, forming '...GG...'
-                                }
-                            } else { // previousSlot was 'B'
-                                // Standard probability for a gap if the previous was a block
-                                if (Math.random() < C.GAP_PROBABILITY) {
-                                    newLayout[j] = 'G';
-                                } else {
-                                    newLayout[j] = 'B';
-                                }
-                            }
+                    // --- REFACTORED GENERATION LOGIC ---
+                    let hasPlacedGap = false;
+
+                    // Pass 1: Place solid blocks (B or I) and a mandatory double gap
+                    for (let j = 1; j < C.LEVEL_SLOTS - 1; j++) {
+                        // Failsafe at slot 6
+                        if (j === 6 && !hasPlacedGap) {
+                            const doubleGapType = Math.random() < 0.5 ? 'G' : 'C';
+                            newLayout[j] = doubleGapType;
+                            newLayout[j+1] = doubleGapType;
+                            j++;
+                            hasPlacedGap = true;
+                            continue;
                         }
 
-                        // Final check: ensure there's at least one gap in the playable area
-                        const hasMiddleGap = newLayout.slice(2, -2).includes('G');
-                        if (!hasMiddleGap) {
-                            const randomIndex = 2 + Math.floor(Math.random() * (C.LEVEL_SLOTS - 4));
-                            newLayout[randomIndex] = 'G';
+                        if (!hasPlacedGap && Math.random() < C.GAP_PROBABILITY && j < C.LEVEL_SLOTS - 2) {
+                            const doubleGapType = Math.random() < 0.5 ? 'G' : 'C';
+                            newLayout[j] = doubleGapType;
+                            newLayout[j+1] = doubleGapType;
+                            j++;
+                            hasPlacedGap = true;
+                        } else {
+                            newLayout[j] = (Math.random() < C.ICY_PLATFORM_PROB) ? 'I' : 'B';
                         }
                     }
+                     // Final failsafe just in case no gap was placed at all.
+                    if (!hasPlacedGap) {
+                         let gapStart = 3 + Math.floor(Math.random() * 3);
+                         const doubleGapType = Math.random() < 0.5 ? 'G' : 'C';
+                         newLayout[gapStart] = doubleGapType;
+                         newLayout[gapStart + 1] = doubleGapType;
+                    }
+
+
+                    // Pass 2: Place moving platforms safely
+                    for (let j = 1; j < C.LEVEL_SLOTS - 2; j++) {
+                        if (newLayout[j-1] !== 'G' && newLayout[j-1] !== 'C' && newLayout[j+1] !== 'G' && newLayout[j+1] !== 'C' && Math.random() < C.MOVING_PLATFORM_PROB) {
+                            newLayout[j-1] = 'G'; newLayout[j] = 'M'; newLayout[j+1] = 'G';
+                            j += 2; 
+                        }
+                    }
+
+                    // Pass 3: Clean up edges and apply anti-orphan
+                    if (['C', 'M', 'G'].includes(newLayout[0])) newLayout[0] = 'B';
+                    if (['C', 'M', 'G'].includes(newLayout[C.LEVEL_SLOTS - 1])) newLayout[C.LEVEL_SLOTS - 1] = 'B';
+                    for (let j = 1; j < C.LEVEL_SLOTS -1; j++) {
+                         if (['G', 'C'].includes(newLayout[j-1]) && !['G', 'C', 'M'].includes(newLayout[j])) {
+                            newLayout[j+1] = newLayout[j];
+                         }
+                    }
+
                     return newLayout;
                 },
 
@@ -130,41 +249,123 @@
                     const S = Game.State;
                     const C = Game.Constants;
                     S.platforms = [];
+                    
+                    let basePlatform;
+                    if (basePlatformsArg && basePlatformsArg.length > 0) {
+                        const minX = Math.min(...basePlatformsArg.map(p => p.x));
+                        const maxX = Math.max(...basePlatformsArg.map(p => p.x + p.width));
+                        basePlatform = { x: minX, y: S.canvas.height - 20, width: maxX - minX, height: C.PLATFORM_HEIGHT, type: 'base', subType: 'normal' };
+                    } else {
+                        basePlatform = { x: 0, y: S.canvas.height - 20, width: S.canvas.width, height: C.PLATFORM_HEIGHT, type: 'base', subType: 'normal' };
+                        basePlatform.x -= S.player.width * 2;
+                        basePlatform.width += S.player.width * 4;
+                    }
+                    S.platforms.push(basePlatform);
+                    
+                    let currentY = basePlatform.y;
+                    while (currentY > C.VERTICAL_GAP + 80) { 
+                        const newY = currentY - C.VERTICAL_GAP;
+                        const isFirst = (newY === basePlatform.y - C.VERTICAL_GAP);
+                        const newLayout = this.generatePlatformRow(isFirst);
+                        const newPlatforms = this.parseLayoutToPlatforms(newLayout, newY);
+                        if(newPlatforms.length > 0) {
+                           newPlatforms[0].x -= S.player.width * 2; newPlatforms[0].width += S.player.width * 2;
+                           newPlatforms[newPlatforms.length - 1].width += S.player.width * 2;
+                        }
+                        S.platforms.push(...newPlatforms);
+                        currentY = newY;
+                    }
 
-                    let basePlatformLayout;
-                    if(basePlatformsArg && basePlatformsArg.length > 0) {
-                        basePlatformLayout = Array(C.LEVEL_SLOTS).fill('G');
-                        basePlatformsArg.forEach(p => {
-                            const startSlot = Math.floor(p.x / C.BLOCK_WIDTH);
-                            const numSlots = Math.floor(p.width / C.BLOCK_WIDTH);
-                            for(let i = 0; i < numSlots; i++) {
-                                if (startSlot + i < C.LEVEL_SLOTS) {
-                                    basePlatformLayout[startSlot + i] = 'B';
+                    const topPlatformY = 0 - C.PLATFORM_HEIGHT / 2;
+                    const topLayout = Array(C.LEVEL_SLOTS).fill('G');
+                    const startPos = 3 + Math.floor(Math.random() * 3);
+                    for (let j = 0; j < 3; j++) topLayout[startPos + j] = 'B';
+                    S.platforms.push(...this.parseLayoutToPlatforms(topLayout, topPlatformY, 'top'));
+                }
+            },
+
+            // --- PLAYER MODULE ---
+            Player: {
+                reset: function() {
+                    const S = Game.State;
+                    const p = S.player;
+                    const startPlatform = S.platforms[0];
+                    p.x = (S.canvas.width / 2) - (p.width / 2);
+                    p.y = startPlatform.y - p.height;
+                    p.dx = 0;
+                    p.dy = 0;
+                    p.onGround = true;
+                    p.standingOnPlatform = startPlatform;
+                },
+                handlePlayerInput: function() {
+                    const p = Game.State.player;
+                    const C = Game.Constants;
+                    const keys = Game.Controls.keys;
+                    const onIce = p.onGround && p.standingOnPlatform && p.standingOnPlatform.subType === 'icy';
+
+                    if (keys.left) {
+                        if (onIce) { 
+                            if (p.dx > 0) p.dx -= 0.4; // Counter-inertia
+                            p.dx = Math.max(p.dx - 0.2, -C.PLAYER_SPEED); 
+                        } else { 
+                            p.dx = -C.PLAYER_SPEED; 
+                        }
+                    } else if (keys.right) {
+                        if (onIce) { 
+                             if (p.dx < 0) p.dx += 0.4; // Counter-inertia
+                             p.dx = Math.min(p.dx + 0.2, C.PLAYER_SPEED); 
+                        } else { 
+                            p.dx = C.PLAYER_SPEED; 
+                        }
+                    } else if (p.onGround) {
+                        if (onIce) { p.dx *= C.ICE_FRICTION; }
+                        else { p.dx = 0; }
+                    }
+                    if (Math.abs(p.dx) < 0.1) p.dx = 0;
+
+                    if (keys.up && p.onGround) {
+                        p.dy = C.JUMP_POWER;
+                        p.onGround = false;
+                    }
+                },
+                updatePlayerPosition: function() {
+                    const p = Game.State.player;
+                    p.dy += Game.Constants.GRAVITY;
+                    p.x += p.dx;
+                    p.y += p.dy;
+
+                    if (p.x + p.width < 0) p.x = Game.State.canvas.width;
+                    else if (p.x > Game.State.canvas.width) p.x = -p.width;
+
+                    if (p.y > Game.State.canvas.height) this.reset();
+                },
+                checkPlayerCollisions: function() {
+                    const p = Game.State.player;
+                    p.onGround = false;
+                    p.standingOnPlatform = null;
+
+                    for (let i = Game.State.platforms.length - 1; i >= 0; i--) {
+                        const plat = Game.State.platforms[i];
+                        if (plat.isFalling) continue;
+
+                        if (p.x + p.width > plat.x && p.x < plat.x + plat.width) {
+                            // Top collision (landing)
+                            if (p.dy >= 0 && (p.y + p.height) >= plat.y && (p.y + p.height - p.dy) <= plat.y) {
+                                p.dy = 0;
+                                p.onGround = true;
+                                p.y = plat.y - p.height;
+                                p.standingOnPlatform = plat;
+                                if (plat.subType === 'moving') p.x += plat.dx;
+                            }
+                            // Bottom collision (hitting head)
+                            if (p.dy < 0 && p.y <= (plat.y + plat.height) && (p.y - p.dy) > (plat.y + plat.height)) {
+                                p.dy = 0;
+                                if (plat.subType === 'crumbling') {
+                                    plat.isFalling = true; // Break from below
                                 }
                             }
-                        });
-                    } else {
-                        basePlatformLayout = Array(C.LEVEL_SLOTS).fill('B');
+                        }
                     }
-                    S.platforms.push(...this.parseLayoutToPlatforms(basePlatformLayout, S.canvas.height - 20, 'base'));
-                    
-                    let lastLevelY = S.canvas.height - 20;
-
-                    for (let i = 1; i <= C.NUM_NORMAL_LEVELS; i++) {
-                        const newLayout = this.generatePlatformRow(i === 1);
-                        const currentY = lastLevelY - C.VERTICAL_GAP;
-                        S.platforms.push(...this.parseLayoutToPlatforms(newLayout, currentY));
-                        lastLevelY = currentY;
-                    }
-
-                    const topPlatformY = lastLevelY - C.VERTICAL_GAP;
-                    const possibleStarts = [3, 4, 5];
-                    const startPos = possibleStarts[Math.floor(Math.random() * possibleStarts.length)];
-                    const goalLayout = Array(C.LEVEL_SLOTS).fill('G');
-                    for (let j = 0; j < 3; j++) {
-                        goalLayout[startPos + j] = 'B';
-                    }
-                    S.platforms.push(...this.parseLayoutToPlatforms(goalLayout, topPlatformY, 'top'));
                 }
             },
 
@@ -172,51 +373,63 @@
             Graphics: {
                 draw: function() {
                     this.drawBackground();
-                    
                     Game.State.platforms.forEach(p => {
-                        if (p.type === 'base') {
-                            Game.State.ctx.fillStyle = '#CCCCCC';
-                        } else if (p.type === 'top') {
-                            Game.State.ctx.fillStyle = '#FFD700';
-                        } else {
-                            Game.State.ctx.fillStyle = '#FFFFFF';
+                        const ctx = Game.State.ctx;
+                        let shakeX = 0;
+                        if(p === Game.State.crumblingPlatformCandidate && !p.isFalling) {
+                             shakeX = Math.sin(Game.State.globalAnimationTick * 0.8) * 1.5;
                         }
-                        Game.State.ctx.fillRect(p.x, p.y, p.width, p.height);
+
+                        switch(p.subType) {
+                            case 'icy': ctx.fillStyle = '#A8D8F0'; break;
+                            case 'moving': ctx.fillStyle = '#B2B2B2'; break;
+                            case 'crumbling':
+                                ctx.fillStyle = '#E0E0E0';
+                                ctx.fillRect(p.x + shakeX, p.y, p.width, p.height);
+                                ctx.strokeStyle = '#A0A0A0'; ctx.lineWidth = 1; ctx.beginPath();
+                                ctx.moveTo(p.x + p.width/2 + shakeX, p.y + 2); ctx.lineTo(p.x + p.width/2 + shakeX, p.y + p.height - 2);
+                                ctx.stroke(); return;
+                            default:
+                                if (p.type === 'base') ctx.fillStyle = '#CCCCCC';
+                                else if (p.type === 'top') ctx.fillStyle = '#FFD700';
+                                else ctx.fillStyle = '#FFFFFF';
+                        }
+                        ctx.fillRect(p.x, p.y, p.width, p.height);
                     });
-                    
-                    const startPlatforms = Game.State.platforms.filter(p => p.type === 'base');
-                    if (startPlatforms.length > 0) {
-                        let totalX = 0;
-                        let totalWidth = 0;
-                        startPlatforms.forEach(p => {
-                            totalX += p.x;
-                            totalWidth += p.width;
-                        });
-                        const avgX = totalX / startPlatforms.length + (totalWidth / startPlatforms.length) / 2;
-                        
-                        const playerX = avgX - (Game.State.player ? Game.State.player.width / 2 : 15);
-                        const playerY = startPlatforms[0].y - (Game.State.player ? Game.State.player.height : 30);
-                        Game.State.ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
-                        if(Game.State.player) Game.State.ctx.fillRect(playerX, playerY, Game.State.player.width, Game.State.player.height);
-                    }
+                    this.drawPlayer();
                 },
                 drawBackground: function() {
-                    const ctx = Game.State.ctx;
-                    const canvas = Game.State.canvas;
+                    const ctx = Game.State.ctx, canvas = Game.State.canvas;
                     const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
-                    sky.addColorStop(0, '#0c1445');
-                    sky.addColorStop(1, '#346888');
-                    ctx.fillStyle = sky;
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    sky.addColorStop(0, '#0c1445'); sky.addColorStop(1, '#346888');
+                    ctx.fillStyle = sky; ctx.fillRect(0, 0, canvas.width, canvas.height);
                 },
+                drawPlayer: function() {
+                    const S = Game.State, p = S.player, x = p.x, y = p.y;
+                    S.ctx.fillStyle = '#8B4513'; S.ctx.fillRect(x + 2, y, p.width - 4, p.height - 2);
+                    S.ctx.fillStyle = '#4682B4'; S.ctx.fillRect(x, y + p.height - 8, p.width, 5);
+                    S.ctx.fillStyle = '#FFDAB9'; S.ctx.fillRect(x + 7, y + 5, p.width - 14, 12);
+                    S.ctx.fillStyle = '#000000'; S.ctx.fillRect(x + 10, y + 10, 3, 3); S.ctx.fillRect(x + 17, y + 10, 3, 3);
+                }
             },
             
             // --- CONTROLS MODULE ---
             Controls: {
+                keys: { left: false, right: false, up: false },
                 setupEventListeners: function() {
                     Game.State.resetLevelButton.addEventListener('click', () => {
-                         const topPlatforms = Game.State.platforms.filter(p => p.type === 'top');
+                        const topPlatforms = Game.State.platforms.filter(p => p.type === 'top');
                         Game.Core.resetStage(topPlatforms.length > 0 ? topPlatforms : null);
+                    });
+                    document.addEventListener('keydown', (e) => {
+                        if (e.key === 'ArrowLeft') this.keys.left = true;
+                        if (e.key === 'ArrowRight') this.keys.right = true;
+                        if (e.key === 'ArrowUp') this.keys.up = true;
+                    });
+                    document.addEventListener('keyup', (e) => {
+                        if (e.key === 'ArrowLeft') this.keys.left = false;
+                        if (e.key === 'ArrowRight') this.keys.right = false;
+                        if (e.key === 'ArrowUp') this.keys.up = false;
                     });
                 }
             },
