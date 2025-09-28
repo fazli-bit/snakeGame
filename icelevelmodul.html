@@ -12,7 +12,12 @@
         .version-info-dev { font-size: 0.7rem; color: #888; margin-top: -15px; margin-bottom: 15px; }
         .game-wrapper { position: relative; }
         #game-canvas { background-color: #000; border: 4px solid #555; border-radius: 10px; display: block; }
+        #hud { position: absolute; top: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; font-size: 1rem; color: #fff; text-shadow: 2px 2px #000; }
         .side-controls { display: flex; flex-direction: column; gap: 20px; background-color: #2b2b2b; padding: 20px; border-radius: 10px; border: 2px solid #555; width: 200px; }
+        .control-container { display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 0.7rem; }
+        .stage-presets { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; width: 100%; }
+        .stage-presets button { background-color: #1a1a1a; color: #fff; border: 1px solid #555; padding: 5px; font-size: 0.6rem; font-family: 'Press Start 2P', cursive; cursor: pointer; }
+        .stage-presets button:hover { background-color: #333; }
         #reset-level-button { background-color: #1a1a1a; color: #fff; border: 1px solid #555; padding: 10px; font-size: 0.7rem; font-family: 'Press Start 2P', cursive; cursor: pointer; }
         #reset-level-button:hover { background-color: #333; }
     </style>
@@ -21,12 +26,29 @@
     <div class="main-container">
         <div class="game-column">
             <h1>Ice Climber (Dev Peringkat)</h1>
-            <p class="version-info-dev">v-dev-level-1.0</p>
+            <p class="version-info-dev">v-dev-level-1.6</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
+                <div id="hud">
+                    <span>STAGE: <span id="stage">1</span></span>
+                </div>
             </div>
         </div>
         <div class="side-controls">
+             <div class="control-container">
+                <label>Peringkat:</label>
+                <div class="stage-presets">
+                    <button data-stage="1">1</button>
+                    <button data-stage="3">3</button>
+                    <button data-stage="7">7</button>
+                    <button data-stage="10">10</button>
+                    <button data-stage="15">15</button>
+                    <button data-stage="20">20</button>
+                    <button data-stage="50">50</button>
+                    <button data-stage="90">90</button>
+                    <button data-stage="30">30</button>
+                </div>
+            </div>
             <button id="reset-level-button">Jana Peringkat Seterusnya</button>
         </div>
     </div>
@@ -48,12 +70,19 @@
                 update: function() {
                     const S = Game.State;
                     S.globalAnimationTick++;
+
+                    if (S.isTransitioning) {
+                        S.stage++;
+                        this.resetStage(S.nextStageBase);
+                        S.isTransitioning = false;
+                        S.nextStageBase = null;
+                        return;
+                    }
                     
                     Game.Player.handlePlayerInput();
                     Game.Player.updatePlayerPosition();
                     Game.Player.checkPlayerCollisions();
                     
-                    // Crumbling platform logic
                     const standingPlat = S.player.standingOnPlatform;
                     if (standingPlat && standingPlat.subType === 'crumbling' && S.player.dx === 0) {
                         if (standingPlat !== S.crumblingPlatformCandidate) {
@@ -61,7 +90,7 @@
                             S.crumbleCounter = 0;
                         }
                         S.crumbleCounter++;
-                        if (S.crumbleCounter > 60) { // 1 second at 60fps
+                        if (S.crumbleCounter > 60) {
                             standingPlat.isFalling = true;
                             S.crumblingPlatformCandidate = null;
                         }
@@ -70,66 +99,46 @@
                         S.crumbleCounter = 0;
                     }
                     
-                    // Update moving and falling platforms
                     for (let i = S.platforms.length - 1; i >= 0; i--) {
                         const p = S.platforms[i];
                         if (p.subType === 'moving') {
                             const nextX = p.x + p.dx;
                             let collision = false;
-
-                            // Check for collision with canvas boundaries
                             if (nextX < 0 || nextX + p.width > S.canvas.width) {
                                 collision = true;
                             } else {
-                                // Check for collision with other platforms
                                 for (let j = 0; j < S.platforms.length; j++) {
                                     if (i === j) continue;
                                     const other = S.platforms[j];
                                     if (other.isFalling) continue;
-
-                                    if (nextX < other.x + other.width &&
-                                        nextX + p.width > other.x &&
-                                        p.y < other.y + other.height &&
-                                        p.y + p.height > other.y) {
+                                    if (nextX < other.x + other.width && nextX + p.width > other.x && p.y === other.y) {
                                         collision = true;
                                         break;
                                     }
                                 }
                             }
-                            
-                            if (collision) {
-                                p.dx *= -1;
-                            }
+                            if (collision) { p.dx *= -1; }
                             p.x += p.dx;
                         }
 
                         if (p.isFalling) {
-                            p.y += 5; // Falling speed
-                            if (p.y > S.canvas.height) {
-                                S.platforms.splice(i, 1);
-                            }
+                            p.y += 5;
+                            if (p.y > S.canvas.height) { S.platforms.splice(i, 1); }
                         }
                     }
                 },
-                resetStage: function(basePlatforms = null) {
-                    Game.Level.generatePlatforms(basePlatforms);
+                resetStage: function(basePlatformArg = null) {
+                    Game.State.stageDisplay.textContent = Game.State.stage;
+                    Game.Level.generatePlatforms(basePlatformArg);
+                    Game.Enemies.generateEnemies();
                     Game.Player.reset();
                 }
             },
 
             // --- CONSTANTS MODULE ---
             Constants: {
-                PLATFORM_HEIGHT: 20,
-                VERTICAL_GAP: 120,
-                BLOCK_WIDTH: 40,
-                LEVEL_SLOTS: 10,
-                GAP_PROBABILITY: 0.35, 
-                MOVING_PLATFORM_PROB: 0.25,
-                ICY_PLATFORM_PROB: 0.20,
-                GRAVITY: 0.5,
-                JUMP_POWER: -12,
-                PLAYER_SPEED: 3,
-                ICE_FRICTION: 0.98,
+                PLATFORM_HEIGHT: 20, VERTICAL_GAP: 120, BLOCK_WIDTH: 40, LEVEL_SLOTS: 10,
+                GRAVITY: 0.5, JUMP_POWER: -12, PLAYER_SPEED: 3, ICE_FRICTION: 0.98,
             },
 
             // --- STATE MODULE ---
@@ -137,8 +146,14 @@
                 canvas: document.getElementById('game-canvas'),
                 ctx: document.getElementById('game-canvas').getContext('2d'),
                 resetLevelButton: document.getElementById('reset-level-button'),
+                stagePresetButtons: document.querySelectorAll('.stage-presets button'),
+                stageDisplay: document.getElementById('stage'),
                 platforms: [],
+                enemies: [],
                 globalAnimationTick: 0,
+                stage: 1,
+                isTransitioning: false,
+                nextStageBase: null,
                  player: { 
                     width: 30, height: 30, x: 0, y: 0, dx: 0, dy: 0,
                     onGround: false, standingOnPlatform: null
@@ -149,6 +164,21 @@
             
             // --- LEVEL MODULE ---
             Level: {
+                stageProgression: [
+                    { range: [1, 5],   lowerRows: { blocks: ['B'] },           upperRows: { blocks: ['B'] },           enemies: [] },
+                    { range: [6, 10],  lowerRows: { blocks: ['B'] },           upperRows: { blocks: ['B', 'I'] },      enemies: ['GROUND_MONSTER'] },
+                    { range: [11, 15], lowerRows: { blocks: ['B', 'I'] },      upperRows: { blocks: ['I'] },           enemies: ['GROUND_MONSTER'] },
+                    { range: [16, 20], lowerRows: { blocks: ['B', 'I'] },      upperRows: { blocks: ['I', 'M'] },      enemies: ['GROUND_MONSTER'] },
+                    { range: [21, 25], lowerRows: { blocks: ['B', 'I', 'M'] }, upperRows: { blocks: ['I', 'M', 'C'] }, enemies: ['GROUND_MONSTER'] },
+                    { range: [26, 30], lowerRows: { blocks: ['B', 'I', 'M', 'C'] }, upperRows: { blocks: ['B', 'I', 'M', 'C'] }, enemies: ['GROUND_MONSTER']},
+                    { range: [31, 999],lowerRows: { blocks: ['B', 'I', 'M', 'C'] }, upperRows: { blocks: ['B', 'I', 'M', 'C'] }, enemies: ['GROUND_MONSTER']}
+                ],
+
+                getCurrentProgression: function() {
+                    const stage = Game.State.stage;
+                    return this.stageProgression.find(p => stage >= p.range[0] && stage <= p.range[1]) || this.stageProgression[this.stageProgression.length - 1];
+                },
+
                 parseLayoutToPlatforms: function(layout, y, type = 'normal') {
                     const C = Game.Constants;
                     let platforms = [];
@@ -160,9 +190,7 @@
                             let p = { ...commonProps, x: x, width: C.BLOCK_WIDTH, subType: 'normal' };
                             if (char === 'I') p.subType = 'icy';
                             if (char === 'M') {
-                                p.subType = 'moving';
-                                p.originalX = x;
-                                p.dx = (Math.random() < 0.5 ? 1 : -1) * 0.8;
+                                p.subType = 'moving'; p.dx = (Math.random() < 0.5 ? 1 : -1) * 0.8;
                             }
                             platforms.push(p);
                         } else if (char === 'C') {
@@ -174,195 +202,204 @@
                     return platforms;
                 },
 
-                generatePlatformRow: function(isFirstRow) {
+                generatePlatformRow: function(isFirstRow, isTopRow) {
+                    const S = Game.State;
                     const C = Game.Constants;
-                    let newLayout = Array(C.LEVEL_SLOTS).fill('B');
-                    
+                    let layout = Array(C.LEVEL_SLOTS).fill('B');
+
                     if (isFirstRow) {
                         const gapStart = 3 + Math.floor(Math.random() * 3);
-                        newLayout[gapStart] = 'G';
-                        newLayout[gapStart + 1] = 'G';
-                        return newLayout;
+                        layout[gapStart] = 'G'; layout[gapStart + 1] = 'G';
+                        return layout;
                     }
                     
-                    const patternRoll = Math.random();
-                    if (patternRoll < 0.15) { 
-                        const patterns = [['B','I','G','G','B','B','I','I','G','G'],['B','B','B','G','G','G','G','B','B','B'],['B','B','G','G','C','C','G','G','B','B']];
-                        return patterns[Math.floor(Math.random() * patterns.length)];
-                    }
+                    const progression = this.getCurrentProgression();
+                    const allowedTypes = isTopRow ? progression.upperRows.blocks : progression.lowerRows.blocks;
 
-                    // --- REFACTORED GENERATION LOGIC ---
-                    let hasPlacedGap = false;
-
-                    // Pass 1: Place solid blocks (B or I) and a mandatory double gap
-                    for (let j = 1; j < C.LEVEL_SLOTS - 1; j++) {
-                        // Failsafe at slot 6
-                        if (j === 6 && !hasPlacedGap) {
-                            const doubleGapType = Math.random() < 0.5 ? 'G' : 'C';
-                            newLayout[j] = doubleGapType;
-                            newLayout[j+1] = doubleGapType;
-                            j++;
-                            hasPlacedGap = true;
-                            continue;
-                        }
-
-                        if (!hasPlacedGap && Math.random() < C.GAP_PROBABILITY && j < C.LEVEL_SLOTS - 2) {
-                            const doubleGapType = Math.random() < 0.5 ? 'G' : 'C';
-                            newLayout[j] = doubleGapType;
-                            newLayout[j+1] = doubleGapType;
-                            j++;
-                            hasPlacedGap = true;
-                        } else {
-                            newLayout[j] = (Math.random() < C.ICY_PLATFORM_PROB) ? 'I' : 'B';
+                    // Pass 1: Place a mandatory double gap
+                    let gapPlaced = false;
+                    for (let i = 1; i < C.LEVEL_SLOTS - 2 && !gapPlaced; i++) {
+                        if (Math.random() < 0.3) {
+                            layout[i] = 'G'; layout[i + 1] = 'G';
+                            gapPlaced = true;
                         }
                     }
-                     // Final failsafe just in case no gap was placed at all.
-                    if (!hasPlacedGap) {
-                         let gapStart = 3 + Math.floor(Math.random() * 3);
-                         const doubleGapType = Math.random() < 0.5 ? 'G' : 'C';
-                         newLayout[gapStart] = doubleGapType;
-                         newLayout[gapStart + 1] = doubleGapType;
+                    if (!gapPlaced) {
+                        const gapStart = 2 + Math.floor(Math.random() * (C.LEVEL_SLOTS - 5));
+                        layout[gapStart] = 'G'; layout[gapStart + 1] = 'G';
                     }
 
-
-                    // Pass 2: Place moving platforms safely
-                    for (let j = 1; j < C.LEVEL_SLOTS - 2; j++) {
-                        if (newLayout[j-1] !== 'G' && newLayout[j-1] !== 'C' && newLayout[j+1] !== 'G' && newLayout[j+1] !== 'C' && Math.random() < C.MOVING_PLATFORM_PROB) {
-                            newLayout[j-1] = 'G'; newLayout[j] = 'M'; newLayout[j+1] = 'G';
-                            j += 2; 
+                    // Pass 2: Apply stage-based progression on solid blocks
+                    for (let i = 0; i < C.LEVEL_SLOTS; i++) {
+                        if (layout[i] === 'B') {
+                            const typeRoll = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
+                            if (typeRoll === 'M' && i > 0 && i < C.LEVEL_SLOTS - 1 && layout[i-1] === 'B' && layout[i+1] === 'B') {
+                                layout[i-1] = 'G'; layout[i] = 'M'; layout[i+1] = 'G';
+                                i++; 
+                            } else if (typeRoll === 'C' && i < C.LEVEL_SLOTS - 1 && layout[i+1] === 'B') {
+                                layout[i] = 'C'; layout[i+1] = 'C';
+                                i++;
+                            } else if (typeRoll === 'I') {
+                                layout[i] = 'I';
+                            }
                         }
                     }
 
-                    // Pass 3: Clean up edges and apply anti-orphan
-                    if (['C', 'M', 'G'].includes(newLayout[0])) newLayout[0] = 'B';
-                    if (['C', 'M', 'G'].includes(newLayout[C.LEVEL_SLOTS - 1])) newLayout[C.LEVEL_SLOTS - 1] = 'B';
+                    // Pass 3: Final cleanup and anti-orphan
+                    if (['C', 'M', 'G'].includes(layout[0])) layout[0] = 'B';
+                    if (['C', 'M', 'G'].includes(layout[C.LEVEL_SLOTS - 1])) layout[C.LEVEL_SLOTS - 1] = 'B';
                     for (let j = 1; j < C.LEVEL_SLOTS -1; j++) {
-                         if (['G', 'C'].includes(newLayout[j-1]) && !['G', 'C', 'M'].includes(newLayout[j])) {
-                            newLayout[j+1] = newLayout[j];
+                         if (['G', 'C'].includes(layout[j-1]) && layout[j] === 'B') {
+                            layout[j+1] = 'B';
                          }
                     }
-
-                    return newLayout;
+                    
+                    return layout;
                 },
 
-                generatePlatforms: function(basePlatformsArg = null) {
+                generatePlatforms: function(basePlatformArg = null) {
                     const S = Game.State;
                     const C = Game.Constants;
                     S.platforms = [];
                     
                     let basePlatform;
-                    if (basePlatformsArg && basePlatformsArg.length > 0) {
-                        const minX = Math.min(...basePlatformsArg.map(p => p.x));
-                        const maxX = Math.max(...basePlatformsArg.map(p => p.x + p.width));
-                        basePlatform = { x: minX, y: S.canvas.height - 20, width: maxX - minX, height: C.PLATFORM_HEIGHT, type: 'base', subType: 'normal' };
+                    if (basePlatformArg) {
+                        basePlatform = { x: basePlatformArg.x, y: S.canvas.height - 20, width: basePlatformArg.width, height: C.PLATFORM_HEIGHT, type: 'base', subType: 'normal' };
                     } else {
                         basePlatform = { x: 0, y: S.canvas.height - 20, width: S.canvas.width, height: C.PLATFORM_HEIGHT, type: 'base', subType: 'normal' };
-                        basePlatform.x -= S.player.width * 2;
-                        basePlatform.width += S.player.width * 4;
+                        basePlatform.x -= S.player.width * 2; basePlatform.width += S.player.width * 4;
                     }
                     S.platforms.push(basePlatform);
-                    
+                                        
+                    let rowCount = 0;
+                    let tempY = basePlatform.y;
+                    while(tempY > C.VERTICAL_GAP + 80) { rowCount++; tempY -= C.VERTICAL_GAP; }
+
                     let currentY = basePlatform.y;
-                    while (currentY > C.VERTICAL_GAP + 80) { 
-                        const newY = currentY - C.VERTICAL_GAP;
-                        const isFirst = (newY === basePlatform.y - C.VERTICAL_GAP);
-                        const newLayout = this.generatePlatformRow(isFirst);
-                        const newPlatforms = this.parseLayoutToPlatforms(newLayout, newY);
+                    for(let i=0; i < rowCount; i++) {
+                        currentY -= C.VERTICAL_GAP;
+                        const isFirst = (i === 0);
+                        const isTopRow = (i >= rowCount - 2);
+                        
+                        const newLayout = this.generatePlatformRow(isFirst, isTopRow);
+                        const newPlatforms = this.parseLayoutToPlatforms(newLayout, currentY);
+
                         if(newPlatforms.length > 0) {
                            newPlatforms[0].x -= S.player.width * 2; newPlatforms[0].width += S.player.width * 2;
                            newPlatforms[newPlatforms.length - 1].width += S.player.width * 2;
                         }
                         S.platforms.push(...newPlatforms);
-                        currentY = newY;
                     }
 
                     const topPlatformY = 0 - C.PLATFORM_HEIGHT / 2;
-                    const topLayout = Array(C.LEVEL_SLOTS).fill('G');
-                    const startPos = 3 + Math.floor(Math.random() * 3);
-                    for (let j = 0; j < 3; j++) topLayout[startPos + j] = 'B';
-                    S.platforms.push(...this.parseLayoutToPlatforms(topLayout, topPlatformY, 'top'));
+                    S.platforms.push({x: 150, y: topPlatformY, width: 100, height: C.PLATFORM_HEIGHT, type: 'top', subType: 'normal' });
+                }
+            },
+            
+            // --- ENEMIES MODULE ---
+            Enemies: {
+                generateEnemies: function() {
+                    const S = Game.State;
+                    S.enemies = [];
+                    const progression = Game.Level.getCurrentProgression();
+                    const allowedEnemies = progression.enemies;
+                    if (allowedEnemies.length === 0) return;
+
+                    let numEnemies = 0;
+                    if (S.stage >= 20) numEnemies = 3;
+                    else if (S.stage >= 10) numEnemies = 2;
+                    else if (S.stage >= 3) numEnemies = 1;
+
+                    const allMiddlePlatforms = S.platforms.filter(p => p.type !== 'base' && p.type !== 'top');
+                    if (allMiddlePlatforms.length === 0) return;
+                    
+                    const highestY = Math.min(...allMiddlePlatforms.map(p => p.y));
+
+                    const spawnablePlatforms = allMiddlePlatforms.filter(p => 
+                        p.y > highestY &&
+                        p.subType !== 'moving' && 
+                        p.subType !== 'crumbling'
+                    );
+
+                    if (spawnablePlatforms.length === 0) return;
+
+                    for (let i = 0; i < numEnemies; i++) {
+                        const platform = spawnablePlatforms[Math.floor(Math.random() * spawnablePlatforms.length)];
+                        const enemyWidth = 25;
+                        const enemyHeight = 25;
+
+                        const visibleStartX = Math.max(0, platform.x);
+                        const visibleEndX = Math.min(S.canvas.width, platform.x + platform.width);
+                        const visibleWidth = visibleEndX - visibleStartX;
+
+                        if (visibleWidth < enemyWidth) continue; // Skip if platform is too small on-screen
+
+                        const spawnX = visibleStartX + (visibleWidth / 2) - (enemyWidth / 2);
+                        
+                        const enemyType = allowedEnemies[Math.floor(Math.random() * allowedEnemies.length)]; 
+                        const enemy = {
+                            type: enemyType,
+                            width: enemyWidth, height: enemyHeight,
+                            x: spawnX,
+                            y: platform.y - enemyHeight
+                        };
+                        S.enemies.push(enemy);
+                    }
                 }
             },
 
             // --- PLAYER MODULE ---
             Player: {
                 reset: function() {
-                    const S = Game.State;
-                    const p = S.player;
+                    const S = Game.State; const p = S.player;
                     const startPlatform = S.platforms[0];
-                    p.x = (S.canvas.width / 2) - (p.width / 2);
-                    p.y = startPlatform.y - p.height;
-                    p.dx = 0;
-                    p.dy = 0;
-                    p.onGround = true;
-                    p.standingOnPlatform = startPlatform;
+                    p.x = (S.canvas.width / 2) - (p.width / 2); p.y = startPlatform.y - p.height;
+                    p.dx = 0; p.dy = 0; p.onGround = true; p.standingOnPlatform = startPlatform;
                 },
                 handlePlayerInput: function() {
-                    const p = Game.State.player;
-                    const C = Game.Constants;
-                    const keys = Game.Controls.keys;
+                    const p = Game.State.player, C = Game.Constants, keys = Game.Controls.keys;
                     const onIce = p.onGround && p.standingOnPlatform && p.standingOnPlatform.subType === 'icy';
-
                     if (keys.left) {
-                        if (onIce) { 
-                            if (p.dx > 0) p.dx -= 0.4; // Counter-inertia
-                            p.dx = Math.max(p.dx - 0.2, -C.PLAYER_SPEED); 
-                        } else { 
-                            p.dx = -C.PLAYER_SPEED; 
-                        }
+                        if (onIce) { if (p.dx > 0) p.dx -= 0.4; p.dx = Math.max(p.dx - 0.2, -C.PLAYER_SPEED); } 
+                        else { p.dx = -C.PLAYER_SPEED; }
                     } else if (keys.right) {
-                        if (onIce) { 
-                             if (p.dx < 0) p.dx += 0.4; // Counter-inertia
-                             p.dx = Math.min(p.dx + 0.2, C.PLAYER_SPEED); 
-                        } else { 
-                            p.dx = C.PLAYER_SPEED; 
-                        }
+                        if (onIce) { if (p.dx < 0) p.dx += 0.4; p.dx = Math.min(p.dx + 0.2, C.PLAYER_SPEED); }
+                         else { p.dx = C.PLAYER_SPEED; }
                     } else if (p.onGround) {
-                        if (onIce) { p.dx *= C.ICE_FRICTION; }
-                        else { p.dx = 0; }
+                        if (onIce) { p.dx *= C.ICE_FRICTION; } else { p.dx = 0; }
                     }
                     if (Math.abs(p.dx) < 0.1) p.dx = 0;
-
-                    if (keys.up && p.onGround) {
-                        p.dy = C.JUMP_POWER;
-                        p.onGround = false;
-                    }
+                    if (keys.up && p.onGround) { p.dy = C.JUMP_POWER; p.onGround = false; }
                 },
                 updatePlayerPosition: function() {
                     const p = Game.State.player;
-                    p.dy += Game.Constants.GRAVITY;
-                    p.x += p.dx;
-                    p.y += p.dy;
-
+                    p.dy += Game.Constants.GRAVITY; p.x += p.dx; p.y += p.dy;
                     if (p.x + p.width < 0) p.x = Game.State.canvas.width;
                     else if (p.x > Game.State.canvas.width) p.x = -p.width;
-
                     if (p.y > Game.State.canvas.height) this.reset();
                 },
                 checkPlayerCollisions: function() {
                     const p = Game.State.player;
-                    p.onGround = false;
-                    p.standingOnPlatform = null;
+                    p.onGround = false; p.standingOnPlatform = null;
 
                     for (let i = Game.State.platforms.length - 1; i >= 0; i--) {
                         const plat = Game.State.platforms[i];
-                        if (plat.isFalling) continue;
+                        if (plat && plat.isFalling) continue;
+                        if (!plat) continue;
 
                         if (p.x + p.width > plat.x && p.x < plat.x + plat.width) {
-                            // Top collision (landing)
                             if (p.dy >= 0 && (p.y + p.height) >= plat.y && (p.y + p.height - p.dy) <= plat.y) {
-                                p.dy = 0;
-                                p.onGround = true;
-                                p.y = plat.y - p.height;
+                                p.dy = 0; p.onGround = true; p.y = plat.y - p.height;
                                 p.standingOnPlatform = plat;
                                 if (plat.subType === 'moving') p.x += plat.dx;
+                                if (plat.type === 'top') {
+                                    Game.State.isTransitioning = true;
+                                    Game.State.nextStageBase = plat;
+                                }
                             }
-                            // Bottom collision (hitting head)
                             if (p.dy < 0 && p.y <= (plat.y + plat.height) && (p.y - p.dy) > (plat.y + plat.height)) {
                                 p.dy = 0;
-                                if (plat.subType === 'crumbling') {
-                                    plat.isFalling = true; // Break from below
-                                }
+                                if (plat.subType === 'crumbling') { plat.isFalling = true; }
                             }
                         }
                     }
@@ -375,17 +412,12 @@
                     this.drawBackground();
                     Game.State.platforms.forEach(p => {
                         const ctx = Game.State.ctx;
-                        let shakeX = 0;
-                        if(p === Game.State.crumblingPlatformCandidate && !p.isFalling) {
-                             shakeX = Math.sin(Game.State.globalAnimationTick * 0.8) * 1.5;
-                        }
-
+                        let shakeX = (p === Game.State.crumblingPlatformCandidate && !p.isFalling) ? Math.sin(Game.State.globalAnimationTick * 0.8) * 1.5 : 0;
                         switch(p.subType) {
                             case 'icy': ctx.fillStyle = '#A8D8F0'; break;
                             case 'moving': ctx.fillStyle = '#B2B2B2'; break;
                             case 'crumbling':
-                                ctx.fillStyle = '#E0E0E0';
-                                ctx.fillRect(p.x + shakeX, p.y, p.width, p.height);
+                                ctx.fillStyle = '#E0E0E0'; ctx.fillRect(p.x + shakeX, p.y, p.width, p.height);
                                 ctx.strokeStyle = '#A0A0A0'; ctx.lineWidth = 1; ctx.beginPath();
                                 ctx.moveTo(p.x + p.width/2 + shakeX, p.y + 2); ctx.lineTo(p.x + p.width/2 + shakeX, p.y + p.height - 2);
                                 ctx.stroke(); return;
@@ -396,6 +428,7 @@
                         }
                         ctx.fillRect(p.x, p.y, p.width, p.height);
                     });
+                    this.drawEnemies();
                     this.drawPlayer();
                 },
                 drawBackground: function() {
@@ -410,6 +443,13 @@
                     S.ctx.fillStyle = '#4682B4'; S.ctx.fillRect(x, y + p.height - 8, p.width, 5);
                     S.ctx.fillStyle = '#FFDAB9'; S.ctx.fillRect(x + 7, y + 5, p.width - 14, 12);
                     S.ctx.fillStyle = '#000000'; S.ctx.fillRect(x + 10, y + 10, 3, 3); S.ctx.fillRect(x + 17, y + 10, 3, 3);
+                },
+                drawEnemies: function() {
+                    const S = Game.State;
+                    S.ctx.fillStyle = '#FF4136'; // Red for enemies
+                    S.enemies.forEach(e => {
+                        S.ctx.fillRect(e.x, e.y, e.width, e.height);
+                    });
                 }
             },
             
@@ -418,8 +458,14 @@
                 keys: { left: false, right: false, up: false },
                 setupEventListeners: function() {
                     Game.State.resetLevelButton.addEventListener('click', () => {
-                        const topPlatforms = Game.State.platforms.filter(p => p.type === 'top');
-                        Game.Core.resetStage(topPlatforms.length > 0 ? topPlatforms : null);
+                        Game.State.stage++;
+                        Game.Core.resetStage();
+                    });
+                    Game.State.stagePresetButtons.forEach(b => {
+                        b.addEventListener('click', (e) => {
+                            Game.State.stage = parseInt(e.target.dataset.stage, 10);
+                            Game.Core.resetStage();
+                        });
                     });
                     document.addEventListener('keydown', (e) => {
                         if (e.key === 'ArrowLeft') this.keys.left = true;
