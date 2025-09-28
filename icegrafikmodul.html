@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ice Climber - Dev Grafik</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #1a1a1a; color: #f0f0f0; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Press Start 2P', cursive; }
+        .main-container { display: flex; align-items: center; gap: 30px; }
+        .game-column { display: flex; flex-direction: column; align-items: center; }
+        .version-info-dev { font-size: 0.7rem; color: #888; margin-top: -15px; margin-bottom: 15px; }
+        .game-wrapper { position: relative; }
+        #game-canvas { background-color: #000; border: 4px solid #555; border-radius: 10px; display: block; }
+        .side-controls { display: flex; flex-direction: column; gap: 15px; background-color: #2b2b2b; padding: 20px; border-radius: 10px; border: 2px solid #555; width: 200px; max-height: 580px; overflow-y: auto;}
+        .control-container { display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 0.7rem; }
+        .control-container h3 { font-size: 0.8rem; color: #ffff00; margin: 0 0 5px 0; width: 100%; border-bottom: 1px solid #555; padding-bottom: 5px; text-align: center;}
+        .entity-list { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 100%; }
+        .entity-list button { background-color: #1a1a1a; color: #fff; border: 1px solid #555; padding: 8px 5px; font-size: 0.5rem; font-family: 'Press Start 2P', cursive; cursor: pointer; text-align: center;}
+        .entity-list button:hover { background-color: #333; }
+        .entity-list button.selected { background-color: #00ff00; color: #000; }
+        
+        #on-screen-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+        .d-pad { position: relative; width: 120px; height: 120px; }
+        .d-pad-btn { position: absolute; width: 40px; height: 40px; background-color: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.4); display: flex; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.7); font-size: 1.5rem; }
+        .d-pad .up { top: 0; left: 40px; }
+        .d-pad .left { top: 40px; left: 0; }
+        .d-pad .right { top: 40px; left: 80px; }
+        .d-pad .down { top: 80px; left: 40px; }
+
+        .action-buttons { display: flex; gap: 15px; }
+        .action-btn { width: 50px; height: 50px; background-color: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: rgba(255, 255, 255, 0.7); }
+
+        .menu {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #fff;
+            text-shadow: 3px 3px #000;
+        }
+        .menu h2 { font-size: 2.5rem; margin-bottom: 30px; }
+        .menu button { background-color: #00ff00; color: #000; border: none; padding: 15px 30px; font-family: 'Press Start 2P', cursive; font-size: 1.2rem; border-radius: 5px; cursor: pointer; transition: background-color 0.2s, transform 0.2s; margin-top: 10px; }
+        .menu button:hover { background-color: #ffff00; transform: scale(1.05); }
+
+        .menu-option {
+            font-size: 1.2rem;
+            color: #fff;
+            cursor: pointer;
+            margin-top: 25px;
+            padding: 10px;
+            transition: transform 0.2s, color 0.2s;
+        }
+        .menu-option:hover {
+            color: #ffff00;
+            transform: scale(1.05);
+        }
+        .instructions-text {
+            font-size: 0.8rem;
+            line-height: 1.8;
+            max-width: 80%;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+        .instructions-text span {
+            color: #ffff00;
+            display: inline-block;
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="game-column">
+            <h1>Ice Climber (Dev Grafik)</h1>
+            <p class="version-info-dev">v-dev-gfx-1.1</p>
+            <div class="game-wrapper">
+                <canvas id="game-canvas" width="400" height="600"></canvas>
+                <div id="on-screen-controls">
+                    <div class="d-pad">
+                        <div id="btn-up" class="d-pad-btn up">&#9652;</div>
+                        <div id="btn-left" class="d-pad-btn left">&#9664;</div>
+                        <div id="btn-right" class="d-pad-btn right">&#9654;</div>
+                        <div id="btn-down" class="d-pad-btn down">&#9662;</div>
+                    </div>
+                    <div class="action-buttons">
+                        <div id="btn-b" class="action-btn">B</div>
+                        <div id="btn-a" class="action-btn">A</div>
+                    </div>
+                </div>
+                <div id="start-menu" class="menu" style="display: none;">
+                    <h2>ICE CLIMBER</h2>
+                    <div id="start-button" class="menu-option">MULA</div>
+                    <div id="instructions-button" class="menu-option">ARAHAN</div>
+                </div>
+                <div id="game-over-menu" class="menu" style="display: none;">
+                    <h2>GAME OVER</h2>
+                    <button id="continue-button">SAMBUNG</button>
+                    <button id="restart-button">MULA SEMULA</button>
+                </div>
+                <div id="instructions-menu" class="menu" style="display: none;">
+                    <h2>ARAHAN</h2>
+                    <div class="instructions-text">
+                        <p><span>Anak Panah &#8592; &#8594;</span> : Bergerak</p>
+                        <p><span>Anak Panah &#8593;</span> : Lompat</p>
+                        <p><span>Anak Panah &#8595;</span> : Tunduk</p>
+                        <hr style="border-color: #555; margin: 15px 0;">
+                        <p><span>Butang D-Pad</span> : Bergerak/Tunduk</p>
+                        <p><span>Butang A</span> : Lompat</p>
+                    </div>
+                    <button id="back-to-start-menu-button">KEMBALI</button>
+                </div>
+            </div>
+        </div>
+        <div id="asset-viewer-controls" class="side-controls">
+             <div class="control-container">
+                <h3>Paparan Menu</h3>
+                <div class="entity-list">
+                    <button id="show-start-menu">Mula</button>
+                    <button id="show-game-over-menu">Tamat</button>
+                    <button id="show-instructions-menu">Arahan</button>
+                    <button id="hide-menus">Sembunyi</button>
+                </div>
+             </div>
+             <div class="control-container">
+                <h3>Watak</h3>
+                <div class="entity-list">
+                    <button class="entity-btn selected" data-category="character" data-type="ESKIMO">Eskimo</button>
+                    <button class="entity-btn" data-category="character" data-type="PENGUIN">Penguin</button>
+                    <button class="entity-btn" data-category="character" data-type="ESKIMO_FEMALE">Eskimo F</button>
+                    <button class="entity-btn" data-category="character" data-type="YETI">Yeti</button>
+                    <button class="entity-btn" data-category="character" data-type="POLAR_BEAR_CUB">Beruang</button>
+                    <button class="entity-btn" data-category="character" data-type="SNOWBALL">Salji</button>
+                </div>
+             </div>
+             <div class="control-container">
+                <h3>Musuh</h3>
+                <div class="entity-list">
+                    <button class="entity-btn" data-category="enemy" data-type="GROUND_MONSTER">Monster</button>
+                    <button class="entity-btn" data-category="enemy" data-type="AWAN_HANTU">Hantu</button>
+                    <button class="entity-btn" data-category="enemy" data-type="ICICLE">Icicle</button>
+                    <button class="entity-btn" data-category="enemy" data-type="BAT">Kelawar</button>
+                </div>
+             </div>
+             <div class="control-container">
+                <h3>Hiasan</h3>
+                <div class="entity-list">
+                    <button class="entity-btn" data-category="decoration" data-type="SNOW_PILE">Snow Pile</button>
+                    <button class="entity-btn" data-category="decoration" data-type="ICE_SHARD">Ice Shard</button>
+                    <button class="entity-btn" data-category="decoration" data-type="ICY_GRASS">Icy Grass</button>
+                    <button class="entity-btn" data-category="decoration" data-type="FROZEN_PUDDLE">Puddle</button>
+                    <button class="entity-btn" data-category="decoration" data-type="ICE_ROCK">Ice Rock</button>
+                    <button class="entity-btn" data-category="decoration" data-type="SIGNPOST">Signpost</button>
+                    <button class="entity-btn" data-category="decoration" data-type="SNOWY_TREE">Tree</button>
+                    <button class="entity-btn" data-category="decoration" data-type="CHECKPOINT_FLAG">Flag</button>
+                </div>
+             </div>
+        </div>
+    </div>
+
+    <script>
+        const Game = {
+            // --- CORE MODULE: Main game loop and state management ---
+            Core: {
+                animationFrameId: null,
+                init: function() {
+                    Game.Controls.setupEventListeners();
+                    Game.Level.generatePlatforms();
+                    Game.Level.displaySelectedEntity('character', 'ESKIMO');
+                    this.gameLoop();
+                },
+                gameLoop: function() {
+                    Game.Core.update();
+                    Game.Graphics.draw();
+                    Game.Core.animationFrameId = requestAnimationFrame(Game.Core.gameLoop);
+                },
+                update: function() {
+                    Game.State.globalAnimationTick++;
+                    Game.Enemies.updateEnemies();
+                },
+            },
+
+            // --- CONSTANTS MODULE ---
+            Constants: {
+                PLATFORM_HEIGHT: 15,
+                EYE_SWEEP_RANGE: 4,
+            },
+
+            // --- STATE MODULE ---
+            State: {
+                canvas: document.getElementById('game-canvas'),
+                ctx: document.getElementById('game-canvas').getContext('2d'),
+                entityButtons: document.querySelectorAll('.entity-btn'),
+                startMenu: document.getElementById('start-menu'),
+                gameOverMenu: document.getElementById('game-over-menu'),
+                instructionsMenu: document.getElementById('instructions-menu'),
+                instructionsButton: document.getElementById('instructions-button'),
+                backToStartMenuButton: document.getElementById('back-to-start-menu-button'),
+                showStartMenuBtn: document.getElementById('show-start-menu'),
+                showGameOverMenuBtn: document.getElementById('show-game-over-menu'),
+                showInstructionsMenuBtn: document.getElementById('show-instructions-menu'),
+                hideMenusBtn: document.getElementById('hide-menus'),
+                globalAnimationTick: 0,
+                player: { width: 30, height: 30 },
+                enemies: [],
+                platforms: [],
+                decorations: [],
+                showcaseCharacters: []
+            },
+            
+            // --- LEVEL MODULE (Simplified for Graphics Dev) ---
+            Level: {
+                generatePlatforms: function() {
+                    Game.State.platforms = [
+                        { x: 0, y: 400, width: 400, height: 200 },
+                    ];
+                },
+                displaySelectedEntity: function(category, type) {
+                    Game.State.enemies = [];
+                    Game.State.decorations = [];
+                    Game.State.showcaseCharacters = [];
+                    const centerX = Game.State.canvas.width / 2;
+                    const centerY = 300;
+                    switch(category) {
+                        case 'character': Game.State.showcaseCharacters.push({ type: type, x: centerX - 15, y: centerY - 15 }); break;
+                        case 'enemy':
+                             const enemyDefaults = {
+                                GROUND_MONSTER: { width: 25, height: 25, x: centerX - 12.5, y: centerY - 12.5, facing: 'right', animationTick: 0 },
+                                AWAN_HANTU: { width: 35, height: 25, x: centerX - 17.5, y: centerY - 12.5, baseY: centerY - 12.5, animationAngle: 0, eyeAngle: 0, state: 'SCANNING' },
+                                ICICLE: { width: 15, height: 30, x: centerX - 7.5, y: centerY - 15, originalX: centerX - 7.5, originalY: centerY - 15, state: 'IDLE' },
+                                BAT: { width: 30, height: 20, x: centerX - 15, y: centerY - 10, state: 'HANGING' }
+                            };
+                            if (enemyDefaults[type]) { Game.State.enemies.push({type: type, ...enemyDefaults[type]}); }
+                            break;
+                        case 'decoration': Game.State.decorations.push({type: type, x: centerX, y: centerY}); break;
+                    }
+                }
+            },
+
+            // --- ENEMIES MODULE (Simplified for Graphics Dev) ---
+            Enemies: {
+                updateEnemies: function() {
+                    const S = Game.State;
+                    S.enemies.forEach(e => {
+                        if (e.type === 'AWAN_HANTU') { e.animationAngle += 0.05; e.y = e.baseY + Math.sin(e.animationAngle) * 5; e.eyeAngle += 0.03; }
+                        if (e.type === 'GROUND_MONSTER') { e.animationTick++; }
+                        if (e.type === 'BAT') { if (S.globalAnimationTick % 120 === 0) { e.state = e.state === 'HANGING' ? 'DETECTED' : 'HANGING'; } }
+                        if (e.type === 'ICICLE') { if (e.state === 'IDLE' && S.globalAnimationTick % 180 === 0) { e.state = 'SHAKING'; e.shakeTimer = 60; } else if (e.state === 'SHAKING') { e.shakeTimer--; e.x = e.originalX + Math.sin(S.globalAnimationTick * 0.8) * 2; if (e.shakeTimer <= 0) { e.state = 'IDLE'; e.x = e.originalX; } } }
+                    });
+                }
+            },
+            
+            // --- GRAPHICS MODULE (Full version from v0.7.0.7) ---
+            Graphics: {
+                draw: function() {
+                    this.drawBackground();
+                    Game.State.platforms.forEach(p => { Game.State.ctx.fillStyle = '#A8D8F0'; Game.State.ctx.fillRect(p.x, p.y, p.width, p.height); });
+                    this.drawDecorations();
+                    this.drawEnemies();
+                    this.drawShowcaseCharacters();
+                },
+                drawCharacter: function(charType, x, y, isCrouching = false, targetCtx = Game.State.ctx) {
+                    const player = Game.State.player;
+                    let heightModifier = isCrouching ? 6 : 0;
+                    let yOffset = isCrouching ? 6 : 0;
+                    switch (charType) {
+                        case 'ESKIMO':
+                            targetCtx.fillStyle = '#8B4513'; targetCtx.fillRect(x + 2, y + yOffset, player.width - 4, player.height - 2 - heightModifier);
+                            targetCtx.fillStyle = '#4682B4'; targetCtx.fillRect(x, y + player.height - 8, player.width, 5);
+                            targetCtx.fillStyle = '#FFDAB9'; targetCtx.fillRect(x + 7, y + 5 + yOffset, player.width - 14, 12 - heightModifier);
+                            targetCtx.fillStyle = '#000000'; targetCtx.fillRect(x + 10, y + 10 + yOffset, 3, 3); targetCtx.fillRect(x + 17, y + 10 + yOffset, 3, 3);
+                            if (!isCrouching) {
+                                targetCtx.fillStyle = '#8B4513'; const armY = y + 15; const animOffset = Math.sin(Game.State.globalAnimationTick * 0.2) * 3;
+                                targetCtx.fillRect(x - 2, armY + animOffset, 4, 8); targetCtx.fillRect(x + player.width - 2, armY - animOffset, 4, 8);
+                            }
+                            const legY = y + player.height - 2; targetCtx.fillRect(x + 5, legY, 8, 5); targetCtx.fillRect(x + player.width - 13, legY, 8, 5);
+                            break;
+                        case 'ESKIMO_FEMALE':
+                            targetCtx.fillStyle = '#DA70D6'; targetCtx.fillRect(x + 2, y + yOffset, player.width - 4, player.height - 2 - heightModifier);
+                            targetCtx.fillStyle = '#FF69B4'; targetCtx.fillRect(x, y + player.height - 8, player.width, 5);
+                            targetCtx.fillStyle = '#FFDAB9'; targetCtx.fillRect(x + 7, y + 5 + yOffset, player.width - 14, 12 - heightModifier);
+                            targetCtx.fillStyle = '#000000'; targetCtx.fillRect(x + 10, y + 10 + yOffset, 3, 4); targetCtx.fillRect(x + 17, y + 10 + yOffset, 3, 4);
+                            if (!isCrouching) {
+                                targetCtx.fillStyle = '#DA70D6'; const armY_f = y + 15; const animOffset_f = Math.sin(Game.State.globalAnimationTick * 0.2) * 3;
+                                targetCtx.fillRect(x - 2, armY_f + animOffset_f, 4, 8); targetCtx.fillRect(x + player.width - 2, armY_f - animOffset_f, 4, 8);
+                            }
+                            const legY_f = y + player.height - 2; targetCtx.fillRect(x + 5, legY_f, 8, 5); targetCtx.fillRect(x + player.width - 13, legY_f, 8, 5);
+                            break;
+                        case 'PENGUIN':
+                            const centerX = x + player.width / 2; const legState = Math.floor(Game.State.globalAnimationTick / 8) % 2;
+                            targetCtx.fillStyle = '#000000'; targetCtx.beginPath(); targetCtx.ellipse(centerX, y + 15 + yOffset/2, 15, 14 - heightModifier/2, 0, 0, Math.PI * 2); targetCtx.fill();
+                            targetCtx.fillStyle = '#FFFFFF'; targetCtx.beginPath(); targetCtx.ellipse(centerX, y + 17 + yOffset/2, 8, 10 - heightModifier/2, 0, 0, Math.PI * 2); targetCtx.fill();
+                            if (!isCrouching) {
+                                targetCtx.fillStyle = '#000000'; targetCtx.beginPath(); targetCtx.moveTo(x + 2, y + 10); targetCtx.lineTo(x - 3, y + 20); targetCtx.lineTo(x + 4, y + 22); targetCtx.closePath(); targetCtx.fill();
+                                targetCtx.beginPath(); targetCtx.moveTo(x + player.width - 2, y + 10); targetCtx.lineTo(x + player.width + 3, y + 20); targetCtx.lineTo(x + player.width - 4, y + 22); targetCtx.closePath(); targetCtx.fill();
+                            }
+                            targetCtx.fillStyle = '#FFA500'; targetCtx.beginPath(); targetCtx.moveTo(centerX, y + 12 + yOffset); targetCtx.lineTo(centerX + 5, y + 15 + yOffset); targetCtx.lineTo(centerX, y + 18 + yOffset); targetCtx.fill();
+                            targetCtx.fillStyle = '#FFFFFF'; targetCtx.fillRect(x + 8, y + 8 + yOffset, 5, 5); targetCtx.fillRect(x + 17, y + 8 + yOffset, 5, 5);
+                            targetCtx.fillStyle = '#000000'; targetCtx.fillRect(x + 10, y + 10 + yOffset, 2, 2); targetCtx.fillRect(x + 19, y + 10 + yOffset, 2, 2);
+                            targetCtx.fillStyle = '#FFA500';
+                            if (legState === 0 || isCrouching) { targetCtx.fillRect(x + 7, y + player.height - 2, 8, 5); targetCtx.fillRect(x + 15, y + player.height - 2, 8, 5);
+                            } else { targetCtx.fillRect(x + 10, y + player.height - 2, 8, 5); targetCtx.fillRect(x + 12, y + player.height - 4, 8, 5); }
+                            break;
+                        case 'YETI':
+                            const tick = Game.State.globalAnimationTick;
+                            const yetiSway = Math.sin(tick * 0.1) * 2;
+                            const yetiCenterX = x + player.width / 2 + yetiSway;
+                            targetCtx.fillStyle = '#f0f8ff'; targetCtx.beginPath(); targetCtx.ellipse(yetiCenterX, y + 17, 15, 13, 0, 0, Math.PI * 2); targetCtx.fill();
+                            targetCtx.fillStyle = '#d1e0e0'; targetCtx.beginPath(); targetCtx.ellipse(yetiCenterX, y + 15, 10, 8, 0, 0, Math.PI * 2); targetCtx.fill();
+                            targetCtx.fillStyle = '#333'; targetCtx.fillRect(yetiCenterX - 6, y + 12, 3, 3); targetCtx.fillRect(yetiCenterX + 3, y + 12, 3, 3);
+                            targetCtx.fillStyle = '#c0c0c0'; targetCtx.fillRect(yetiCenterX - 8, y, 4, 4); targetCtx.fillRect(yetiCenterX + 4, y, 4, 4);
+                            const armSway = Math.sin(tick * 0.15) * 4;
+                            targetCtx.fillStyle = '#f0f8ff';
+                            targetCtx.beginPath(); targetCtx.ellipse(x - 2, y + 20 + armSway, 5, 8, 0, 0, Math.PI * 2); targetCtx.fill();
+                            targetCtx.beginPath(); targetCtx.ellipse(x + player.width + 2, y + 20 - armSway, 5, 8, 0, 0, Math.PI * 2); targetCtx.fill();
+                            break;
+                        case 'POLAR_BEAR_CUB':
+                            const bearCenterX = x + player.width / 2;
+                            const animFrame = Math.floor(Game.State.globalAnimationTick / 15) % 2;
+                            targetCtx.fillStyle = '#ffffff'; targetCtx.beginPath(); targetCtx.ellipse(bearCenterX, y + 20, 15, 10, 0, 0, Math.PI * 2); targetCtx.fill();
+                            targetCtx.beginPath(); targetCtx.arc(bearCenterX, y + 12, 12, 0, Math.PI * 2); targetCtx.fill();
+                            targetCtx.fillStyle = '#e0e0e0'; targetCtx.beginPath(); targetCtx.ellipse(bearCenterX, y + 15, 6, 4, 0, 0, Math.PI * 2); targetCtx.fill();
+                            targetCtx.fillStyle = '#333'; targetCtx.fillRect(bearCenterX - 1, y + 14, 2, 2);
+                            targetCtx.fillRect(bearCenterX - 6, y + 8, 3, 3); targetCtx.fillRect(bearCenterX + 3, y + 8, 3, 3);
+                            targetCtx.fillStyle = '#ffffff'; targetCtx.beginPath(); targetCtx.arc(bearCenterX - 10, y + 4, 4, 0, Math.PI * 2); targetCtx.fill();
+                            targetCtx.beginPath(); targetCtx.arc(bearCenterX + 10, y + 4, 4, 0, Math.PI * 2); targetCtx.fill();
+                            const legYpos = y + 28;
+                            if (animFrame === 0) {
+                                targetCtx.fillRect(bearCenterX - 10, legYpos, 6, 4); targetCtx.fillRect(bearCenterX + 4, legYpos + 2, 6, 4);
+                            } else {
+                                targetCtx.fillRect(bearCenterX - 10, legYpos + 2, 6, 4); targetCtx.fillRect(bearCenterX + 4, legYpos, 6, 4);
+                            }
+                            break;
+                        case 'SNOWBALL':
+                            const ballCenterX = x + player.width / 2;
+                            const ballCenterY = y + player.height / 2;
+                            targetCtx.fillStyle = '#ffffff'; targetCtx.beginPath(); targetCtx.arc(ballCenterX, ballCenterY, 15, 0, Math.PI * 2); targetCtx.fill();
+                            targetCtx.fillStyle = '#d4f0fc'; targetCtx.beginPath(); targetCtx.arc(ballCenterX, ballCenterY + 2, 14, 0, Math.PI); targetCtx.fill();
+                            targetCtx.fillStyle = '#333'; targetCtx.fillRect(ballCenterX - 6, ballCenterY - 4, 4, 4); targetCtx.fillRect(ballCenterX + 2, ballCenterY - 4, 4, 4);
+                            break;
+                    }
+                },
+                drawShowcaseCharacters: function() {
+                    Game.State.showcaseCharacters.forEach(char => {
+                        this.drawCharacter(char.type, char.x, char.y, false);
+                    });
+                },
+                drawBackground: function() {
+                    const ctx = Game.State.ctx; const canvas = Game.State.canvas;
+                    const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    sky.addColorStop(0, '#0c1445'); sky.addColorStop(1, '#346888');
+                    ctx.fillStyle = sky; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                },
+                drawEnemies: function() {
+                    const ctx = Game.State.ctx; const C = Game.Constants;
+                    Game.State.enemies.forEach(e => {
+                         if (e.type === 'ICICLE') {
+                            let xPos = e.state === 'SHAKING' ? e.originalX + Math.sin(Game.State.globalAnimationTick * 0.8) * 2 : e.x;
+                            ctx.fillStyle = '#bdeeff'; ctx.beginPath(); ctx.moveTo(xPos, e.y); ctx.lineTo(xPos + e.width, e.y); ctx.lineTo(xPos + e.width / 2, e.y + e.height); ctx.closePath(); ctx.fill(); 
+                         }
+                         else if (e.type === 'AWAN_HANTU') { const isAngry = e.state === 'PAUSING' || e.state === 'DASHING' || e.state === 'RETURNING'; ctx.fillStyle = isAngry ? '#ff4136' : '#ADD8E6'; ctx.beginPath(); ctx.arc(e.x + e.width / 2, e.y + e.height / 2, e.width / 2, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(e.x, e.y + e.height/2, e.width, e.height/2); ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(e.x + e.width / 2, e.y + e.height / 2, 8, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#000000'; const pupilX = e.x + e.width / 2 + (Math.sin(e.eyeAngle) * C.EYE_SWEEP_RANGE); ctx.beginPath(); ctx.arc(pupilX, e.y + e.height / 2, 4, 0, Math.PI * 2); ctx.fill(); }
+                         else if (e.type === 'BAT') { const centerX = e.x + e.width / 2; ctx.fillStyle = '#3d5a80'; if (e.state === 'HANGING' || e.state === 'DETECTED') { ctx.beginPath(); ctx.moveTo(centerX - 8, e.y); ctx.lineTo(centerX, e.y + e.height); ctx.lineTo(centerX + 8, e.y); ctx.closePath(); ctx.fill(); if (e.state === 'DETECTED') { ctx.fillStyle = '#e71d36'; ctx.fillRect(centerX - 1.5, e.y + 8, 3, 3); } } else { const wingFlap = Math.sin(Game.State.globalAnimationTick * 0.4) * 12; ctx.fillStyle = '#293241'; ctx.fillRect(centerX - 5, e.y, 10, e.height); ctx.fillStyle = '#98c1d9'; ctx.beginPath(); ctx.moveTo(centerX, e.y + 5); ctx.lineTo(centerX - e.width / 2 - 5, e.y + wingFlap); ctx.lineTo(centerX - e.width / 2 + 5, e.y + e.height); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(centerX, e.y + 5); ctx.lineTo(centerX + e.width / 2 + 5, e.y + wingFlap); ctx.lineTo(centerX + e.width / 2 - 5, e.y + e.height); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#e71d36'; ctx.fillRect(centerX - 1.5, e.y + 3, 3, 3); } }
+                         else { ctx.fillStyle = '#ff80ed'; ctx.fillRect(e.x + 2, e.y, e.width - 4, e.height - 2); ctx.fillStyle = '#000000'; const eyeSize = 5; const eyeY = e.y + 7; let eyeX = (e.facing === 'right') ? e.x + e.width - eyeSize - 6 : e.x + 6; ctx.fillRect(eyeX, eyeY, eyeSize, eyeSize); const mouthY = e.y + 15; const mouthWidth = 10; let mouthX = (e.facing === 'right') ? e.x + e.width - mouthWidth - 2 : e.x + 2; ctx.fillStyle = '#000000'; if (e.isAttacking) { ctx.fillRect(mouthX - 2, mouthY - 2, mouthWidth + 4, 8); } else { ctx.fillRect(mouthX, mouthY, mouthWidth, 4); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(mouthX + 1, mouthY, 2, 2); ctx.fillRect(mouthX + 7, mouthY, 2, 2); } ctx.strokeStyle = '#ff80ed'; ctx.lineWidth = 3; const legState = Math.floor(e.animationTick / 8) % 2; const legY = e.y + e.height - 2; if (legState === 0) { ctx.beginPath(); ctx.moveTo(e.x + 8, legY); ctx.lineTo(e.x + 4, legY + 5); ctx.moveTo(e.x + 17, legY); ctx.lineTo(e.x + 21, legY + 5); ctx.stroke(); } else { ctx.beginPath(); ctx.moveTo(e.x + 8, legY); ctx.lineTo(e.x + 12, legY + 5); ctx.moveTo(e.x + 17, legY); ctx.lineTo(e.x + 13, legY + 5); ctx.stroke(); } }
+                    });
+                },
+                drawDecorations: function() {
+                    const G = Game.Graphics;
+                    Game.State.decorations.forEach(d => {
+                        switch (d.type) {
+                            case 'SNOW_PILE': G.drawSnowPile(d.x, d.y); break;
+                            case 'ICE_SHARD': G.drawIceShard(d.x, d.y); break;
+                            case 'ICY_GRASS': G.drawIcyGrass(d.x, d.y); break;
+                            case 'FROZEN_PUDDLE': G.drawFrozenPuddle(d.x, d.y); break;
+                            case 'ICE_ROCK': G.drawIceRock(d.x, d.y); break;
+                            case 'SIGNPOST': G.drawSignpost(d.x, d.y); break;
+                            case 'SNOWY_TREE': G.drawSnowyTree(d.x, d.y); break;
+                            case 'CHECKPOINT_FLAG': G.drawCheckpointFlag(d.x, d.y); break;
+                        }
+                    });
+                },
+                drawSnowPile: (x, y, targetCtx = Game.State.ctx) => { const baseRadius = 8; targetCtx.fillStyle = 'rgba(255, 255, 255, 0.8)'; targetCtx.beginPath(); targetCtx.arc(x, y, baseRadius, Math.PI, Math.PI * 2); targetCtx.fill(); targetCtx.beginPath(); targetCtx.arc(x + (baseRadius*0.9), y, baseRadius*0.75, Math.PI, Math.PI * 2); targetCtx.fill(); },
+                drawIceShard: (x, y, targetCtx = Game.State.ctx) => { const height = 13, width = 6; targetCtx.fillStyle = 'rgba(189, 234, 255, 0.7)'; targetCtx.beginPath(); targetCtx.moveTo(x, y); targetCtx.lineTo(x + width, y - height); targetCtx.lineTo(x + (width*2), y); targetCtx.closePath(); targetCtx.fill(); },
+                drawIcyGrass: (x, y, targetCtx = Game.State.ctx) => { const h1=10, h2=13, h3=9; targetCtx.strokeStyle = 'rgba(200, 255, 255, 0.9)'; targetCtx.lineWidth = 2; targetCtx.beginPath(); targetCtx.moveTo(x, y); targetCtx.lineTo(x + 3, y - h1); targetCtx.moveTo(x + 5, y); targetCtx.lineTo(x + 6, y - h2); targetCtx.moveTo(x + 10, y); targetCtx.lineTo(x + 9, y - h3); targetCtx.stroke(); },
+                drawFrozenPuddle: (x, y, targetCtx = Game.State.ctx) => { const w = 30, h = 4; targetCtx.fillStyle = 'rgba(173, 216, 230, 0.6)'; targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; targetCtx.lineWidth = 1; targetCtx.beginPath(); targetCtx.ellipse(x, y, w, h, 0, 0, 2 * Math.PI); targetCtx.fill(); targetCtx.stroke(); },
+                drawIceRock: (x, y, targetCtx = Game.State.ctx) => { targetCtx.save(); targetCtx.translate(x, y); targetCtx.rotate(Math.PI / 6); targetCtx.fillStyle = 'rgba(210, 220, 230, 0.85)'; targetCtx.strokeStyle = 'rgba(180, 190, 200, 0.9)'; targetCtx.lineWidth = 1; targetCtx.beginPath(); targetCtx.moveTo(0, 0); targetCtx.lineTo(-8, -5); targetCtx.lineTo(-2, -15); targetCtx.lineTo(10, -12); targetCtx.lineTo(12, -4); targetCtx.closePath(); targetCtx.fill(); targetCtx.stroke(); targetCtx.restore(); },
+                drawSignpost: (x, y, targetCtx = Game.State.ctx) => { targetCtx.fillStyle = '#8B4513'; targetCtx.fillRect(x, y - 20, 4, 20); targetCtx.fillRect(x - 10, y - 18, 24, 10); targetCtx.fillStyle = '#FFF'; targetCtx.beginPath(); targetCtx.moveTo(x + 8, y - 15); targetCtx.lineTo(x + 12, y - 13); targetCtx.lineTo(x + 8, y - 11); targetCtx.fill(); },
+                drawSnowyTree: (x, y, targetCtx = Game.State.ctx) => { targetCtx.fillStyle = '#5C4033'; targetCtx.fillRect(x, y - 15, 8, 15); targetCtx.fillStyle = '#FFFFFF'; targetCtx.beginPath(); targetCtx.moveTo(x + 4, y - 45); targetCtx.lineTo(x - 15, y - 25); targetCtx.lineTo(x + 23, y - 25); targetCtx.closePath(); targetCtx.fill(); targetCtx.beginPath(); targetCtx.moveTo(x + 4, y - 30); targetCtx.lineTo(x - 20, y - 10); targetCtx.lineTo(x + 28, y - 10); targetCtx.closePath(); targetCtx.fill(); },
+                drawCheckpointFlag: (x, y, targetCtx = Game.State.ctx) => { targetCtx.fillStyle = '#964B00'; targetCtx.fillRect(x, y - 30, 4, 30); targetCtx.fillStyle = '#00FF00'; targetCtx.beginPath(); targetCtx.moveTo(x + 4, y - 28); targetCtx.lineTo(x + 18, y - 22); targetCtx.lineTo(x + 4, y - 16); targetCtx.closePath(); targetCtx.fill(); },
+            },
+            
+            // --- CONTROLS MODULE ---
+            Controls: {
+                setupEventListeners: function() {
+                    const S = Game.State;
+                    if (S.resetStageButton) {
+                        S.resetStageButton.addEventListener('click', () => {
+                            const selectedBtn = document.querySelector('.entity-btn.selected');
+                            if(selectedBtn) {
+                                const category = selectedBtn.dataset.category;
+                                const type = selectedBtn.dataset.type;
+                                Game.Level.displaySelectedEntity(category, type);
+                            }
+                        });
+                    }
+                    S.entityButtons.forEach(button => {
+                        button.addEventListener('click', () => {
+                            S.entityButtons.forEach(btn => btn.classList.remove('selected'));
+                            button.classList.add('selected');
+                            const category = button.dataset.category;
+                            const type = button.dataset.type;
+                            Game.Level.displaySelectedEntity(category, type);
+                        });
+                    });
+                    S.showStartMenuBtn.addEventListener('click', () => {
+                        S.startMenu.style.display = 'flex';
+                        S.gameOverMenu.style.display = 'none';
+                        S.instructionsMenu.style.display = 'none';
+                    });
+                    S.showGameOverMenuBtn.addEventListener('click', () => {
+                        S.startMenu.style.display = 'none';
+                        S.gameOverMenu.style.display = 'flex';
+                        S.instructionsMenu.style.display = 'none';
+                    });
+                    S.showInstructionsMenuBtn.addEventListener('click', () => {
+                        S.startMenu.style.display = 'none';
+                        S.gameOverMenu.style.display = 'none';
+                        S.instructionsMenu.style.display = 'flex';
+                    });
+                    S.hideMenusBtn.addEventListener('click', () => {
+                        S.startMenu.style.display = 'none';
+                        S.gameOverMenu.style.display = 'none';
+                        S.instructionsMenu.style.display = 'none';
+                    });
+                    S.instructionsButton.addEventListener('click', () => {
+                        S.startMenu.style.display = 'none';
+                        S.instructionsMenu.style.display = 'flex';
+                    });
+                    S.backToStartMenuButton.addEventListener('click', () => {
+                        S.instructionsMenu.style.display = 'none';
+                        S.startMenu.style.display = 'flex';
+                    });
+                }
+            },
+        };
+
+        window.onload = function() { Game.Core.init(); };
+    </script>
+</body>
+</html>
+
