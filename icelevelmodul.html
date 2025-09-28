@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ice Climber - Dev Peringkat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #1a1a1a; color: #f0f0f0; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Press Start 2P', cursive; }
+        .main-container { display: flex; align-items: center; gap: 30px; }
+        .game-column { display: flex; flex-direction: column; align-items: center; }
+        .version-info-dev { font-size: 0.7rem; color: #888; margin-top: -15px; margin-bottom: 15px; }
+        .game-wrapper { position: relative; }
+        #game-canvas { background-color: #000; border: 4px solid #555; border-radius: 10px; display: block; }
+        .side-controls { display: flex; flex-direction: column; gap: 15px; background-color: #2b2b2b; padding: 20px; border-radius: 10px; border: 2px solid #555; width: 200px; }
+        .control-container { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 0.6rem; text-align: center; }
+        .control-container input[type="range"] { width: 100%; }
+        #reset-level-button { background-color: #1a1a1a; color: #fff; border: 1px solid #555; padding: 10px; font-size: 0.7rem; font-family: 'Press Start 2P', cursive; cursor: pointer; }
+        #reset-level-button:hover { background-color: #333; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="game-column">
+            <h1>Ice Climber (Dev Peringkat)</h1>
+            <p class="version-info-dev">v-dev-level-0.9</p>
+            <div class="game-wrapper">
+                <canvas id="game-canvas" width="400" height="600"></canvas>
+            </div>
+        </div>
+        <div class="side-controls">
+            <div class="control-container">
+                <label for="min-platform-slider">Min Platform (Blok)</label>
+                <input type="range" id="min-platform-slider" min="2" max="5" value="2">
+                <span id="min-platform-value">2</span>
+            </div>
+            <div class="control-container">
+                <label for="max-platform-slider">Maks Platform (Blok)</label>
+                <input type="range" id="max-platform-slider" min="2" max="8" value="5">
+                <span id="max-platform-value">5</span>
+            </div>
+            <div class="control-container">
+                <label for="min-gap-slider">Min Jurang (Blok)</label>
+                <input type="range" id="min-gap-slider" min="1" max="4" value="1">
+                <span id="min-gap-value">1</span>
+            </div>
+            <div class="control-container">
+                <label for="max-gap-slider">Maks Jurang (Blok)</label>
+                <input type="range" id="max-gap-slider" min="1" max="5" value="3">
+                <span id="max-gap-value">3</span>
+            </div>
+            <button id="reset-level-button">Jana Semula Peringkat</button>
+        </div>
+    </div>
+
+    <script>
+        const Game = {
+            // --- CORE MODULE: Main game loop and state management ---
+            Core: {
+                init: function() {
+                    Game.Controls.setupEventListeners();
+                    this.resetStage();
+                    this.gameLoop();
+                },
+                gameLoop: function() {
+                    Game.Graphics.draw();
+                    requestAnimationFrame(Game.Core.gameLoop);
+                },
+                resetStage: function(basePlatform = null) {
+                    Game.Level.generatePlatforms(basePlatform);
+                }
+            },
+
+            // --- CONSTANTS MODULE ---
+            Constants: {
+                PLATFORM_HEIGHT: 15,
+                VERTICAL_GAP: 120,
+                BLOCK_WIDTH: 40,
+            },
+
+            // --- STATE MODULE ---
+            State: {
+                canvas: document.getElementById('game-canvas'),
+                ctx: document.getElementById('game-canvas').getContext('2d'),
+                resetLevelButton: document.getElementById('reset-level-button'),
+                player: { width: 30, height: 30 },
+                platforms: [],
+                goalPlatform: null,
+                // Sliders
+                minPlatformSlider: document.getElementById('min-platform-slider'),
+                minPlatformValue: document.getElementById('min-platform-value'),
+                maxPlatformSlider: document.getElementById('max-platform-slider'),
+                maxPlatformValue: document.getElementById('max-platform-value'),
+                minGapSlider: document.getElementById('min-gap-slider'),
+                minGapValue: document.getElementById('min-gap-value'),
+                maxGapSlider: document.getElementById('max-gap-slider'),
+                maxGapValue: document.getElementById('max-gap-value'),
+                // Generation parameters
+                minPlatformBlocks: 2,
+                maxPlatformBlocks: 5,
+                minGapBlocks: 1,
+                maxGapBlocks: 3,
+            },
+            
+            // --- LEVEL MODULE ---
+            Level: {
+                isRowReachable: function(newPlatforms, previousPlatforms) {
+                    if (newPlatforms.length === 0) return false;
+                    const MAX_JUMP_DISTANCE = 160;
+                    return newPlatforms.some(p1 => {
+                        return previousPlatforms.some(p2 => {
+                            const reachableMinX = p2.x - MAX_JUMP_DISTANCE + Game.State.player.width;
+                            const reachableMaxX = p2.x + p2.width + MAX_JUMP_DISTANCE - Game.State.player.width;
+                            const platformMinX = p1.x;
+                            const platformMaxX = p1.x + p1.width;
+                            return Math.max(reachableMinX, platformMinX) < Math.min(reachableMaxX, platformMaxX);
+                        });
+                    });
+                },
+
+                parseSlotArray(slotArray, y) {
+                    const C = Game.Constants;
+                    const platforms = [];
+                    let currentPlatformStart = -1;
+
+                    for (let i = 0; i < slotArray.length; i++) {
+                        if (slotArray[i] === 1 && currentPlatformStart === -1) {
+                            currentPlatformStart = i;
+                        } else if (slotArray[i] === 0 && currentPlatformStart !== -1) {
+                            platforms.push({
+                                x: currentPlatformStart * C.BLOCK_WIDTH,
+                                y: y,
+                                width: (i - currentPlatformStart) * C.BLOCK_WIDTH,
+                                height: C.PLATFORM_HEIGHT,
+                            });
+                            currentPlatformStart = -1;
+                        }
+                    }
+                    if (currentPlatformStart !== -1) {
+                        platforms.push({
+                            x: currentPlatformStart * C.BLOCK_WIDTH,
+                            y: y,
+                            width: (slotArray.length - currentPlatformStart) * C.BLOCK_WIDTH,
+                            height: C.PLATFORM_HEIGHT,
+                        });
+                    }
+                    return platforms;
+                },
+
+                generateSinglePlatformRow: function(y, previousRow) {
+                    const S = Game.State;
+                    const C = Game.Constants;
+                    let generatedPlatforms = [];
+                    let isReachable = false;
+                    let attempts = 0;
+                    const MAX_ATTEMPTS = 100;
+                    const totalSlots = S.canvas.width / C.BLOCK_WIDTH;
+
+                    while (!isReachable && attempts < MAX_ATTEMPTS) {
+                        const slots = Array(totalSlots).fill(0);
+                        const numPlatforms = 2 + Math.floor(Math.random() * 2); // 2 or 3
+                        const numGaps = numPlatforms - 1;
+
+                        let platformBlocks = Array(numPlatforms).fill(S.minPlatformBlocks);
+                        let gapBlocks = Array(numGaps).fill(S.minGapBlocks);
+
+                        let usedBlocks = (numPlatforms * S.minPlatformBlocks) + (numGaps * S.minGapBlocks);
+                        let remainingBlocks = totalSlots - usedBlocks;
+                        
+                        if (remainingBlocks < 0) { // Failsafe if min values are too high
+                            attempts++;
+                            continue;
+                        }
+
+                        for (let i = 0; i < remainingBlocks; i++) {
+                            const isPlatform = Math.random() > 0.3;
+                            if (isPlatform) {
+                                const platformIndex = Math.floor(Math.random() * numPlatforms);
+                                if (platformBlocks[platformIndex] < S.maxPlatformBlocks) {
+                                    platformBlocks[platformIndex]++;
+                                }
+                            } else {
+                                const gapIndex = Math.floor(Math.random() * numGaps);
+                                if(gapBlocks[gapIndex] < S.maxGapBlocks) {
+                                    gapBlocks[gapIndex]++;
+                                }
+                            }
+                        }
+
+                        let currentIndex = 0;
+                        for (let i = 0; i < numPlatforms; i++) {
+                            for (let j = 0; j < platformBlocks[i] && currentIndex < totalSlots; j++) {
+                                slots[currentIndex++] = 1;
+                            }
+                            if (i < numGaps) {
+                                currentIndex += gapBlocks[i];
+                            }
+                        }
+                        
+                        generatedPlatforms = this.parseSlotArray(slots, y);
+
+                        if (generatedPlatforms.length > 0 && this.isRowReachable(generatedPlatforms, previousRow)) {
+                            isReachable = true;
+                        }
+                        attempts++;
+                    }
+
+                    if (!isReachable) {
+                        const platformWidth = 5 * C.BLOCK_WIDTH;
+                        generatedPlatforms = [{ 
+                            x: (S.canvas.width - platformWidth) / 2, 
+                            y: y, 
+                            width: platformWidth, 
+                            height: S.Constants.PLATFORM_HEIGHT 
+                        }];
+                    }
+                    return generatedPlatforms;
+                },
+
+                generatePlatforms: function(basePlatformArg = null) {
+                    const S = Game.State;
+                    const C = Game.Constants;
+                    S.platforms = [];
+
+                    let basePlatform;
+                    if (basePlatformArg) {
+                        basePlatform = { ...basePlatformArg, y: S.canvas.height - 20, height: 20 };
+                    } else {
+                        basePlatform = { x: 0, y: S.canvas.height - 20, width: S.canvas.width, height: 20 };
+                    }
+                    S.platforms.push(basePlatform);
+                    
+                    let previousRow = [basePlatform];
+
+                    for (let y = S.canvas.height - 20 - C.VERTICAL_GAP; y > 50; y -= C.VERTICAL_GAP) {
+                        const newRow = this.generateSinglePlatformRow(y, previousRow);
+                        S.platforms.push(...newRow);
+                        previousRow = newRow;
+                    }
+
+                    const goalWidth = 4 * C.BLOCK_WIDTH;
+                    const goalX = (S.canvas.width - goalWidth) / 2;
+                    S.goalPlatform = { x: goalX, y: 0 - (C.PLATFORM_HEIGHT / 2), width: goalWidth, height: C.PLATFORM_HEIGHT };
+                    S.platforms.push(S.goalPlatform);
+                }
+            },
+
+            // --- GRAPHICS MODULE ---
+            Graphics: {
+                draw: function() {
+                    this.drawBackground();
+                    Game.State.platforms.forEach(p => { 
+                        if (p === Game.State.goalPlatform) {
+                            Game.State.ctx.fillStyle = '#FFFF00';
+                        } else {
+                             Game.State.ctx.fillStyle = '#FFFFFF';
+                        }
+                        Game.State.ctx.fillRect(p.x, p.y, p.width, p.height); 
+                    });
+                    
+                    const startPlatform = Game.State.platforms[0];
+                    if (startPlatform) {
+                        const playerX = startPlatform.x + startPlatform.width / 2 - Game.State.player.width / 2;
+                        const playerY = startPlatform.y - Game.State.player.height;
+                        Game.State.ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+                        Game.State.ctx.fillRect(playerX, playerY, Game.State.player.width, Game.State.player.height);
+                    }
+                },
+                drawBackground: function() {
+                    const ctx = Game.State.ctx; const canvas = Game.State.canvas;
+                    const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    sky.addColorStop(0, '#0c1445'); sky.addColorStop(1, '#346888');
+                    ctx.fillStyle = sky; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                },
+            },
+            
+            // --- CONTROLS MODULE ---
+            Controls: {
+                setupEventListeners: function() {
+                    const S = Game.State;
+                    S.resetLevelButton.addEventListener('click', () => {
+                        Game.Core.resetStage(S.goalPlatform);
+                    });
+                    
+                    const setupSlider = (slider, valueDisplay, stateKey) => {
+                        slider.addEventListener('input', (e) => {
+                            const value = parseInt(e.target.value, 10);
+                            S[stateKey] = value;
+                            valueDisplay.textContent = value;
+                            Game.Core.resetStage(S.platforms[0]); // Reset with current base
+                        });
+                    };
+
+                    setupSlider(S.minPlatformSlider, S.minPlatformValue, 'minPlatformBlocks');
+                    setupSlider(S.maxPlatformSlider, S.maxPlatformValue, 'maxPlatformBlocks');
+                    setupSlider(S.minGapSlider, S.minGapValue, 'minGapBlocks');
+                    setupSlider(S.maxGapSlider, S.maxGapValue, 'maxGapBlocks');
+                }
+            },
+        };
+
+        window.onload = function() { Game.Core.init(); };
+    </script>
+</body>
+</html>
+
