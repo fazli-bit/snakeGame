@@ -111,6 +111,8 @@
             width: 20px;
             height: 20px;
             display: none; /* Hidden by default */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30"><path fill="%238B4513" d="M3 0 L27 0 L27 28 L3 28 Z" /><path fill="%234682B4" d="M0 22 L30 22 L30 27 L0 27 Z" /><path fill="%23FFDAB9" d="M8 5 L22 5 L22 17 L8 17 Z" /><path fill="%23000" d="M11 10 L14 10 L14 13 L11 13 Z M16 10 L19 10 L19 13 L16 13 Z" /></svg>');
+            background-size: contain;
         }
     </style>
 </head>
@@ -118,16 +120,16 @@
     <div class="main-container">
         <div class="game-column">
             <h1>Ice Climber (Dev Kawalan)</h1>
-            <p class="version-info-dev">v-dev-ctrl-1.0</p>
+            <p class="version-info-dev">v-dev-ctrl-1.1</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
-                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-1.0</div>
+                <div id="hud-version" class="version-display-overlay">v-dev-ctrl-1.1</div>
                 <div id="start-menu" class="menu">
                     <h2>ICE CLIMBER</h2>
                     <div id="start-button" class="menu-option" data-index="0">MULA</div>
                     <div id="instructions-button" class="menu-option" data-index="1">ARAHAN</div>
                 </div>
-                <div id="instructions-menu" class="menu" style="display: none;">
+                 <div id="instructions-menu" class="menu" style="display: none;">
                     <h2>ARAHAN</h2>
                     <div class="instructions-text">
                         <p><span>Anak Panah</span> : Bergerak/Tunduk</p>
@@ -160,14 +162,14 @@
 
     <script>
         const Game = {
-            // --- CORE MODULE: Main game loop and state management ---
+            // --- CORE MODULE ---
             Core: {
                 animationFrameId: null,
                 init: function() {
                     Game.Controls.setupEventListeners();
                     Game.Level.generatePlatforms();
                     this.resetStage();
-                    Game.Controls.updateActiveMenu(); // Set initial menu
+                    Game.Controls.updateActiveMenu();
                     this.gameLoop();
                 },
                 gameLoop: function() {
@@ -206,7 +208,7 @@
                 }
             },
 
-            // --- CONSTANTS MODULE ---
+            // --- CONSTANTS ---
             Constants: {
                 GRAVITY: 0.5,
                 JUMP_POWER: -12,
@@ -214,7 +216,7 @@
                 VERTICAL_GAP: 120,
             },
 
-            // --- STATE MODULE ---
+            // --- STATE ---
             State: {
                 canvas: document.getElementById('game-canvas'),
                 ctx: document.getElementById('game-canvas').getContext('2d'),
@@ -241,7 +243,7 @@
                 currentMenuSelection: 0,
             },
             
-            // --- LEVEL MODULE (Simplified) ---
+            // --- LEVEL MODULE ---
             Level: {
                 generatePlatforms: function() {
                     const C = Game.Constants;
@@ -253,7 +255,7 @@
                 },
             },
 
-            // --- PLAYER MODULE (Full logic) ---
+            // --- PLAYER MODULE ---
             Player: {
                 handlePlayerInput: function() {
                     const player = Game.State.player;
@@ -281,9 +283,8 @@
                     }
                     
                     if (keys.b && !player.isActionBlinking) {
-                        // TODO: Gantikan dengan mekanik block/pound
                         player.isActionBlinking = true;
-                        player.actionBlinkTimer = 15; // Blink for 15 frames
+                        player.actionBlinkTimer = 15;
                     }
                 },
                 updatePlayerPosition: function() {
@@ -301,7 +302,6 @@
                     
                     for (const platform of Game.State.platforms) {
                         if(player.platformToDropThrough === platform) continue;
-
                         if (player.x + player.width > platform.x && player.x < platform.x + platform.width && player.dy >= 0 && player.y + player.height >= platform.y && (player.y + player.height - player.dy) <= platform.y) {
                             player.dy = 0;
                             player.onGround = true;
@@ -333,9 +333,6 @@
                     const selectedOption = S.menuOptions[S.currentMenuSelection];
                     if (selectedOption) {
                         S.menuCursor.style.display = 'block';
-                        const optionRect = selectedOption.getBoundingClientRect();
-                        const wrapperRect = S.canvas.parentElement.getBoundingClientRect();
-                        
                         S.menuCursor.style.left = `${selectedOption.offsetLeft - 30}px`;
                         S.menuCursor.style.top = `${selectedOption.offsetTop + selectedOption.offsetHeight / 2 - 10}px`;
                     }
@@ -343,23 +340,19 @@
                 drawCharacter: function(charType, x, y, isCrouching = false, targetCtx = Game.State.ctx) {
                     const player = Game.State.player;
                     if (player.isActionBlinking && Math.floor(Game.State.globalAnimationTick / 4) % 2 === 0) {
-                        return; // Skip drawing to create a blink effect
+                        return;
                     }
                     let heightModifier = isCrouching ? 6 : 0;
                     let yOffset = isCrouching ? 6 : 0;
-                    switch (charType) {
-                        case 'ESKIMO':
-                            targetCtx.fillStyle = '#8B4513'; targetCtx.fillRect(x + 2, y + yOffset, player.width - 4, player.height - 2 - heightModifier);
-                            targetCtx.fillStyle = '#4682B4'; targetCtx.fillRect(x, y + player.height - 8, player.width, 5);
-                            targetCtx.fillStyle = '#FFDAB9'; targetCtx.fillRect(x + 7, y + 5 + yOffset, player.width - 14, 12 - heightModifier);
-                            targetCtx.fillStyle = '#000000'; targetCtx.fillRect(x + 10, y + 10 + yOffset, 3, 3); targetCtx.fillRect(x + 17, y + 10 + yOffset, 3, 3);
-                            if (!isCrouching) {
-                                targetCtx.fillStyle = '#8B4513'; const armY = y + 15; const animOffset = Math.sin(Game.State.globalAnimationTick * 0.2) * 3;
-                                targetCtx.fillRect(x - 2, armY + animOffset, 4, 8); targetCtx.fillRect(x + player.width - 2, armY - animOffset, 4, 8);
-                            }
-                            const legY = y + player.height - 2; targetCtx.fillRect(x + 5, legY, 8, 5); targetCtx.fillRect(x + player.width - 13, legY, 8, 5);
-                            break;
+                    targetCtx.fillStyle = '#8B4513'; targetCtx.fillRect(x + 2, y + yOffset, player.width - 4, player.height - 2 - heightModifier);
+                    targetCtx.fillStyle = '#4682B4'; targetCtx.fillRect(x, y + player.height - 8, player.width, 5);
+                    targetCtx.fillStyle = '#FFDAB9'; targetCtx.fillRect(x + 7, y + 5 + yOffset, player.width - 14, 12 - heightModifier);
+                    targetCtx.fillStyle = '#000000'; targetCtx.fillRect(x + 10, y + 10 + yOffset, 3, 3); targetCtx.fillRect(x + 17, y + 10 + yOffset, 3, 3);
+                    if (!isCrouching) {
+                        targetCtx.fillStyle = '#8B4513'; const armY = y + 15; const animOffset = Math.sin(Game.State.globalAnimationTick * 0.2) * 3;
+                        targetCtx.fillRect(x - 2, armY + animOffset, 4, 8); targetCtx.fillRect(x + player.width - 2, armY - animOffset, 4, 8);
                     }
+                    const legY = y + player.height - 2; targetCtx.fillRect(x + 5, legY, 8, 5); targetCtx.fillRect(x + player.width - 13, legY, 8, 5);
                 },
                 drawBackground: function() {
                     const ctx = Game.State.ctx; const canvas = Game.State.canvas;
@@ -374,13 +367,9 @@
                 keys: { left: false, right: false, up: false, down: false, a: false, b: false },
                 updateActiveMenu: function() {
                     const S = Game.State;
-                    if (S.startMenu.style.display !== 'none') {
-                        S.activeMenu = S.startMenu;
-                    } else if (S.instructionsMenu.style.display !== 'none') {
-                        S.activeMenu = S.instructionsMenu;
-                    } else {
-                        S.activeMenu = null;
-                    }
+                    if (S.startMenu.style.display !== 'none') { S.activeMenu = S.startMenu; }
+                    else if (S.instructionsMenu.style.display !== 'none') { S.activeMenu = S.instructionsMenu; }
+                    else { S.activeMenu = null; }
 
                     if (S.activeMenu) {
                         S.menuOptions = S.activeMenu.querySelectorAll('.menu-option');
@@ -390,26 +379,19 @@
                 handleMenuAction: function() {
                     const S = Game.State;
                     if (!S.isMenuVisible || !S.menuOptions) return;
-                    
                     const selectedOption = S.menuOptions[S.currentMenuSelection];
                     if (!selectedOption) return;
 
                     if (S.activeMenu === S.startMenu) {
                         if (selectedOption.id === 'start-button') {
-                            S.isMenuVisible = false;
-                            S.startMenu.style.display = 'none';
-                            S.menuCursor.style.display = 'none';
+                            S.isMenuVisible = false; S.startMenu.style.display = 'none'; S.menuCursor.style.display = 'none';
                             Game.Core.resetStage();
                         } else if (selectedOption.id === 'instructions-button') {
-                            S.startMenu.style.display = 'none';
-                            S.instructionsMenu.style.display = 'flex';
-                            this.updateActiveMenu();
+                            S.startMenu.style.display = 'none'; S.instructionsMenu.style.display = 'flex'; this.updateActiveMenu();
                         }
                     } else if (S.activeMenu === S.instructionsMenu) {
                         if (selectedOption.textContent === 'KEMBALI') {
-                            S.instructionsMenu.style.display = 'none';
-                            S.startMenu.style.display = 'flex';
-                            this.updateActiveMenu();
+                            S.instructionsMenu.style.display = 'none'; S.startMenu.style.display = 'flex'; this.updateActiveMenu();
                         }
                     }
                 },
@@ -426,7 +408,7 @@
                         } else {
                             if (key === 'arrowleft') this.keys.left = true;
                             if (key === 'arrowright') this.keys.right = true;
-                            if (key === 'arrowup' || key === 'd') { e.preventDefault(); this.keys.a = true; this.keys.up = true; } // a is jump
+                            if (key === 'arrowup' || key === 'd') { e.preventDefault(); this.keys.up = true; this.keys.a = true; }
                             if (key === 'arrowdown') this.keys.down = true;
                             if (key === 's') this.keys.b = true;
                         }
@@ -459,8 +441,7 @@
                                     if (key === 'b' && S.activeMenu === S.instructionsMenu) { this.handleMenuAction(); }
                                 }
                             } else {
-                                if (key === 'a') this.keys['up'] = isPressed; // Map A button to 'up' for jumping
-                                else this.keys[key] = isPressed;
+                                this.keys[key] = isPressed;
                             }
                             element.classList.toggle('pressed', isPressed);
                         }, { passive: false });
