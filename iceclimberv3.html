@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ice Climber v0.8.8 (Mekanik Icicle)</title>
+    <title>Ice Climber v0.8.9 (Mekanik Perisai)</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -881,7 +881,6 @@
                         }
                     }
                     
-                    // HP SYSTEM & ENEMY COLLISION LOGIC
                     for (let i = Game.State.enemies.length - 1; i >= 0; i--) {
                         const enemy = Game.State.enemies[i];
 
@@ -921,6 +920,7 @@
                              const isFrontalCollision = (player.direction === 'right' && proj.dx < 0) || (player.direction === 'left' && proj.dx > 0);
                              if (player.isBlocking && isFrontalCollision) {
                                  Game.State.projectiles.splice(i, 1);
+                                 player.dx += player.direction === 'right' ? -2 : 2; // ADDED KNOCKBACK
                              } else if (!player.isHit) {
                                  Game.State.projectiles.splice(i, 1);
                                  if (player.powerUp) {
