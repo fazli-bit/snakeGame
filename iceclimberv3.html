@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ice Climber v0.8.5 (AI Raksasa & Janaan)</title>
+    <title>Ice Climber v0.8.6 (Mekanik Tempur & Janaan)</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -279,7 +279,7 @@
         </div>
         <div class="game-column">
             <h1>Ice Climber</h1>
-            <p class="version-info">v0.8.5 (AI Raksasa & Janaan)</p>
+            <p class="version-info">v0.8.6 (Mekanik Tempur & Janaan)</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
                 <div id="hud" style="display: none;">
@@ -766,6 +766,7 @@
 
                 updateActions: function() {
                     const player = Game.State.player;
+                    const S = Game.State;
                     if (player.attackTimer > 0) {
                         player.attackTimer--;
                         if (player.isAttacking && player.attackTimer === 25) {
@@ -775,15 +776,16 @@
                             const attackY = player.y;
                             const attackHeight = player.height;
 
-                            Game.State.enemies.forEach(enemy => {
+                            for (let i = S.enemies.length - 1; i >= 0; i--) {
+                                const enemy = S.enemies[i];
                                 if (attackX < enemy.x + enemy.width && attackX + attackWidth > enemy.x &&
                                     attackY < enemy.y + enemy.height && attackY + attackHeight > enemy.y) {
                                     
-                                    const isOnSlippery = enemy.platform && enemy.platform.subType === 'icy';
-                                    const knockbackForce = isOnSlippery ? 15 : 8;
-                                    enemy.knockbackDx = player.direction === 'right' ? knockbackForce : -knockbackForce;
+                                    if (enemy.type === 'GROUND_MONSTER' || enemy.type === 'BAT') {
+                                        S.enemies.splice(i, 1);
+                                    }
                                 }
-                            });
+                            }
                         }
                         if (player.attackTimer === 0) {
                             player.isAttacking = false;
@@ -917,6 +919,7 @@
                     const goalPlatform = S.goalPlatform;
                     
                     if (stage === 101) {
+                        // Logic for stage 101 remains unchanged
                         const p1 = platforms.find(p => p.y < 400 && p.x === 0);
                         const p2 = platforms.find(p => p.y < 400 && p.x > 100 && p.x < 200);
                         const p3 = platforms.find(p => p.y < 400 && p.x > 200);
@@ -941,7 +944,7 @@
                         return;
                     }
                     
-                    const spawnablePlatforms = platforms.filter(p => p.type !== 'base' && p.type !== 'top' && p !== goalPlatform && p.subType !== 'moving' && p.subType !== 'crumbling');
+                    const spawnablePlatforms = platforms.filter(p => p.type !== 'base' && p.type !== 'top' && p !== goalPlatform && (p.subType === 'normal' || p.subType === 'icy'));
 
                     if (spawnablePlatforms.length === 0) return;
                     
@@ -975,7 +978,7 @@
                     else if (stage >= 21) { awanHantuChance = 0.25; }
 
                     if (Math.random() < awanHantuChance && platforms.length > 5) {
-                        const topTierPlatforms = platforms.filter(p => p.y < 200 && p.type !== 'top' && p.subType !== 'moving' && p.subType !== 'crumbling' && p.subType !== 'icy');
+                        const topTierPlatforms = platforms.filter(p => p.y < 200 && p.type !== 'top' && (p.subType === 'normal' || p.subType === 'icy'));
                         if (topTierPlatforms.length > 0) {
                             const platform = topTierPlatforms[Math.floor(Math.random() * topTierPlatforms.length)];
                             const baseX = platform.x + (platform.width / 2) - 17.5;
@@ -1022,12 +1025,10 @@
                                     let shouldTurn = false;
                                     const nextX = enemy.x + enemy.dx;
 
-                                    // 1. Check canvas boundaries
                                     if (nextX <= 0 || nextX + enemy.width >= S.canvas.width) {
                                         shouldTurn = true;
                                     }
 
-                                    // 2. Check for stuck icicles
                                     if (!shouldTurn) {
                                         for (const other of S.enemies) {
                                             if (other.type === 'ICICLE' && other.state === 'STUCK') {
@@ -1040,16 +1041,15 @@
                                         }
                                     }
                                     
-                                    // 3. Check for gaps
                                     if (!shouldTurn) {
                                         const probeX = enemy.dx > 0 ? nextX + enemy.width : nextX;
-                                        const probeY = enemy.y + enemy.height + 5; // Point below the monster's feet
+                                        const probeY = enemy.y + enemy.height + 5;
                                         const groundExists = S.platforms.some(p => 
                                             !p.isFalling && 
                                             probeX >= p.x && 
                                             probeX < (p.x + p.width) &&
                                             probeY > p.y &&
-                                            probeY < (p.y + p.height + 10) // Allow some tolerance
+                                            probeY < (p.y + p.height + 10)
                                         );
                                         if (!groundExists) {
                                             shouldTurn = true;
@@ -1167,22 +1167,15 @@
                                             {
                                                 enemy.y = p.y - enemy.height + 8;
                                                 enemy.state = 'STUCK';
-                                                enemy.shakeTimer = C.ICICLE_WAIT_DURATION;
                                                 break; 
                                             }
                                         }
                                         if (enemy.y > S.canvas.height) {
                                             enemy.state = 'STUCK';
-                                            enemy.shakeTimer = C.ICICLE_WAIT_DURATION;
                                         }
                                         break;
                                     case 'STUCK':
-                                        enemy.shakeTimer--;
-                                         if (enemy.shakeTimer <= 0) {
-                                             enemy.y = enemy.originalY;
-                                             enemy.x = enemy.originalX;
-                                             enemy.state = 'IDLE';
-                                         }
+                                        // Icicle is now a permanent obstacle. Do nothing.
                                         break;
                                    }
                             } else if (enemy.type === 'BAT') {
@@ -1378,6 +1371,7 @@
                     const C = Game.Constants;
 
                     if ([101, 102].includes(S.stage)) {
+                        // Logic for stages 101 and 102 remains unchanged
                         const canvas = S.canvas;
                         S.showcaseCharacters = [];
                         
@@ -1465,17 +1459,14 @@
                     Game.Level.generateDecorations();
                 },
                 
-                // REPLACED: Updated power-up generation logic
                 generatePowerUps: function() {
                     const S = Game.State;
                     S.powerUps = [];
-                    // FIX: Allow spawning on 'icy' platforms.
-                    const spawnablePlatforms = S.platforms.filter(p => p.type === 'normal' && p.y < S.canvas.height - 100 && p.y > 100 && p.subType !== 'crumbling' && p.subType !== 'moving');
+                    const spawnablePlatforms = S.platforms.filter(p => p.type === 'normal' && p.y < S.canvas.height - 100 && p.y > 100 && (p.subType === 'normal' || p.subType === 'icy'));
                     if (spawnablePlatforms.length < 1) return;
 
                     let availablePowerUps = ['HAMMER', 'SHIELD'];
                     
-                    // If player has a power-up, only spawn the other one
                     if (S.player.powerUp) {
                         availablePowerUps = availablePowerUps.filter(type => type !== S.player.powerUp.type);
                     }
@@ -1505,6 +1496,7 @@
                     };
 
                     if (S.stage === 101) {
+                        // Logic for stage 101 remains unchanged
                         S.platforms.forEach(p => {
                             if (p.y === levelYShowcase.aras2) {
                                 S.decorations.push({ type: 'ICY_GRASS', x: p.x + 20, y: p.y });
@@ -1530,8 +1522,7 @@
 
                     S.platforms.forEach(p => {
                         if (p !== S.platforms[0] && p !== S.goalPlatform) {
-                            // FIX: Prevent decorations on invalid platforms
-                            if (p.subType === 'crumbling' || p.subType === 'moving') {
+                            if (p.subType !== 'normal' && p.subType !== 'icy') {
                                 return;
                             }
                             for(let i=0; i < 3; i++) { 
