@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ice Climber v0.8.6 (Mekanik Tempur & Janaan)</title>
+    <title>Ice Climber v0.8.8 (Mekanik Icicle)</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -213,17 +213,31 @@
             text-align: right;
         }
 
+        #toggle-controls-btn {
+            cursor: pointer;
+            font-size: 1rem;
+            margin-left: 15px;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        #toggle-controls-btn:hover {
+            transform: scale(1.1) rotate(15deg);
+        }
+
         /* --- STYLES FOR ON-SCREEN CONTROLS --- */
         #on-screen-controls {
             position: absolute;
             bottom: 20px;
             left: 20px;
             right: 20px;
-            display: flex;
+            display: none; /* Hidden by default */
             justify-content: space-between;
             align-items: flex-end;
             pointer-events: auto;
             opacity: 0.7;
+        }
+        body.is-mobile #on-screen-controls {
+            display: flex; /* Shown only on mobile */
         }
         .d-pad { position: relative; width: 120px; height: 120px; }
         .d-pad-btn {
@@ -263,7 +277,22 @@
         .d-pad-btn.pressed, .action-btn.pressed {
             background-color: rgba(255, 255, 255, 0.5);
         }
-        /* --- END OF ON-SCREEN CONTROLS STYLES --- */
+
+        /* Hide side panels by default */
+        #debug-panel, .side-controls {
+            display: none;
+        }
+        /* Show panels when toggle class is present */
+        .main-container.show-debug #debug-panel,
+        .main-container.show-controls .side-controls {
+            display: flex;
+        }
+        /* Force hide panels on mobile */
+        body.is-mobile #debug-panel,
+        body.is-mobile .side-controls,
+        body.is-mobile #toggle-controls-btn {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -278,8 +307,8 @@
             <p>Pelanggaran: <span id="debug-collision">Tidak</span></p>
         </div>
         <div class="game-column">
-            <h1>Ice Climber</h1>
-            <p class="version-info">v0.8.6 (Mekanik Tempur & Janaan)</p>
+            <h1>Ice Climber<span id="toggle-controls-btn">⚙️</span></h1>
+            <p class="version-info">v0.8.8 (Mekanik Icicle)</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
                 <div id="hud" style="display: none;">
@@ -311,7 +340,7 @@
                     </div>
                 </div>
 
-                <div id="on-screen-controls" style="display: none;">
+                <div id="on-screen-controls">
                     <div class="d-pad">
                         <div id="btn-up" class="d-pad-btn up">&#9652;</div>
                         <div id="btn-left" class="d-pad-btn left">&#9664;</div>
@@ -365,6 +394,12 @@
     </div>
 
     <script>
+        // Mobile detection
+        const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        if (isMobile) {
+            document.body.classList.add('is-mobile');
+        }
+
         const Game = {
             // --- CORE MODULE: Main game loop and state management ---
             Core: {
@@ -493,7 +528,6 @@
                         S.continueButton.disabled = S.checkpointStage <= 1;
                         S.gameOverMenu.style.display = 'flex';
                         S.hud.style.display = 'none';
-                        document.getElementById('on-screen-controls').style.display = 'none';
                     }
                 },
                 
@@ -502,7 +536,6 @@
                     S.startMenu.style.display = 'none';
                     S.gameOverMenu.style.display = 'none';
                     S.hud.style.display = 'block';
-                    document.getElementById('on-screen-controls').style.display = 'flex';
                     
                     if (Game.Core.animationFrameId) cancelAnimationFrame(Game.Core.animationFrameId);
                     
@@ -644,6 +677,8 @@
                 debugPlayerDY: document.getElementById('debug-player-dy'),
                 debugPlayerOnGround: document.getElementById('debug-player-onground'),
                 debugCollision: document.getElementById('debug-collision'),
+                toggleControlsButton: document.getElementById('toggle-controls-btn'),
+                mainContainer: document.querySelector('.main-container'),
                 score: 0,
                 gameOver: false,
                 stage: 1,
@@ -846,21 +881,35 @@
                         }
                     }
                     
-                    // HP SYSTEM LOGIC
-                    for (const enemy of Game.State.enemies) {
+                    // HP SYSTEM & ENEMY COLLISION LOGIC
+                    for (let i = Game.State.enemies.length - 1; i >= 0; i--) {
+                        const enemy = Game.State.enemies[i];
+
                         if (player.x + player.width > enemy.x && player.x < enemy.x + enemy.width && player.y + player.height > enemy.y && player.y < enemy.y + enemy.height) {
+                            
+                            if (enemy.type === 'ICICLE' && enemy.state === 'STUCK') {
+                                if (player.dx > 0) player.x = enemy.x - player.width;
+                                else if (player.dx < 0) player.x = enemy.x + enemy.width;
+                                player.dx = 0;
+                                continue;
+                            }
+
                             collisionDetected = true;
+                            
                             const isFrontalCollision = (player.direction === 'right' && enemy.x >= player.x) || (player.direction === 'left' && enemy.x <= player.x);
+
                             if (player.isBlocking && isFrontalCollision) {
                                 player.dx += player.direction === 'right' ? -2 : 2;
                             } else if (!player.isHit) {
                                 if (player.powerUp) {
                                     player.powerUp = null;
                                     player.isHit = true;
-                                    player.hitTimer = 90; // 1.5s invincibility
-                                    player.dy = -5; // Bounce up
+                                    player.hitTimer = 90;
+                                    player.dy = -5;
                                 } else {
-                                    Game.State.gameOver = true;
+                                    if (![101, 102].includes(stage)) {
+                                        Game.State.gameOver = true;
+                                    }
                                 }
                             }
                         }
@@ -880,7 +929,9 @@
                                      player.hitTimer = 90;
                                      player.dy = -5;
                                  } else {
-                                     Game.State.gameOver = true;
+                                     if (![101, 102].includes(stage)) {
+                                        Game.State.gameOver = true;
+                                    }
                                  }
                              }
                         }
@@ -919,7 +970,6 @@
                     const goalPlatform = S.goalPlatform;
                     
                     if (stage === 101) {
-                        // Logic for stage 101 remains unchanged
                         const p1 = platforms.find(p => p.y < 400 && p.x === 0);
                         const p2 = platforms.find(p => p.y < 400 && p.x > 100 && p.x < 200);
                         const p3 = platforms.find(p => p.y < 400 && p.x > 200);
@@ -1013,7 +1063,8 @@
                     const C = Game.Constants;
                     const S = Game.State;
 
-                    for (const enemy of S.enemies) {
+                    for (let i = S.enemies.length - 1; i >= 0; i--) {
+                        const enemy = S.enemies[i];
                         if (enemy.knockbackDx && Math.abs(enemy.knockbackDx) > 0.5) {
                            enemy.x += enemy.knockbackDx;
                            enemy.knockbackDx *= 0.9;
@@ -1742,6 +1793,11 @@
                             e.preventDefault(); this.keys.up = true; this.keys.a = true;
                         }
                         if (key === 's') { e.preventDefault(); this.keys.b = true; }
+                        
+                        if (e.ctrlKey && key === 'd') {
+                            e.preventDefault();
+                            S.mainContainer.classList.toggle('show-debug');
+                        }
                     });
 
                     document.addEventListener('keyup', (e) => {
@@ -1754,11 +1810,14 @@
                         if (key === 's') { this.keys.b = false; }
                     });
 
+                    S.toggleControlsButton.addEventListener('click', () => {
+                        S.mainContainer.classList.toggle('show-controls');
+                    });
+
                     S.startButton.addEventListener('click', Game.Core.startGame);
                     S.continueButton.addEventListener('click', () => { Game.Core.startGame(); });
                     S.restartButton.addEventListener('click', () => {
                         S.checkpointStage = 1; S.stage = 1; S.gameOverMenu.style.display = 'none'; S.startMenu.style.display = 'flex';
-                        document.getElementById('on-screen-controls').style.display = 'none';
                         Game.Core.resetGame(); Game.Graphics.draw();
                     });
                     S.decorationSlider.addEventListener('input', (e) => { const v = parseInt(e.target.value, 10); S.decorationProbability = v / 100; S.decorationValue.textContent = `${v}%`; });
