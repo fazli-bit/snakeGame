@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ice Climber v0.8.9 (Mekanik Perisai)</title>
+    <title>Ice Climber v0.8.10 (Power-up Bersinar)</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         html, body {
@@ -324,7 +324,7 @@
         <div class="game-column">
             <div class="game-title-bar">
                  <h1>Ice Climber<span id="toggle-controls-btn">⚙️</span></h1>
-                 <p class="version-info">v0.8.9 (Mekanik Perisai)</p>
+                 <p class="version-info">v0.8.10 (Power-up Bersinar)</p>
             </div>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
@@ -905,6 +905,7 @@
 
                         if (player.x + player.width > enemy.x && player.x < enemy.x + enemy.width && player.y + player.height > enemy.y && player.y < enemy.y + enemy.height) {
                             
+                            // FIX: Stuck icicles are just obstacles, not damaging.
                             if (enemy.type === 'ICICLE' && enemy.state === 'STUCK') {
                                 if (player.dx > 0) player.x = enemy.x - player.width;
                                 else if (player.dx < 0) player.x = enemy.x + enemy.width;
@@ -1775,7 +1776,17 @@
                 drawCheckpointFlag: (x, y, tCtx = Game.State.ctx) => { tCtx.fillStyle = '#964B00'; tCtx.fillRect(x, y - 30, 4, 30); tCtx.fillStyle = '#00FF00'; tCtx.beginPath(); tCtx.moveTo(x + 4, y - 28); tCtx.lineTo(x + 18, y - 22); tCtx.lineTo(x + 4, y - 16); tCtx.closePath(); tCtx.fill(); },
                 drawPowerUps: function() {
                     const ctx = Game.State.ctx;
+                    const tick = Game.State.globalAnimationTick;
                     Game.State.powerUps.forEach(p => {
+                        const glowRadius = p.width / 2 + 5 + Math.sin(tick * 0.1) * 3;
+                        const glowOpacity = 0.4 + Math.sin(tick * 0.1) * 0.2;
+                        ctx.save();
+                        ctx.fillStyle = `rgba(255, 255, 150, ${glowOpacity})`;
+                        ctx.beginPath();
+                        ctx.arc(p.x + p.width / 2, p.y + p.height / 2, glowRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+
                         if (p.type === 'HAMMER') { this.drawHammer(p.x, p.y); } 
                         else if (p.type === 'SHIELD') { this.drawShieldFrontView(p.x, p.y); }
                     });
