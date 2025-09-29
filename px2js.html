@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Art to JS Converter (30x30)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Gaya untuk grid pixel yang lebih jelas dan besar */
+        #grid-container {
+            display: grid;
+            border: 2px solid #9ca3af; /* gray-400, lebih tebal */
+            touch-action: none; /* Mengelakkan scrolling pada peranti sentuh semasa melukis */
+            width: 90vmin; /* Guna viewport unit untuk saiz responsif */
+            max-width: 600px; /* Saiz maksimum */
+        }
+        .grid-cell {
+            background-color: #ffffff;
+            border: 1px solid #d1d5db; /* gray-300 */
+            aspect-ratio: 1 / 1;
+        }
+        /* Memberi highlight kepada warna yang dipilih */
+        .color-box.selected {
+            box-shadow: 0 0 0 3px #3b82f6; /* blue-500 */
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Pixel Art ke Kod JavaScript</h1>
+            <p class="text-md md:text-lg text-gray-600 mt-2">Lukis pada grid 30x30 dan hasilkan kod tatasusunan 2D.</p>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <!-- Bahagian Utama Aplikasi -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <!-- Palet Warna & Alat -->
+                <div class="lg:col-span-1">
+                    <h3 class="text-lg font-semibold mb-3">Palet Warna</h3>
+                    <div id="color-palette" class="grid grid-cols-8 gap-2 mb-4">
+                        <!-- Warna akan dimasukkan oleh JS -->
+                    </div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <label for="color-picker" class="font-medium">Warna Pilihan:</label>
+                        <input type="color" id="color-picker" value="#000000" class="h-10 w-10 rounded-md border-gray-300 cursor-pointer">
+                    </div>
+                    <button id="clear-grid-btn" class="w-full bg-gray-500 text-white font-semibold px-4 py-2 rounded-md hover:bg-gray-600 transition-all shadow">Padam Lukisan</button>
+                </div>
+
+                <!-- Grid Lukisan yang lebih besar -->
+                <div class="lg:col-span-4 flex justify-center items-start">
+                    <div id="grid-container" class="cursor-pointer shadow-md"></div>
+                </div>
+            </div>
+
+            <!-- Bahagian Hasil Kod -->
+            <div class="mt-8 pt-6 border-t">
+                <h3 class="text-lg font-semibold mb-3">Kod JavaScript Dihasilkan</h3>
+                <div class="relative">
+                    <textarea id="js-code-output" readonly class="w-full h-48 p-3 font-mono text-sm bg-gray-900 text-green-400 rounded-md shadow-inner resize-none focus:outline-none"></textarea>
+                    <button id="copy-code-btn" class="absolute top-3 right-3 bg-gray-700 text-white px-3 py-1 text-xs font-semibold rounded-md hover:bg-gray-600 transition">Salin Kod</button>
+                </div>
+                 <button id="generate-code-btn" class="w-full mt-4 bg-green-600 text-white font-bold py-3 rounded-md hover:bg-green-700 transition-all shadow-lg text-lg">Hasilkan Kod</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Saiz grid tetap
+        const GRID_WIDTH = 30;
+        const GRID_HEIGHT = 30;
+
+        // Elemen DOM
+        const gridContainer = document.getElementById('grid-container');
+        const colorPalette = document.getElementById('color-palette');
+        const colorPicker = document.getElementById('color-picker');
+        const clearGridBtn = document.getElementById('clear-grid-btn');
+        const generateCodeBtn = document.getElementById('generate-code-btn');
+        const copyCodeBtn = document.getElementById('copy-code-btn');
+        const jsCodeOutput = document.getElementById('js-code-output');
+
+        // Senarai warna palet asas
+        const defaultColors = [
+            '#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff',
+            '#c0c0c0', '#808080', '#800000', '#008000', '#000080', '#808000', '#800080', '#008080'
+        ];
+
+        // Status Aplikasi
+        let currentColor = '#000000';
+        let isDrawing = false;
+        
+        // --- FUNGSI ---
+
+        // Fungsi untuk menukar warna RGB ke HEX
+        function rgbToHex(rgb) {
+            if (!rgb || rgb.startsWith('#')) return rgb || '#ffffff';
+            let sep = rgb.indexOf(",") > -1 ? "," : " ";
+            rgb = rgb.substr(4).split(")")[0].split(sep);
+            let r = (+rgb[0]).toString(16),
+                g = (+rgb[1]).toString(16),
+                b = (+rgb[2]).toString(16);
+            if (r.length == 1) r = "0" + r;
+            if (g.length == 1) g = "0" + g;
+            if (b.length == 1) b = "0" + b;
+            return "#" + r + g + b;
+        }
+        
+        // Fungsi untuk mencipta palet warna
+        function createColorPalette() {
+            colorPalette.innerHTML = '';
+            defaultColors.forEach(color => {
+                const colorBox = document.createElement('div');
+                colorBox.className = 'color-box w-8 h-8 rounded-md cursor-pointer transition-transform transform hover:scale-110';
+                colorBox.style.backgroundColor = color;
+                colorBox.addEventListener('click', () => selectColor(color, colorBox));
+                colorPalette.appendChild(colorBox);
+            });
+            selectColor(defaultColors[1], colorPalette.children[1]);
+        }
+
+        // Fungsi untuk memilih warna
+        function selectColor(color, element) {
+            currentColor = color;
+            colorPicker.value = color;
+            document.querySelectorAll('.color-box').forEach(box => box.classList.remove('selected'));
+            if (element) {
+                element.classList.add('selected');
+            }
+        }
+
+        // Fungsi untuk mencipta atau mengemaskini grid
+        function createGrid() {
+            gridContainer.innerHTML = '';
+            gridContainer.style.gridTemplateColumns = `repeat(${GRID_WIDTH}, 1fr)`;
+
+            for (let i = 0; i < GRID_WIDTH * GRID_HEIGHT; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                
+                cell.addEventListener('mousedown', (e) => {
+                    isDrawing = true;
+                    cell.style.backgroundColor = currentColor;
+                    e.preventDefault();
+                });
+                
+                cell.addEventListener('mouseover', () => {
+                    if (isDrawing) {
+                        cell.style.backgroundColor = currentColor;
+                    }
+                });
+                gridContainer.appendChild(cell);
+            }
+        }
+        
+        // Fungsi untuk memadam lukisan pada grid
+        function clearGrid() {
+            const cells = gridContainer.querySelectorAll('.grid-cell');
+            cells.forEach(cell => {
+                cell.style.backgroundColor = '#ffffff';
+            });
+            jsCodeOutput.value = '';
+        }
+        
+        // Fungsi untuk menghasilkan kod JavaScript
+        function generateCode() {
+            const cells = gridContainer.querySelectorAll('.grid-cell');
+            let artArray = [];
+            let row = [];
+
+            cells.forEach((cell, index) => {
+                const color = rgbToHex(cell.style.backgroundColor);
+                row.push(color);
+                
+                if ((index + 1) % GRID_WIDTH === 0) {
+                    artArray.push(row);
+                    row = [];
+                }
+            });
+
+            const codeString = `const pixelArt = ${JSON.stringify(artArray, null, 2)};`;
+            jsCodeOutput.value = codeString;
+        }
+
+        // Fungsi untuk menyalin kod ke papan klip
+        function copyCode() {
+            if (!jsCodeOutput.value) {
+                alert('Sila hasilkan kod terlebih dahulu!');
+                return;
+            }
+            jsCodeOutput.select();
+            document.execCommand('copy');
+            
+            const originalText = copyCodeBtn.textContent;
+            copyCodeBtn.textContent = 'Disalin!';
+            copyCodeBtn.classList.add('bg-green-500');
+            setTimeout(() => {
+                copyCodeBtn.textContent = originalText;
+                copyCodeBtn.classList.remove('bg-green-500');
+            }, 2000);
+        }
+
+        // --- EVENT LISTENERS ---
+        
+        window.addEventListener('mouseup', () => { isDrawing = false; });
+        gridContainer.addEventListener('dragstart', (e) => e.preventDefault());
+        clearGridBtn.addEventListener('click', clearGrid);
+        generateCodeBtn.addEventListener('click', generateCode);
+        copyCodeBtn.addEventListener('click', copyCode);
+        colorPicker.addEventListener('input', (e) => selectColor(e.target.value, null));
+
+        // Inisialisasi Aplikasi
+        document.addEventListener('DOMContentLoaded', () => {
+            createColorPalette();
+            createGrid();
+        });
+
+    </script>
+</body>
+</html>
+
