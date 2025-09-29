@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ice Climber v0.8.10</title>
+    <title>Ice Climber v0.8.10 (Pembetulan Pepijat)</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         html, body {
@@ -132,6 +132,12 @@
             color: #fff;
             text-shadow: 2px 2px #000;
             pointer-events: none;
+        }
+        .version-info {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: -15px;
+            margin-bottom: 15px;
         }
         .side-controls {
             flex-direction: column;
@@ -324,7 +330,7 @@
         <div class="game-column">
             <div class="game-title-bar">
                  <h1>Ice Climber<span id="toggle-controls-btn">⚙️</span></h1>
-                 <p class="version-info">v0.8.10 (Power-up Bersinar)</p>
+                 <p class="version-info">v0.8.10 (Pembetulan Pepijat)</p>
             </div>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
@@ -812,6 +818,10 @@
                             player.dx = 0;
                         } else if (player.powerUp.type === 'SHIELD') {
                             player.isBlocking = true;
+                            if (player.onGround && (keys.left || keys.right) && player.dy === 0) {
+                                player.dy = -2.5;
+                                player.onGround = false;
+                            }
                         }
                     } else {
                         player.isBlocking = false;
@@ -905,7 +915,6 @@
 
                         if (player.x + player.width > enemy.x && player.x < enemy.x + enemy.width && player.y + player.height > enemy.y && player.y < enemy.y + enemy.height) {
                             
-                            // FIX: Stuck icicles are just obstacles, not damaging.
                             if (enemy.type === 'ICICLE' && enemy.state === 'STUCK') {
                                 if (player.dx > 0) player.x = enemy.x - player.width;
                                 else if (player.dx < 0) player.x = enemy.x + enemy.width;
@@ -919,6 +928,8 @@
 
                             if (player.isBlocking && isFrontalCollision) {
                                 player.dx += player.direction === 'right' ? -2 : 2;
+                                player.dy = -4; 
+                                player.onGround = false; 
                             } else if (!player.isHit) {
                                 if (player.powerUp) {
                                     player.powerUp = null;
@@ -941,6 +952,8 @@
                              if (player.isBlocking && isFrontalCollision) {
                                  Game.State.projectiles.splice(i, 1);
                                  player.dx += player.direction === 'right' ? -2 : 2; 
+                                 player.dy = -4; 
+                                 player.onGround = false; 
                              } else if (!player.isHit) {
                                  Game.State.projectiles.splice(i, 1);
                                  if (player.powerUp) {
@@ -1112,6 +1125,19 @@
                                         }
                                     }
                                     
+                                    if (!shouldTurn && S.player.isBlocking) {
+                                        const playerIsFacingEnemy = (S.player.direction === 'right' && enemy.x > S.player.x) || (S.player.direction === 'left' && enemy.x < S.player.x);
+                                        if (playerIsFacingEnemy) {
+                                            if (nextX < S.player.x + S.player.width &&
+                                                nextX + enemy.width > S.player.x &&
+                                                enemy.y < S.player.y + S.player.height &&
+                                                enemy.y + enemy.height > S.player.y)
+                                            {
+                                                shouldTurn = true;
+                                            }
+                                        }
+                                    }
+
                                     if (!shouldTurn) {
                                         const probeX = enemy.dx > 0 ? nextX + enemy.width : nextX;
                                         const probeY = enemy.y + enemy.height + 5;
@@ -1796,10 +1822,16 @@
                     targetCtx.fillStyle = '#C0C0C0'; targetCtx.fillRect(x, y, 25, 10);
                 },
                 drawShieldFrontView: function(x, y, targetCtx = Game.State.ctx) {
-                    targetCtx.fillStyle = '#4682B4'; targetCtx.beginPath(); targetCtx.moveTo(x, y);
-                    targetCtx.lineTo(x + 25, y); targetCtx.lineTo(x + 25, y + 20);
-                    targetCtx.arcTo(x + 12.5, y + 30, x, y + 20, 15); targetCtx.closePath(); targetCtx.fill();
-                    targetCtx.fillStyle = '#C0C0C0'; targetCtx.fillRect(x, y, 25, 3);
+                    targetCtx.fillStyle = '#4682B4'; // Blue part
+                    targetCtx.beginPath();
+                    targetCtx.moveTo(x, y);
+                    targetCtx.lineTo(x + 25, y);
+                    targetCtx.lineTo(x + 25, y + 20);
+                    targetCtx.arcTo(x + 12.5, y + 30, x, y + 20, 15);
+                    targetCtx.closePath();
+                    targetCtx.fill(); // FIX: Changed tCtx to targetCtx
+                    targetCtx.fillStyle = '#C0C0C0'; // Silver border
+                    targetCtx.fillRect(x, y, 25, 3);
                 },
                 drawShieldSideView: function(x, y, targetCtx = Game.State.ctx) {
                     targetCtx.fillStyle = '#C0C0C0'; targetCtx.fillRect(x, y, 4, 25);
