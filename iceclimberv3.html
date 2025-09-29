@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ice Climber v0.8.1.0 (Kawalan Sentuhan)</title>
+    <title>Ice Climber v0.8.5 (AI Raksasa & Janaan)</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -279,7 +279,7 @@
         </div>
         <div class="game-column">
             <h1>Ice Climber</h1>
-            <p class="version-info">v0.8.1.0 (Kawalan Sentuhan)</p>
+            <p class="version-info">v0.8.5 (AI Raksasa & Janaan)</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
                 <div id="hud" style="display: none;">
@@ -326,9 +326,8 @@
 
             </div>
             <div class="controls-info">
-                <p>Use Arrow Keys to Move, Arrow Up to Jump</p>
-                <p>Down Arrow + Up Arrow to Drop Down</p>
-                <p>Mobile: D-Pad to Move, 'A' Button to Jump</p>
+                <p>Anak Panah/D-Pad: Bergerak | Atas/A: Lompat</p>
+                <p>Bawah + Atas/A: Turun | S/B: Guna Item</p>
             </div>
         </div>
         <div class="side-controls">
@@ -393,6 +392,16 @@
                         Game.Core.handleStageTransition();
                         return;
                     }
+                    
+                    if (Game.State.player.hitTimer > 0) {
+                        Game.State.player.hitTimer--;
+                    } else {
+                        Game.State.player.isHit = false;
+                    }
+
+                    if (Game.State.player.powerUpCooldown > 0) {
+                        Game.State.player.powerUpCooldown--;
+                    }
 
                     if (Game.State.player.platformToDropThrough && Game.State.player.y > Game.State.player.platformToDropThrough.y + Game.Constants.PLATFORM_HEIGHT) {
                         Game.State.player.platformToDropThrough = null;
@@ -401,6 +410,7 @@
                     Game.Enemies.updateEnemies();
                     Game.Enemies.updateProjectiles();
                     Game.Player.handlePlayerInput();
+                    Game.Player.updateActions();
                     Game.Player.updatePlayerPosition();
                     const collisionDetected = Game.Player.checkPlayerCollisions();
                     Game.Debug.updateDebugInfo(collisionDetected);
@@ -483,7 +493,7 @@
                         S.continueButton.disabled = S.checkpointStage <= 1;
                         S.gameOverMenu.style.display = 'flex';
                         S.hud.style.display = 'none';
-                        document.getElementById('on-screen-controls').style.display = 'none'; // ADDED
+                        document.getElementById('on-screen-controls').style.display = 'none';
                     }
                 },
                 
@@ -492,7 +502,7 @@
                     S.startMenu.style.display = 'none';
                     S.gameOverMenu.style.display = 'none';
                     S.hud.style.display = 'block';
-                    document.getElementById('on-screen-controls').style.display = 'flex'; // ADDED
+                    document.getElementById('on-screen-controls').style.display = 'flex';
                     
                     if (Game.Core.animationFrameId) cancelAnimationFrame(Game.Core.animationFrameId);
                     
@@ -513,6 +523,15 @@
                     player.isCrouching = false;
                     player.canDropDown = true;
                     player.platformToDropThrough = null;
+                    player.isHit = false;
+                    player.hitTimer = 0;
+                    player.powerUp = null;
+                    player.powerUpCooldown = 0;
+                    player.isAttacking = false;
+                    player.attackTimer = 0;
+                    player.isBlocking = false;
+                    player.direction = 'right';
+
 
                     S.score = 0;
                     S.scoreDisplay.textContent = S.score;
@@ -522,6 +541,7 @@
                     
                     S.landedYLevels = new Set();
                     Game.Level.generatePlatforms();
+                    Game.Level.generatePowerUps();
                     if(S.platforms[0]) S.landedYLevels.add(S.platforms[0].y);
                 },
 
@@ -531,6 +551,7 @@
                     const targetY = S.canvas.height - S.goalPlatform.height;
                     
                     S.platforms.forEach(p => p.y += scrollSpeed);
+                    S.powerUps.forEach(p => p.y += scrollSpeed);
                     S.player.y += scrollSpeed;
                     S.enemies.forEach(e => e.y += scrollSpeed);
                     S.decorations.forEach(d => d.y += scrollSpeed);
@@ -538,6 +559,7 @@
                     if (S.goalPlatform.y >= targetY) {
                         const finalShift = targetY - S.goalPlatform.y;
                         S.platforms.forEach(p => p.y += finalShift);
+                        S.powerUps.forEach(p => p.y += finalShift);
                         S.player.y += finalShift;
                         
                         S.isTransitioning = false;
@@ -551,6 +573,7 @@
                         
                         const previousTopPlatforms = S.platforms.filter(p => p.type === 'top');
                         Game.Level.generatePlatforms(previousTopPlatforms);
+                        Game.Level.generatePowerUps();
                         
                         const startPlatform = S.platforms[0];
                         S.player.y = startPlatform.y - S.player.height;
@@ -635,11 +658,20 @@
                 player: {
                     width: 30, height: 30, x: 0, y: 0, dx: 0, dy: 0,
                     onGround: false, standingOnPlatform: null, isCrouching: false,
-                    canDropDown: true, platformToDropThrough: null
+                    canDropDown: true, platformToDropThrough: null,
+                    isHit: false, 
+                    hitTimer: 0,
+                    powerUp: null,
+                    powerUpCooldown: 0,
+                    direction: 'right',
+                    isAttacking: false,
+                    attackTimer: 0,
+                    isBlocking: false,
                 },
                 enemies: [],
                 platforms: [],
                 projectiles: [],
+                powerUps: [],
                 goalPlatform: null,
                 decorations: [],
                 showcaseCharacters: [],
@@ -665,66 +697,96 @@
                     const keys = Game.Controls.keys;
                     const C = Game.Constants;
 
-                    if (stage === 101) {
+                    if (player.isAttacking) {
                         player.dx = 0;
-                        return;
-                    }
+                    } else {
+                        if (stage === 101) {
+                            player.dx = 0;
+                            return;
+                        }
 
-                    player.isCrouching = (keys.down && player.onGround);
+                        player.isCrouching = (keys.down && player.onGround);
 
-                    const onIce = player.onGround && player.standingOnPlatform && player.standingOnPlatform.subType === 'icy';
+                        const onIce = player.onGround && player.standingOnPlatform && player.standingOnPlatform.subType === 'icy';
 
-                    if (keys.left) {
-                        if (onIce) {
-                             if (player.dx > 0) player.dx -= 0.4;
-                             player.dx = Math.max(player.dx - 0.2, -Game.State.playerSpeed);
-                        } else {
-                            if (player.onGround && stage >= 5 && stage !== 102 && (stage >= 10 || player.standingOnPlatform !== Game.State.platforms[0])) {
-                                if (player.dx > 0) player.dx *= Game.State.friction;
-                                player.dx = Math.max(player.dx - 0.4, -Game.State.playerSpeed);
+                        if (keys.left) {
+                            player.direction = 'left';
+                            if (onIce) {
+                                if (player.dx > 0) player.dx -= 0.4;
+                                player.dx = Math.max(player.dx - 0.2, -Game.State.playerSpeed);
                             } else {
                                 player.dx = -Game.State.playerSpeed;
                             }
-                        }
-                    } else if (keys.right) {
-                        if (onIce) {
-                            if (player.dx < 0) player.dx += 0.4;
-                            player.dx = Math.min(player.dx + 0.2, Game.State.playerSpeed);
-                        } else {
-                            if (player.onGround && stage >= 5 && stage !== 102 && (stage >= 10 || player.standingOnPlatform !== Game.State.platforms[0])) {
-                                if (player.dx < 0) player.dx *= Game.State.friction;
-                                player.dx = Math.min(player.dx + 0.4, Game.State.playerSpeed);
+                        } else if (keys.right) {
+                            player.direction = 'right';
+                            if (onIce) {
+                                if (player.dx < 0) player.dx += 0.4;
+                                player.dx = Math.min(player.dx + 0.2, Game.State.playerSpeed);
                             } else {
                                 player.dx = Game.State.playerSpeed;
                             }
-                        }
-                    } else if (player.onGround) {
-                        if (onIce) {
-                            player.dx *= C.ICE_FRICTION;
-                        } else {
-                            if (stage >= 5 && stage !== 102 && (stage >= 10 || player.standingOnPlatform !== Game.State.platforms[0])) {
-                                player.dx *= Game.State.friction;
+                        } else if (player.onGround) {
+                            if (onIce) {
+                                player.dx *= C.ICE_FRICTION;
                             } else {
                                 player.dx = 0;
                             }
                         }
+
+                        if (Math.abs(player.dx) < 0.1) player.dx = 0;
+
+                        if ((keys.up || keys.a) && player.onGround && Game.State.canJump) {
+                            if (player.isCrouching && player.standingOnPlatform && player.standingOnPlatform !== Game.State.platforms[0] && player.canDropDown) {
+                                player.dy = -2;
+                                player.onGround = false;
+                                player.platformToDropThrough = player.standingOnPlatform;
+                                player.canDropDown = false;
+                                setTimeout(() => { player.canDropDown = true; }, 300);
+                            } else if (!player.isCrouching) {
+                                player.dy = Game.Constants.JUMP_POWER;
+                                player.onGround = false;
+                                Game.State.canJump = false;
+                                setTimeout(() => { Game.State.canJump = true; }, Game.State.jumpDelay);
+                            }
+                        }
                     }
 
-                    if (Math.abs(player.dx) < 0.1) player.dx = 0;
-                    
-                    // MODIFIED: Added `|| keys.a` to allow jumping with A button
-                    if ((keys.up || keys.a) && player.onGround && Game.State.canJump) {
-                        if (player.isCrouching && player.standingOnPlatform && player.standingOnPlatform !== Game.State.platforms[0] && player.canDropDown) {
-                            player.dy = -2;
-                            player.onGround = false;
-                            player.platformToDropThrough = player.standingOnPlatform;
-                            player.canDropDown = false;
-                            setTimeout(() => { player.canDropDown = true; }, 300);
-                        } else if (!player.isCrouching) {
-                            player.dy = Game.Constants.JUMP_POWER;
-                            player.onGround = false;
-                            Game.State.canJump = false;
-                            setTimeout(() => { Game.State.canJump = true; }, Game.State.jumpDelay);
+                    if (keys.b && player.powerUp) {
+                        if (player.powerUp.type === 'HAMMER' && player.attackTimer <= 0) {
+                            player.isAttacking = true;
+                            player.attackTimer = 30;
+                            player.dx = 0;
+                        } else if (player.powerUp.type === 'SHIELD') {
+                            player.isBlocking = true;
+                        }
+                    } else {
+                        player.isBlocking = false;
+                    }
+                },
+
+                updateActions: function() {
+                    const player = Game.State.player;
+                    if (player.attackTimer > 0) {
+                        player.attackTimer--;
+                        if (player.isAttacking && player.attackTimer === 25) {
+                            const attackOffset = 5;
+                            const attackWidth = 25;
+                            const attackX = player.direction === 'right' ? player.x + player.width + attackOffset : player.x - attackWidth - attackOffset;
+                            const attackY = player.y;
+                            const attackHeight = player.height;
+
+                            Game.State.enemies.forEach(enemy => {
+                                if (attackX < enemy.x + enemy.width && attackX + attackWidth > enemy.x &&
+                                    attackY < enemy.y + enemy.height && attackY + attackHeight > enemy.y) {
+                                    
+                                    const isOnSlippery = enemy.platform && enemy.platform.subType === 'icy';
+                                    const knockbackForce = isOnSlippery ? 15 : 8;
+                                    enemy.knockbackDx = player.direction === 'right' ? knockbackForce : -knockbackForce;
+                                }
+                            });
+                        }
+                        if (player.attackTimer === 0) {
+                            player.isAttacking = false;
                         }
                     }
                 },
@@ -782,35 +844,65 @@
                         }
                     }
                     
+                    // HP SYSTEM LOGIC
                     for (const enemy of Game.State.enemies) {
-                        if (enemy.type === 'ICICLE' && enemy.state === 'STUCK') {
-                            if (player.x < enemy.x + enemy.width &&
-                                player.x + player.width > enemy.x &&
-                                player.y < enemy.y + enemy.height &&
-                                player.y + player.height > enemy.y) {
-                                
-                                if (player.dx < 0 && (player.x - player.dx) >= (enemy.x + enemy.width)) {
-                                    player.x = enemy.x + enemy.width;
-                                    player.dx = 0;
-                                } 
-                                else if (player.dx > 0 && (player.x + player.width - player.dx) <= enemy.x) {
-                                    player.x = enemy.x - player.width;
-                                    player.dx = 0;
-                                }
-                            }
-                            continue;
-                        }
-
-                        if (player.x < enemy.x + enemy.width &&
-                            player.x + player.width > enemy.x &&
-                            player.y < enemy.y + enemy.height &&
-                            player.y + player.height > enemy.y) {
+                        if (player.x + player.width > enemy.x && player.x < enemy.x + enemy.width && player.y + player.height > enemy.y && player.y < enemy.y + enemy.height) {
                             collisionDetected = true;
-                            if (![101, 102].includes(stage)) {
-                                Game.State.gameOver = true;
+                            const isFrontalCollision = (player.direction === 'right' && enemy.x >= player.x) || (player.direction === 'left' && enemy.x <= player.x);
+                            if (player.isBlocking && isFrontalCollision) {
+                                player.dx += player.direction === 'right' ? -2 : 2;
+                            } else if (!player.isHit) {
+                                if (player.powerUp) {
+                                    player.powerUp = null;
+                                    player.isHit = true;
+                                    player.hitTimer = 90; // 1.5s invincibility
+                                    player.dy = -5; // Bounce up
+                                } else {
+                                    Game.State.gameOver = true;
+                                }
                             }
                         }
                     }
+
+                    for (let i = Game.State.projectiles.length - 1; i >= 0; i--) {
+                        const proj = Game.State.projectiles[i];
+                        if (player.x + player.width > proj.x && player.x < proj.x + proj.width && player.y + player.height > proj.y && player.y < proj.y + proj.height) {
+                             const isFrontalCollision = (player.direction === 'right' && proj.dx < 0) || (player.direction === 'left' && proj.dx > 0);
+                             if (player.isBlocking && isFrontalCollision) {
+                                 Game.State.projectiles.splice(i, 1);
+                             } else if (!player.isHit) {
+                                 Game.State.projectiles.splice(i, 1);
+                                 if (player.powerUp) {
+                                     player.powerUp = null;
+                                     player.isHit = true;
+                                     player.hitTimer = 90;
+                                     player.dy = -5;
+                                 } else {
+                                     Game.State.gameOver = true;
+                                 }
+                             }
+                        }
+                    }
+
+                    if (player.powerUpCooldown === 0) {
+                        for (let i = Game.State.powerUps.length - 1; i >= 0; i--) {
+                            const p = Game.State.powerUps[i];
+                            if (player.x < p.x + p.width && player.x + player.width > p.x && player.y < p.y + p.height && player.y + player.height > p.y) {
+                                const currentPowerUp = player.powerUp;
+                                player.powerUp = p;
+                                player.powerUpCooldown = 30;
+                                if (currentPowerUp) {
+                                    Game.State.powerUps[i] = currentPowerUp;
+                                    currentPowerUp.x = p.x;
+                                    currentPowerUp.y = p.y;
+                                } else {
+                                    Game.State.powerUps.splice(i, 1);
+                                }
+                                break;
+                            }
+                        }
+                    }
+
                     return collisionDetected;
                 }
             },
@@ -848,35 +940,13 @@
                         }
                         return;
                     }
+                    
+                    const spawnablePlatforms = platforms.filter(p => p.type !== 'base' && p.type !== 'top' && p !== goalPlatform && p.subType !== 'moving' && p.subType !== 'crumbling');
 
-                    if (stage === 102) {
-                        const p_mid = platforms[1];
-                        const p_top = platforms[2];
-                        const testEnemyType = S.testEnemyType;
-
-                        if(p_mid && testEnemyType === 'GROUND_MONSTER') {
-                            S.enemies.push({ type: 'GROUND_MONSTER', width: 25, height: 25, x: p_mid.x + p_mid.width/2 - 12.5, y: p_mid.y - 25, dx: S.enemySpeed, platform: p_mid, isTurning: false, animationTick: 0, facing: 'right', attackCooldown: 120, isAttacking: false });
-                        }
-                        if(p_mid && testEnemyType === 'AWAN_HANTU') {
-                            const baseX = p_mid.x + p_mid.width/2 - 17.5;
-                            const baseY = p_mid.y - 40;
-                            S.enemies.push({ type: 'AWAN_HANTU', width: 35, height: 25, x: baseX, y: baseY, originalX: baseX, originalY: baseY, baseY: baseY, dx: 0, platform: p_mid, animationAngle: 0, eyeAngle: 0, state: 'SCANNING', detectionTimer: 0, dashTargetX: 0 });
-                        }
-                        if (p_top && testEnemyType === 'ICICLE') {
-                            S.enemies.push({ type: 'ICICLE', width: 15, height: 30, x: p_top.x + p_top.width/2, y: p_top.y + Game.Constants.PLATFORM_HEIGHT, originalX: p_top.x + p_top.width/2, originalY: p_top.y + Game.Constants.PLATFORM_HEIGHT, state: 'IDLE', shakeTimer: 0 });
-                        }
-                        if (p_top && testEnemyType === 'BAT') {
-                            S.enemies.push({type: 'BAT', width: 30, height: 20, x: p_top.x + p_top.width/2, y: p_top.y + Game.Constants.PLATFORM_HEIGHT, originalX: p_top.x + p_top.width/2, originalY: p_top.y + Game.Constants.PLATFORM_HEIGHT, state: 'HANGING', wakeTimer: 0, dx: 0 });
-                        }
-                        return;
-                    }
-
-                    const spawnablePlatforms = platforms.filter(p => p.type !== 'base' && p.type !== 'top' && p !== goalPlatform);
                     if (spawnablePlatforms.length === 0) return;
                     
                     const lowerTierPlatforms = spawnablePlatforms.filter(p => p.y > 100);
 
-                    // Penjanaan GROUND_MONSTER
                     let numEnemies = 0;
                     if (stage >= 3) numEnemies = 1;
                     if (stage >= 7) numEnemies = 2;
@@ -891,7 +961,7 @@
                             const platformsAtLevel = lowerTierPlatforms.filter(p => p.y === yLevel);
                             const platform = platformsAtLevel[Math.floor(Math.random() * platformsAtLevel.length)];
                             const initialDirection = Math.random() < 0.5 ? 1 : -1;
-                            const monster = { type: 'GROUND_MONSTER', width: 25, height: 25, x: platform.x + (platform.width / 2) - 12.5, y: platform.y - 25, dx: S.enemySpeed * initialDirection, platform: platform, isTurning: false, animationTick: 0, facing: initialDirection > 0 ? 'right' : 'left' };
+                            const monster = { type: 'GROUND_MONSTER', width: 25, height: 25, x: platform.x + (platform.width / 2) - 12.5, y: platform.y - 25, dx: S.enemySpeed * initialDirection, platform: platform, isTurning: false, animationTick: 0, facing: initialDirection > 0 ? 'right' : 'left', knockbackDx: 0 };
                             if (stage >= 20) {
                                 monster.attackCooldown = (stage > 30) ? (90 + Math.random() * 40) : (120 + Math.random() * 60);
                                 monster.isAttacking = false;
@@ -900,22 +970,20 @@
                         }
                     }
 
-                    // Penjanaan AWAN_HANTU (Zon 3+)
                     let awanHantuChance = 0;
                     if (stage > 0 && stage % 10 === 0) { awanHantuChance = 1.0; } 
                     else if (stage >= 21) { awanHantuChance = 0.25; }
 
                     if (Math.random() < awanHantuChance && platforms.length > 5) {
-                        const topTierPlatforms = platforms.filter(p => p.y < 200 && p.type !== 'top');
+                        const topTierPlatforms = platforms.filter(p => p.y < 200 && p.type !== 'top' && p.subType !== 'moving' && p.subType !== 'crumbling' && p.subType !== 'icy');
                         if (topTierPlatforms.length > 0) {
                             const platform = topTierPlatforms[Math.floor(Math.random() * topTierPlatforms.length)];
                             const baseX = platform.x + (platform.width / 2) - 17.5;
                             const baseY = platform.y - 40;
-                            S.enemies.push({ type: 'AWAN_HANTU', width: 35, height: 25, x: baseX, y: baseY, originalX: baseX, originalY: baseY, baseY: baseY, dx: 0, platform: platform, animationAngle: Math.random() * Math.PI * 2, eyeAngle: 0, state: 'SCANNING', detectionTimer: 0, dashTargetX: 0 });
+                            S.enemies.push({ type: 'AWAN_HANTU', width: 35, height: 25, x: baseX, y: baseY, originalX: baseX, originalY: baseY, baseY: baseY, dx: 0, platform: platform, animationAngle: Math.random() * Math.PI * 2, eyeAngle: 0, state: 'SCANNING', detectionTimer: 0, dashTargetX: 0, knockbackDx: 0 });
                         }
                     }
 
-                    // Penjanaan ICICLE & BAT (Zon 2+)
                     if (stage >= 5) {
                         const spawnChance = 0.05 + (stage - 5) * 0.002;
                         
@@ -927,11 +995,11 @@
                                 if (Math.random() < batChance) {
                                     const batX = platform.x + Math.random() * (platform.width - 30);
                                     const batY = platform.y + Game.Constants.PLATFORM_HEIGHT;
-                                     S.enemies.push({type: 'BAT', width: 30, height: 20, x: batX, y: batY, originalX: batX, originalY: batY, state: 'HANGING', wakeTimer: 0, dx: 0 });
+                                     S.enemies.push({type: 'BAT', width: 30, height: 20, x: batX, y: batY, originalX: batX, originalY: batY, state: 'HANGING', wakeTimer: 0, dx: 0, knockbackDx: 0 });
                                 } else {
                                     const icicleX = platform.x + Math.random() * (platform.width - 15);
                                     const icicleY = platform.y + Game.Constants.PLATFORM_HEIGHT;
-                                    S.enemies.push({ type: 'ICICLE', width: 15, height: 30, x: icicleX, y: icicleY, originalX: icicleX, originalY: icicleY, state: 'IDLE', shakeTimer: 0 });
+                                    S.enemies.push({ type: 'ICICLE', width: 15, height: 30, x: icicleX, y: icicleY, originalX: icicleX, originalY: icicleY, state: 'IDLE', shakeTimer: 0, knockbackDx: 0 });
                                 }
                             }
                         });
@@ -943,77 +1011,119 @@
                     const S = Game.State;
 
                     for (const enemy of S.enemies) {
-                        if (enemy.type === 'GROUND_MONSTER') {
-                            if (!enemy.isAttacking && !enemy.isTurning && enemy.dx !== 0) {
-                                enemy.x += enemy.dx;
-                                enemy.animationTick++;
-                                const visiblePlatformStartX = Math.max(0, enemy.platform.x);
-                                const visiblePlatformEndX = Math.min(S.canvas.width, enemy.platform.x + enemy.platform.width);
-                                if (enemy.x <= visiblePlatformStartX || enemy.x + enemy.width >= visiblePlatformEndX) {
-                                    enemy.isTurning = true;
-                                    enemy.facing = enemy.dx > 0 ? 'left' : 'right';
-                                    enemy.dx = 0;
-                                    setTimeout(() => {
-                                        enemy.dx = enemy.facing === 'right' ? S.enemySpeed : -S.enemySpeed;
-                                        enemy.isTurning = false;
-                                    }, C.ENEMY_TURN_DELAY);
-                                }
-                            }
+                        if (enemy.knockbackDx && Math.abs(enemy.knockbackDx) > 0.5) {
+                           enemy.x += enemy.knockbackDx;
+                           enemy.knockbackDx *= 0.9;
+                        } else {
+                           enemy.knockbackDx = 0;
+                        
+                            if (enemy.type === 'GROUND_MONSTER') {
+                                if (!enemy.isAttacking && !enemy.isTurning && enemy.dx !== 0) {
+                                    let shouldTurn = false;
+                                    const nextX = enemy.x + enemy.dx;
 
-                            if ((S.stage >= 20 || S.stage === 102) && enemy.attackCooldown > 0) {
-                                enemy.attackCooldown--;
-                            }
-                            
-                            const distanceToPlayer = Math.abs((S.player.x + S.player.width / 2) - (enemy.x + enemy.width / 2));
-                            const onSamePlatform = S.player.standingOnPlatform === enemy.platform;
-                            const isPlayerInFront = (enemy.facing === 'right' && S.player.x > enemy.x) || (enemy.facing === 'left' && S.player.x < enemy.x);
-
-                            if ((S.stage >= 20 || S.stage === 102) && onSamePlatform && isPlayerInFront && !enemy.isAttacking && enemy.attackCooldown <= 0 && distanceToPlayer < C.GROUND_MONSTER_ATTACK_RANGE) {
-                                enemy.isAttacking = true;
-                                enemy.dx = 0;
-                                setTimeout(() => {
-                                    if(!enemy.isTurning) {
-                                        const projectileX = enemy.facing === 'right' ? enemy.x + enemy.width : enemy.x;
-                                        const projectileY = enemy.y + 17;
-                                        const projectileDX = enemy.facing === 'right' ? 4 : -4;
-                                        S.projectiles.push({ x: projectileX, y: projectileY, dx: projectileDX, width: 8, height: 8 });
+                                    // 1. Check canvas boundaries
+                                    if (nextX <= 0 || nextX + enemy.width >= S.canvas.width) {
+                                        shouldTurn = true;
                                     }
-                                    enemy.isAttacking = false;
-                                    enemy.attackCooldown = 180 + Math.random() * 120;
-                                    if(!enemy.isTurning) enemy.dx = enemy.facing === 'right' ? S.enemySpeed : -S.enemySpeed;
-                                }, 300);
-                            }
-                        } else if (enemy.type === 'AWAN_HANTU') {
-                           switch (enemy.state) {
-                                case 'SCANNING':
-                                    enemy.animationAngle += 0.05;
-                                    enemy.y = enemy.baseY + Math.sin(enemy.animationAngle) * 5;
-                                    enemy.eyeAngle += 0.03;
-                                    const detectionRangeX = C.AWAN_HANTU_DETECTION_X_BASE + (Math.floor(S.stage / 10) - 1) * 10;
-                                    const playerDistX = Math.abs((S.player.x + S.player.width/2) - (enemy.x + enemy.width/2));
-                                    const playerDistY = Math.abs(S.player.y - enemy.y);
-                                    const eyeDirection = Math.sin(enemy.eyeAngle);
-                                    if (playerDistX < detectionRangeX && playerDistY < C.AWAN_HANTU_DETECTION_Y) {
-                                        const isPlayerRight = S.player.x > enemy.x;
-                                        if ((isPlayerRight && eyeDirection > 0.3) || (!isPlayerRight && eyeDirection < -0.3)) {
-                                            enemy.state = 'PAUSING';
-                                            enemy.detectionTimer = C.AWAN_HANTU_PAUSE_DURATION;
-                                            enemy.dashTargetX = S.player.x + 10;
+
+                                    // 2. Check for stuck icicles
+                                    if (!shouldTurn) {
+                                        for (const other of S.enemies) {
+                                            if (other.type === 'ICICLE' && other.state === 'STUCK') {
+                                                if (nextX < other.x + other.width && nextX + enemy.width > other.x &&
+                                                    enemy.y < other.y + other.height && enemy.y + enemy.height > other.y) {
+                                                    shouldTurn = true;
+                                                    break;
+                                                }
+                                            }
                                         }
                                     }
-                                    break;
-                                case 'PAUSING':
-                                    enemy.detectionTimer--;
-                                    if (enemy.detectionTimer <= 0) { enemy.state = 'DASHING'; }
-                                    break;
-                                case 'DASHING':
-                                    const directionToTarget = Math.sign(enemy.dashTargetX - enemy.x);
-                                    enemy.x += directionToTarget * C.AWAN_HANTU_DASH_SPEED;
-                                    if (Math.abs(enemy.x - enemy.dashTargetX) < C.AWAN_HANTU_DASH_SPEED) {
-                                        enemy.x = enemy.dashTargetX;
-                                        enemy.state = 'RETURNING';
+                                    
+                                    // 3. Check for gaps
+                                    if (!shouldTurn) {
+                                        const probeX = enemy.dx > 0 ? nextX + enemy.width : nextX;
+                                        const probeY = enemy.y + enemy.height + 5; // Point below the monster's feet
+                                        const groundExists = S.platforms.some(p => 
+                                            !p.isFalling && 
+                                            probeX >= p.x && 
+                                            probeX < (p.x + p.width) &&
+                                            probeY > p.y &&
+                                            probeY < (p.y + p.height + 10) // Allow some tolerance
+                                        );
+                                        if (!groundExists) {
+                                            shouldTurn = true;
+                                        }
                                     }
-                                    break;
+                                    
+                                    if (shouldTurn) {
+                                        enemy.isTurning = true;
+                                        enemy.facing = enemy.dx > 0 ? 'left' : 'right';
+                                        enemy.dx = 0;
+                                        setTimeout(() => {
+                                            enemy.dx = enemy.facing === 'right' ? S.enemySpeed : -S.enemySpeed;
+                                            enemy.isTurning = false;
+                                        }, C.ENEMY_TURN_DELAY);
+                                    } else {
+                                        enemy.x = nextX;
+                                        enemy.animationTick++;
+                                    }
+                                }
+
+                                if ((S.stage >= 20 || S.stage === 102) && enemy.attackCooldown > 0) {
+                                    enemy.attackCooldown--;
+                                }
+                                
+                                const distanceToPlayer = Math.abs((S.player.x + S.player.width / 2) - (enemy.x + enemy.width / 2));
+                                const onSamePlatform = S.player.standingOnPlatform === enemy.platform;
+                                const isPlayerInFront = (enemy.facing === 'right' && S.player.x > enemy.x) || (enemy.facing === 'left' && S.player.x < enemy.x);
+
+                                if ((S.stage >= 20 || S.stage === 102) && onSamePlatform && isPlayerInFront && !enemy.isAttacking && enemy.attackCooldown <= 0 && distanceToPlayer < C.GROUND_MONSTER_ATTACK_RANGE) {
+                                    enemy.isAttacking = true;
+                                    enemy.dx = 0;
+                                    setTimeout(() => {
+                                        if(!enemy.isTurning) {
+                                            const projectileX = enemy.facing === 'right' ? enemy.x + enemy.width : enemy.x;
+                                            const projectileY = enemy.y + 17;
+                                            const projectileDX = enemy.facing === 'right' ? 4 : -4;
+                                            S.projectiles.push({ x: projectileX, y: projectileY, dx: projectileDX, width: 8, height: 8 });
+                                        }
+                                        enemy.isAttacking = false;
+                                        enemy.attackCooldown = 180 + Math.random() * 120;
+                                        if(!enemy.isTurning) enemy.dx = enemy.facing === 'right' ? S.enemySpeed : -S.enemySpeed;
+                                    }, 300);
+                                }
+                            } else if (enemy.type === 'AWAN_HANTU') {
+                               switch (enemy.state) {
+                                    case 'SCANNING':
+                                        enemy.animationAngle += 0.05;
+                                        enemy.y = enemy.baseY + Math.sin(enemy.animationAngle) * 5;
+                                        enemy.eyeAngle += 0.03;
+                                        const detectionRangeX = C.AWAN_HANTU_DETECTION_X_BASE + (Math.floor(S.stage / 10) - 1) * 10;
+                                        const playerDistX = Math.abs((S.player.x + S.player.width/2) - (enemy.x + enemy.width/2));
+                                        const playerDistY = Math.abs(S.player.y - enemy.y);
+                                        const eyeDirection = Math.sin(enemy.eyeAngle);
+                                        if (playerDistX < detectionRangeX && playerDistY < C.AWAN_HANTU_DETECTION_Y) {
+                                            const isPlayerRight = S.player.x > enemy.x;
+                                            if ((isPlayerRight && eyeDirection > 0.3) || (!isPlayerRight && eyeDirection < -0.3)) {
+                                                enemy.state = 'PAUSING';
+                                                enemy.detectionTimer = C.AWAN_HANTU_PAUSE_DURATION;
+                                                enemy.dashTargetX = S.player.x + 10;
+                                            }
+                                        }
+                                        break;
+                                    case 'PAUSING':
+                                        enemy.detectionTimer--;
+                                        if (enemy.detectionTimer <= 0) { enemy.state = 'DASHING'; }
+                                        break;
+                                    case 'DASHING':
+                                        const directionToTarget = Math.sign(enemy.dashTargetX - enemy.x);
+                                        enemy.x += directionToTarget * C.AWAN_HANTU_DASH_SPEED;
+                                        if (Math.abs(enemy.x - enemy.dashTargetX) < C.AWAN_HANTU_DASH_SPEED) {
+                                            enemy.x = enemy.dashTargetX;
+                                            enemy.state = 'RETURNING';
+                                     }
+                                     break;
                                 case 'RETURNING':
                                     const directionToHome = Math.sign(enemy.originalX - enemy.x);
                                      enemy.x += directionToHome * (C.AWAN_HANTU_DASH_SPEED / 2);
@@ -1022,126 +1132,128 @@
                                          enemy.state = 'SCANNING';
                                      }
                                      break;
-                            }
-                        } else if (enemy.type === 'ICICLE') {
-                            switch (enemy.state) {
-                                case 'IDLE':
-                                    if (S.stage === 101 || S.stage === 102) {
-                                        if(!enemy.resetTimer) enemy.resetTimer = 180;
-                                        enemy.resetTimer--;
-                                        if(enemy.resetTimer <= 0) {
-                                            enemy.state = 'SHAKING';
-                                            enemy.shakeTimer = C.ICICLE_SHAKE_DURATION;
-                                            delete enemy.resetTimer;
+                                }
+                            } else if (enemy.type === 'ICICLE') {
+                                switch (enemy.state) {
+                                    case 'IDLE':
+                                        if (S.stage === 101 || S.stage === 102) {
+                                            if(!enemy.resetTimer) enemy.resetTimer = 180;
+                                            enemy.resetTimer--;
+                                            if(enemy.resetTimer <= 0) {
+                                                enemy.state = 'SHAKING';
+                                                enemy.shakeTimer = C.ICICLE_SHAKE_DURATION;
+                                                delete enemy.resetTimer;
+                                            }
+                                        } else if (S.player.onGround && S.player.standingOnPlatform) {
+                                            const yDist = S.player.standingOnPlatform.y - (enemy.y - C.PLATFORM_HEIGHT);
+                                            const xDist = Math.abs((S.player.x + S.player.width/2) - (enemy.x + enemy.width/2));
+                                            if (Math.abs(yDist - C.VERTICAL_GAP) < 10 && xDist < C.ICICLE_DETECTION_RANGE) {
+                                                enemy.state = 'SHAKING';
+                                                enemy.shakeTimer = C.ICICLE_SHAKE_DURATION;
+                                            }
                                         }
-                                    } else if (S.player.onGround && S.player.standingOnPlatform) {
-                                        const yDist = S.player.standingOnPlatform.y - (enemy.y - C.PLATFORM_HEIGHT);
-                                        const xDist = Math.abs((S.player.x + S.player.width/2) - (enemy.x + enemy.width/2));
-                                        if (Math.abs(yDist - C.VERTICAL_GAP) < 10 && xDist < C.ICICLE_DETECTION_RANGE) {
-                                            enemy.state = 'SHAKING';
-                                            enemy.shakeTimer = C.ICICLE_SHAKE_DURATION;
+                                        break;
+                                    case 'SHAKING':
+                                        enemy.shakeTimer--;
+                                        enemy.x = enemy.originalX + Math.sin(S.globalAnimationTick * 0.8) * 2;
+                                        if (enemy.shakeTimer <= 0) { enemy.state = 'FALLING'; }
+                                        break;
+                                    case 'FALLING':
+                                        enemy.y += C.ICICLE_FALL_SPEED;
+                                        for (const p of S.platforms) {
+                                            const tipY = enemy.y + enemy.height;
+                                            if (tipY >= p.y && tipY - C.ICICLE_FALL_SPEED < p.y &&
+                                                enemy.x > p.x && enemy.x < p.x + p.width)
+                                            {
+                                                enemy.y = p.y - enemy.height + 8;
+                                                enemy.state = 'STUCK';
+                                                enemy.shakeTimer = C.ICICLE_WAIT_DURATION;
+                                                break; 
+                                            }
                                         }
-                                    }
-                                    break;
-                                case 'SHAKING':
-                                    enemy.shakeTimer--;
-                                    enemy.x = enemy.originalX + Math.sin(S.globalAnimationTick * 0.8) * 2;
-                                    if (enemy.shakeTimer <= 0) { enemy.state = 'FALLING'; }
-                                    break;
-                                case 'FALLING':
-                                    enemy.y += C.ICICLE_FALL_SPEED;
-                                    for (const p of S.platforms) {
-                                        const tipY = enemy.y + enemy.height;
-                                        if (tipY >= p.y && tipY - C.ICICLE_FALL_SPEED < p.y &&
-                                            enemy.x > p.x && enemy.x < p.x + p.width)
-                                        {
-                                            enemy.y = p.y - enemy.height + 8;
+                                        if (enemy.y > S.canvas.height) {
                                             enemy.state = 'STUCK';
                                             enemy.shakeTimer = C.ICICLE_WAIT_DURATION;
-                                            break; 
                                         }
-                                    }
-                                    if (enemy.y > S.canvas.height) {
-                                        enemy.state = 'STUCK';
-                                        enemy.shakeTimer = C.ICICLE_WAIT_DURATION;
-                                    }
-                                    break;
-                                case 'STUCK':
-                                    enemy.shakeTimer--;
-                                     if (enemy.shakeTimer <= 0) {
-                                         enemy.y = enemy.originalY;
-                                         enemy.x = enemy.originalX;
-                                         enemy.state = 'IDLE';
-                                     }
-                                    break;
-                               }
-                        } else if (enemy.type === 'BAT') {
-                            const xDist = Math.abs((S.player.x + S.player.width/2) - (enemy.x + enemy.width/2));
-                            const isPlayerBelow = S.player.y > enemy.y;
-                            
-                            switch(enemy.state) {
-                                case 'HANGING':
-                                     if (S.stage === 101 || S.stage === 102) {
-                                         if (!enemy.resetTimer) enemy.resetTimer = 240;
-                                         enemy.resetTimer--;
-                                         if(enemy.resetTimer <= 0) {
-                                             enemy.state = 'WAKING';
-                                             enemy.wakeTimer = C.BAT_WAKE_DURATION;
-                                             delete enemy.resetTimer;
+                                        break;
+                                    case 'STUCK':
+                                        enemy.shakeTimer--;
+                                         if (enemy.shakeTimer <= 0) {
+                                             enemy.y = enemy.originalY;
+                                             enemy.x = enemy.originalX;
+                                             enemy.state = 'IDLE';
                                          }
-                                     } else if (isPlayerBelow && xDist < C.BAT_DETECTION_RANGE_X) {
-                                         enemy.state = 'DETECTED';
-                                     }
-                                     break;
-                                case 'DETECTED':
-                                    if (!isPlayerBelow || xDist >= C.BAT_DETECTION_RANGE_X) {
-                                        enemy.state = 'HANGING';
-                                    } else if (xDist < C.BAT_ATTACK_RANGE_X) {
-                                        enemy.state = 'WAKING';
-                                        enemy.wakeTimer = C.BAT_WAKE_DURATION;
-                                    }
-                                    break;
-                                case 'WAKING':
-                                    enemy.wakeTimer--;
-                                    if(enemy.wakeTimer <= 0) {
-                                        enemy.state = 'FLYING_DIP';
-                                        enemy.targetY = enemy.originalY + C.BAT_DIP_HEIGHT; 
-                                        enemy.dx = (S.player.x < enemy.x) ? -C.BAT_FLIGHT_SPEED : C.BAT_FLIGHT_SPEED;
-                                    }
-                                    break;
-                                case 'FLYING_DIP':
-                                    enemy.y += (enemy.targetY - enemy.y) * 0.1;
-                                    if (Math.abs(enemy.y - enemy.targetY) < 1) {
-                                        enemy.state = 'ASCENDING';
-                                        enemy.targetY = enemy.originalY - C.BAT_FLIGHT_HEIGHT;
-                                    }
-                                    break;
-                                case 'ASCENDING':
-                                     enemy.y += (enemy.targetY - enemy.y) * 0.1;
-                                     enemy.x += enemy.dx;
-                                     if (Math.abs(enemy.y - enemy.targetY) < 1) {
-                                         enemy.state = 'FLYING';
-                                     }
-                                     if (enemy.x < enemy.originalX - C.BAT_FLIGHT_RANGE || enemy.x > enemy.originalX + C.BAT_FLIGHT_RANGE) {
-                                         enemy.dx *= -1;
-                                     }
-                                     break;
-                                case 'FLYING':
-                                    enemy.x += enemy.dx;
-                                    if (enemy.x < enemy.originalX - C.BAT_FLIGHT_RANGE || enemy.x > enemy.originalX + C.BAT_FLIGHT_RANGE) {
-                                        enemy.dx *= -1;
-                                    }
-                                    if (S.stage === 101 || S.stage === 102) { 
-                                        if(!enemy.resetTimer) enemy.resetTimer = 300;
-                                        enemy.resetTimer--;
-                                        if(enemy.resetTimer <= 0) {
-                                            enemy.x = enemy.originalX;
-                                            enemy.y = enemy.originalY;
+                                        break;
+                                   }
+                            } else if (enemy.type === 'BAT') {
+                                const xDist = Math.abs((S.player.x + S.player.width/2) - (enemy.x + enemy.width/2));
+                                const yDist = S.player.y - enemy.y;
+                                const isPlayerBelow = yDist > 0 && yDist < 90;
+                                
+                                switch(enemy.state) {
+                                    case 'HANGING':
+                                         if (S.stage === 101 || S.stage === 102) {
+                                             if (!enemy.resetTimer) enemy.resetTimer = 240;
+                                             enemy.resetTimer--;
+                                             if(enemy.resetTimer <= 0) {
+                                                 enemy.state = 'WAKING';
+                                                 enemy.wakeTimer = C.BAT_WAKE_DURATION;
+                                                 delete enemy.resetTimer;
+                                             }
+                                         } else if (isPlayerBelow && xDist < C.BAT_DETECTION_RANGE_X) {
+                                             enemy.state = 'DETECTED';
+                                         }
+                                         break;
+                                    case 'DETECTED':
+                                        if (!isPlayerBelow || xDist >= C.BAT_DETECTION_RANGE_X) {
                                             enemy.state = 'HANGING';
-                                            delete enemy.resetTimer;
+                                        } else if (xDist < C.BAT_ATTACK_RANGE_X) {
+                                            enemy.state = 'WAKING';
+                                            enemy.wakeTimer = C.BAT_WAKE_DURATION;
                                         }
-                                    }
-                                    break;
+                                        break;
+                                    case 'WAKING':
+                                        enemy.wakeTimer--;
+                                        if(enemy.wakeTimer <= 0) {
+                                            enemy.state = 'FLYING_DIP';
+                                            enemy.targetY = enemy.originalY + C.BAT_DIP_HEIGHT; 
+                                            enemy.dx = (S.player.x < enemy.x) ? -C.BAT_FLIGHT_SPEED : C.BAT_FLIGHT_SPEED;
+                                        }
+                                        break;
+                                    case 'FLYING_DIP':
+                                        enemy.y += (enemy.targetY - enemy.y) * 0.1;
+                                        if (Math.abs(enemy.y - enemy.targetY) < 1) {
+                                            enemy.state = 'ASCENDING';
+                                            enemy.targetY = enemy.originalY - C.BAT_FLIGHT_HEIGHT;
+                                        }
+                                        break;
+                                    case 'ASCENDING':
+                                         enemy.y += (enemy.targetY - enemy.y) * 0.1;
+                                         enemy.x += enemy.dx;
+                                         if (Math.abs(enemy.y - enemy.targetY) < 1) {
+                                             enemy.state = 'FLYING';
+                                         }
+                                         if (enemy.x < enemy.originalX - C.BAT_FLIGHT_RANGE || enemy.x > enemy.originalX + C.BAT_FLIGHT_RANGE) {
+                                             enemy.dx *= -1;
+                                         }
+                                         break;
+                                    case 'FLYING':
+                                        enemy.x += enemy.dx;
+                                        if (enemy.x < enemy.originalX - C.BAT_FLIGHT_RANGE || enemy.x > enemy.originalX + C.BAT_FLIGHT_RANGE) {
+                                            enemy.dx *= -1;
+                                        }
+                                        if (S.stage === 101 || S.stage === 102) { 
+                                            if(!enemy.resetTimer) enemy.resetTimer = 300;
+                                            enemy.resetTimer--;
+                                            if(enemy.resetTimer <= 0) {
+                                                enemy.x = enemy.originalX;
+                                                enemy.y = enemy.originalY;
+                                                enemy.state = 'HANGING';
+                                                delete enemy.resetTimer;
+                                            }
+                                        }
+                                        break;
+                                }
                             }
                         }
                     }
@@ -1156,17 +1268,6 @@
                         if (p.x < 0 || p.x > S.canvas.width) {
                             S.projectiles.splice(i, 1);
                             continue;
-                        }
-
-                        if (S.player.x < p.x + p.width &&
-                            S.player.x + S.player.width > p.x &&
-                            S.player.y < p.y + p.height &&
-                            S.player.y + S.player.height > p.y)
-                        {
-                            if (![101, 102].includes(S.stage)) {
-                                S.gameOver = true;
-                            }
-                            S.projectiles.splice(i, 1);
                         }
                     }
                 }
@@ -1188,7 +1289,6 @@
                                 p.subType = 'moving';
                                 p.originalX = x;
                                 let speedMultiplier = 0.8;
-                                // Peningkatan kelajuan di Zon 3
                                 if (S.stage >= 21 && S.stage <= 30) {
                                     speedMultiplier = 1.0 + (S.stage - 21) * 0.05;
                                 } else if (S.stage > 30) {
@@ -1223,11 +1323,8 @@
                     let icyProb = C.ICY_PLATFORM_PROB + (stage * 0.005);
                     let crumblingInsteadOfGapProb = 0.5;
 
-                    // Zon 2: Gua Kristal Rapuh (11-20)
                     if (stage >= 11 && stage <= 20) { crumblingInsteadOfGapProb = 0.75; }
-                    // Zon 3: Puncak Berangin (21-30)
                     else if (stage >= 21 && stage <= 30) { movingProb += 0.2; }
-                    // Zon 4: Glasier Abadi (31+)
                     else if (stage > 30) { icyProb += 0.3; }
 
                     const patternRoll = Math.random();
@@ -1368,6 +1465,35 @@
                     Game.Level.generateDecorations();
                 },
                 
+                // REPLACED: Updated power-up generation logic
+                generatePowerUps: function() {
+                    const S = Game.State;
+                    S.powerUps = [];
+                    // FIX: Allow spawning on 'icy' platforms.
+                    const spawnablePlatforms = S.platforms.filter(p => p.type === 'normal' && p.y < S.canvas.height - 100 && p.y > 100 && p.subType !== 'crumbling' && p.subType !== 'moving');
+                    if (spawnablePlatforms.length < 1) return;
+
+                    let availablePowerUps = ['HAMMER', 'SHIELD'];
+                    
+                    // If player has a power-up, only spawn the other one
+                    if (S.player.powerUp) {
+                        availablePowerUps = availablePowerUps.filter(type => type !== S.player.powerUp.type);
+                    }
+
+                    if (availablePowerUps.length === 0) return;
+
+                    const platform = spawnablePlatforms[Math.floor(Math.random() * spawnablePlatforms.length)];
+                    const powerUpType = availablePowerUps[Math.floor(Math.random() * availablePowerUps.length)];
+                    
+                    S.powerUps.push({
+                        type: powerUpType,
+                        x: platform.x + platform.width / 2 - 12.5,
+                        y: platform.y - 25,
+                        width: 25,
+                        height: 25
+                    });
+                },
+
                 generateDecorations: function() {
                     const S = Game.State;
                     S.decorations = [];
@@ -1404,6 +1530,10 @@
 
                     S.platforms.forEach(p => {
                         if (p !== S.platforms[0] && p !== S.goalPlatform) {
+                            // FIX: Prevent decorations on invalid platforms
+                            if (p.subType === 'crumbling' || p.subType === 'moving') {
+                                return;
+                            }
                             for(let i=0; i < 3; i++) { 
                                 if (Math.random() < S.decorationProbability) {
                                     const sizeRoll = Math.random();
@@ -1454,11 +1584,36 @@
                         }
                         ctx.fillRect(p.x, p.y, p.width, p.height);
                     });
-                    this.drawDecorations(); this.drawProjectiles(); this.drawEnemies(); this.drawPlayer(); this.drawShowcaseCharacters();
+                    this.drawDecorations(); 
+                    this.drawPowerUps();
+                    this.drawProjectiles(); 
+                    this.drawEnemies(); 
+                    this.drawPlayer(); 
+                    this.drawShowcaseCharacters();
                 },
                 
                 drawCharacter: function(charType, x, y, isCrouching, targetCtx = Game.State.ctx) {
-                    const player = Game.State.player; let heightModifier = isCrouching ? 6 : 0; let yOffset = isCrouching ? 6 : 0;
+                    const player = Game.State.player;
+                    if (player.isHit && Math.floor(Game.State.globalAnimationTick / 4) % 2 === 0) {
+                        return;
+                    }
+                    
+                    const showHeldItem = player.powerUp && !player.isAttacking && !player.isBlocking;
+
+                    if (showHeldItem) {
+                        const itemX = x + player.width / 2;
+                        const itemY = y + player.height / 2 - 5;
+                        targetCtx.save();
+                        targetCtx.translate(itemX, itemY);
+                        if (player.powerUp.type === 'HAMMER') {
+                            targetCtx.rotate(-Math.PI / 6); this.drawHammer(-12.5, -15, targetCtx);
+                        } else if (player.powerUp.type === 'SHIELD') {
+                            targetCtx.rotate(Math.PI / 8); this.drawShieldFrontView(-12.5, -15, targetCtx);
+                        }
+                        targetCtx.restore();
+                    }
+                    
+                    let heightModifier = isCrouching ? 6 : 0; let yOffset = isCrouching ? 6 : 0;
                     switch (charType) {
                         case 'ESKIMO':
                             targetCtx.fillStyle = '#8B4513'; targetCtx.fillRect(x + 2, y + yOffset, player.width - 4, player.height - 2 - heightModifier);
@@ -1487,6 +1642,22 @@
                             targetCtx.fillStyle = '#FFA500'; if (legState === 0 || isCrouching) { targetCtx.fillRect(x + 7, y + player.height - 2, 8, 5); targetCtx.fillRect(x + 15, y + player.height - 2, 8, 5); } else { targetCtx.fillRect(x + 10, y + player.height - 2, 8, 5); targetCtx.fillRect(x + 12, y + player.height - 4, 8, 5); }
                             break;
                     }
+
+                    if (player.isBlocking) {
+                        const shieldX = player.direction === 'right' ? x + player.width - 4 : x;
+                        this.drawShieldSideView(shieldX, y + 2, targetCtx);
+                    } else if (player.isAttacking) {
+                        const armY = y + 15;
+                        const pivotX = player.direction === 'right' ? x + player.width - 2 : x + 2;
+                        const pivotY = armY;
+                        targetCtx.save();
+                        targetCtx.translate(pivotX, pivotY);
+                        const swingProgress = (30 - player.attackTimer) / 30;
+                        const swingAngle = Math.sin(swingProgress * Math.PI) * (Math.PI / 1.5);
+                        targetCtx.rotate(player.direction === 'right' ? swingAngle : -swingAngle);
+                        this.drawHammer(-12.5, -25, targetCtx);
+                        targetCtx.restore();
+                    }
                 },
                 
                 drawPlayer: function() { if (Game.State.stage !== 101) this.drawCharacter(Game.State.selectedCharacter, Game.State.player.x, Game.State.player.y, Game.State.player.isCrouching); },
@@ -1498,17 +1669,14 @@
                     let skyColor0 = '#0c1445', skyColor1 = '#346888';
                     let mount1Color = '#1e2d40', mount2Color = '#15202e', mount3Color = '#0d1520';
 
-                    // Zon 2: Gua Kristal Rapuh (11-20)
                     if (stage >= 11 && stage <= 20) {
                         skyColor0 = '#1c1445'; skyColor1 = '#433488';
                         mount1Color = '#2d1e40'; mount2Color = '#20152e'; mount3Color = '#150d20';
                     }
-                    // Zon 3: Puncak Berangin (21-30)
                     else if (stage >= 21 && stage <= 30) {
                         skyColor0 = '#607D8B'; skyColor1 = '#B0BEC5';
                         mount1Color = '#78909C'; mount2Color = '#546E7A'; mount3Color = '#37474F';
                     }
-                    // Zon 4: Glasier Abadi (31+)
                     else if (stage > 30) {
                         skyColor0 = '#023047'; skyColor1 = '#0288D1';
                         mount1Color = '#01579B'; mount2Color = '#014073'; mount3Color = '#002340';
@@ -1544,18 +1712,35 @@
                 drawSignpost: (x, y, tCtx = Game.State.ctx) => { tCtx.fillStyle = '#8B4513'; tCtx.fillRect(x, y - 20, 4, 20); tCtx.fillRect(x - 10, y - 18, 24, 10); tCtx.fillStyle = '#FFF'; tCtx.beginPath(); tCtx.moveTo(x + 8, y - 15); tCtx.lineTo(x + 12, y - 13); tCtx.lineTo(x + 8, y - 11); tCtx.fill(); },
                 drawSnowyTree: (x, y, tCtx = Game.State.ctx) => { tCtx.fillStyle = '#5C4033'; tCtx.fillRect(x, y - 15, 8, 15); tCtx.fillStyle = '#FFFFFF'; tCtx.beginPath(); tCtx.moveTo(x + 4, y - 45); tCtx.lineTo(x - 15, y - 25); tCtx.lineTo(x + 23, y - 25); tCtx.closePath(); tCtx.fill(); tCtx.beginPath(); tCtx.moveTo(x + 4, y - 30); tCtx.lineTo(x - 20, y - 10); tCtx.lineTo(x + 28, y - 10); tCtx.closePath(); tCtx.fill(); },
                 drawCheckpointFlag: (x, y, tCtx = Game.State.ctx) => { tCtx.fillStyle = '#964B00'; tCtx.fillRect(x, y - 30, 4, 30); tCtx.fillStyle = '#00FF00'; tCtx.beginPath(); tCtx.moveTo(x + 4, y - 28); tCtx.lineTo(x + 18, y - 22); tCtx.lineTo(x + 4, y - 16); tCtx.closePath(); tCtx.fill(); },
+                drawPowerUps: function() {
+                    const ctx = Game.State.ctx;
+                    Game.State.powerUps.forEach(p => {
+                        if (p.type === 'HAMMER') { this.drawHammer(p.x, p.y); } 
+                        else if (p.type === 'SHIELD') { this.drawShieldFrontView(p.x, p.y); }
+                    });
+                },
+                drawHammer: function(x, y, targetCtx = Game.State.ctx) {
+                    targetCtx.fillStyle = '#8B4513'; targetCtx.fillRect(x + 10, y + 10, 5, 15);
+                    targetCtx.fillStyle = '#C0C0C0'; targetCtx.fillRect(x, y, 25, 10);
+                },
+                drawShieldFrontView: function(x, y, targetCtx = Game.State.ctx) {
+                    targetCtx.fillStyle = '#4682B4'; targetCtx.beginPath(); targetCtx.moveTo(x, y);
+                    targetCtx.lineTo(x + 25, y); targetCtx.lineTo(x + 25, y + 20);
+                    targetCtx.arcTo(x + 12.5, y + 30, x, y + 20, 15); targetCtx.closePath(); targetCtx.fill();
+                    targetCtx.fillStyle = '#C0C0C0'; targetCtx.fillRect(x, y, 25, 3);
+                },
+                drawShieldSideView: function(x, y, targetCtx = Game.State.ctx) {
+                    targetCtx.fillStyle = '#C0C0C0'; targetCtx.fillRect(x, y, 4, 25);
+                    targetCtx.fillStyle = '#4682B4'; targetCtx.fillRect(x + 4, y, 3, 25);
+                },
             },
 
             Controls: {
-                // MODIFIED: Added `a` and `b` keys for new controls
                 keys: { left: false, right: false, up: false, down: false, a: false, b: false },
-                
-                // REPLACED: Entire function replaced with merged logic
                 setupEventListeners: function() {
                     const S = Game.State;
                     const C = Game.Constants;
 
-                    // --- Start of Merged Keyboard Listeners ---
                     document.addEventListener('keydown', (e) => {
                         const key = e.key.toLowerCase();
                         if (key === 'arrowleft') this.keys.left = true;
@@ -1563,11 +1748,9 @@
                         if (key === 'arrowdown') this.keys.down = true;
 
                         if (key === 'arrowup' || key === 'd') {
-                            e.preventDefault();
-                            this.keys.up = true;
-                            this.keys.a = true;
+                            e.preventDefault(); this.keys.up = true; this.keys.a = true;
                         }
-                        if (key === 's') this.keys.b = true; // This key does nothing in stable game
+                        if (key === 's') { e.preventDefault(); this.keys.b = true; }
                     });
 
                     document.addEventListener('keyup', (e) => {
@@ -1576,20 +1759,15 @@
                         if (key === 'arrowright') this.keys.right = false;
                         if (key === 'arrowdown') this.keys.down = false;
                         
-                        if (key === 'arrowup' || key === 'd') {
-                            this.keys.up = false;
-                            this.keys.a = false;
-                        }
-                        if (key === 's') this.keys.b = false;
+                        if (key === 'arrowup' || key === 'd') { this.keys.up = false; this.keys.a = false; }
+                        if (key === 's') { this.keys.b = false; }
                     });
-                    // --- End of Merged Keyboard Listeners ---
 
-                    // --- Start of Original Button Listeners ---
                     S.startButton.addEventListener('click', Game.Core.startGame);
                     S.continueButton.addEventListener('click', () => { Game.Core.startGame(); });
                     S.restartButton.addEventListener('click', () => {
                         S.checkpointStage = 1; S.stage = 1; S.gameOverMenu.style.display = 'none'; S.startMenu.style.display = 'flex';
-                        document.getElementById('on-screen-controls').style.display = 'none'; // ADDED
+                        document.getElementById('on-screen-controls').style.display = 'none';
                         Game.Core.resetGame(); Game.Graphics.draw();
                     });
                     S.decorationSlider.addEventListener('input', (e) => { const v = parseInt(e.target.value, 10); S.decorationProbability = v / 100; S.decorationValue.textContent = `${v}%`; });
@@ -1614,11 +1792,10 @@
                     S.resetPlatformsButton.addEventListener('click', () => {
                         if ([101, 102].includes(S.stage)) return;
                         Game.Level.generatePlatforms(null);
+                        Game.Level.generatePowerUps();
                         const startP = S.platforms[0]; S.player.y = startP.y - S.player.height; S.player.x = startP.x + (startP.width / 2) - (S.player.width / 2); S.player.dx = 0; S.player.dy = 0; S.player.onGround = true; Game.Graphics.draw();
                     });
-                    // --- End of Original Button Listeners ---
 
-                    // --- Start of Touch Controls Logic ---
                     const btnLeft = document.getElementById('btn-left');
                     const btnRight = document.getElementById('btn-right');
                     const btnUp = document.getElementById('btn-up');
@@ -1630,6 +1807,7 @@
                         element.addEventListener(isPressed ? 'touchstart' : 'touchend', (e) => {
                             e.preventDefault();
                             this.keys[key] = isPressed;
+                            if (key === 'a') this.keys['up'] = isPressed; // Link 'a' to 'up'
                             element.classList.toggle('pressed', isPressed);
                         }, { passive: false });
                     };
@@ -1640,7 +1818,6 @@
                     handleTouch(btnUp, 'up', true); handleTouch(btnUp, 'up', false);
                     handleTouch(btnA, 'a', true); handleTouch(btnA, 'a', false);
                     handleTouch(btnB, 'b', true); handleTouch(btnB, 'b', false);
-                    // --- End of Touch Controls Logic ---
                 }
             },
 
@@ -1658,3 +1835,4 @@
     </script>
 </body>
 </html>
+
