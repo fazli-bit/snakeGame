@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ice Climber v0.8.10 (Pembetulan Pepijat)</title>
+    <title>Ice Climber v0.8.11</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         html, body {
@@ -218,16 +218,13 @@
 
         /* --- STYLES FOR ON-SCREEN CONTROLS --- */
         #on-screen-controls {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            display: none;
-            justify-content: space-between;
-            align-items: flex-end;
-            pointer-events: auto;
-            opacity: 0.7;
+            display: none; /* Hidden by default for desktop */
+            width: 100%;
+            background-color: #111;
+            padding: 10px;
+            box-sizing: border-box;
         }
+
         .d-pad { position: relative; width: 150px; height: 150px; }
         .d-pad-btn {
             position: absolute;
@@ -290,17 +287,16 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: center;
         }
         body.is-mobile .game-title-bar {
             display: none;
         }
         body.is-mobile .game-wrapper {
             width: 100%;
-            height: 100%;
             flex-grow: 1;
             display: flex;
             position: relative;
+            min-height: 0;
         }
         body.is-mobile #game-canvas {
             width: 100%;
@@ -308,6 +304,13 @@
             object-fit: contain;
             border: none;
             border-radius: 0;
+        }
+        body.is-mobile #on-screen-controls {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 180px; /* Dedicated height for controls */
+            flex-shrink: 0;
         }
         body.is-mobile #debug-panel,
         body.is-mobile .side-controls,
@@ -330,7 +333,7 @@
         <div class="game-column">
             <div class="game-title-bar">
                  <h1>Ice Climber<span id="toggle-controls-btn">⚙️</span></h1>
-                 <p class="version-info">v0.8.10 (Pembetulan Pepijat)</p>
+                 <p class="version-info">v0.8.9 (Mekanik Perisai Lanjutan)</p>
             </div>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
@@ -362,20 +365,18 @@
                         <button id="restart-button">Mula Semula</button>
                     </div>
                 </div>
-
-                <div id="on-screen-controls">
-                    <div class="d-pad">
-                        <div id="btn-up" class="d-pad-btn up">&#9652;</div>
-                        <div id="btn-left" class="d-pad-btn left">&#9664;</div>
-                        <div id="btn-right" class="d-pad-btn right">&#9654;</div>
-                        <div id="btn-down" class="d-pad-btn down">&#9662;</div>
-                    </div>
-                    <div class="action-buttons">
-                        <div id="btn-b" class="action-btn">B</div>
-                        <div id="btn-a" class="action-btn">A</div>
-                    </div>
+            </div>
+            <div id="on-screen-controls">
+                <div class="d-pad">
+                    <div id="btn-up" class="d-pad-btn up">&#9652;</div>
+                    <div id="btn-left" class="d-pad-btn left">&#9664;</div>
+                    <div id="btn-right" class="d-pad-btn right">&#9654;</div>
+                    <div id="btn-down" class="d-pad-btn down">&#9662;</div>
                 </div>
-
+                <div class="action-buttons">
+                    <div id="btn-b" class="action-btn">B</div>
+                    <div id="btn-a" class="action-btn">A</div>
+                </div>
             </div>
         </div>
         <div class="side-controls">
@@ -1829,7 +1830,7 @@
                     targetCtx.lineTo(x + 25, y + 20);
                     targetCtx.arcTo(x + 12.5, y + 30, x, y + 20, 15);
                     targetCtx.closePath();
-                    targetCtx.fill(); // FIX: Changed tCtx to targetCtx
+                    targetCtx.fill();
                     targetCtx.fillStyle = '#C0C0C0'; // Silver border
                     targetCtx.fillRect(x, y, 25, 3);
                 },
