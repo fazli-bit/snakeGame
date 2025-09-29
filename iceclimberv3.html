@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ice Climber v0.8.0.0 (Zon Tematik)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ice Climber v0.8.1.0 (Kawalan Sentuhan)</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -138,6 +138,7 @@
             font-size: 1rem;
             color: #fff;
             text-shadow: 2px 2px #000;
+            pointer-events: none;
         }
         .version-info {
             font-size: 0.7rem;
@@ -211,6 +212,58 @@
             min-width: 60px;
             text-align: right;
         }
+
+        /* --- STYLES FOR ON-SCREEN CONTROLS --- */
+        #on-screen-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: auto;
+            opacity: 0.7;
+        }
+        .d-pad { position: relative; width: 120px; height: 120px; }
+        .d-pad-btn {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.5rem;
+            -webkit-user-select: none; user-select: none;
+            transition: background-color 0.1s;
+        }
+        .d-pad .up { top: 0; left: 40px; }
+        .d-pad .left { top: 40px; left: 0; }
+        .d-pad .right { top: 40px; left: 80px; }
+        .d-pad .down { top: 80px; left: 40px; }
+
+        .action-buttons { display: flex; gap: 15px; }
+        .action-btn {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+             -webkit-user-select: none; user-select: none;
+             transition: background-color 0.1s;
+        }
+        .d-pad-btn.pressed, .action-btn.pressed {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        /* --- END OF ON-SCREEN CONTROLS STYLES --- */
     </style>
 </head>
 <body>
@@ -226,7 +279,7 @@
         </div>
         <div class="game-column">
             <h1>Ice Climber</h1>
-            <p class="version-info">v0.8.0.0 (Zon Tematik)</p>
+            <p class="version-info">v0.8.1.0 (Kawalan Sentuhan)</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
                 <div id="hud" style="display: none;">
@@ -257,10 +310,25 @@
                         <button id="restart-button">Mula Semula</button>
                     </div>
                 </div>
+
+                <div id="on-screen-controls" style="display: none;">
+                    <div class="d-pad">
+                        <div id="btn-up" class="d-pad-btn up">&#9652;</div>
+                        <div id="btn-left" class="d-pad-btn left">&#9664;</div>
+                        <div id="btn-right" class="d-pad-btn right">&#9654;</div>
+                        <div id="btn-down" class="d-pad-btn down">&#9662;</div>
+                    </div>
+                    <div class="action-buttons">
+                        <div id="btn-b" class="action-btn">B</div>
+                        <div id="btn-a" class="action-btn">A</div>
+                    </div>
+                </div>
+
             </div>
             <div class="controls-info">
                 <p>Use Arrow Keys to Move, Arrow Up to Jump</p>
                 <p>Down Arrow + Up Arrow to Drop Down</p>
+                <p>Mobile: D-Pad to Move, 'A' Button to Jump</p>
             </div>
         </div>
         <div class="side-controls">
@@ -415,6 +483,7 @@
                         S.continueButton.disabled = S.checkpointStage <= 1;
                         S.gameOverMenu.style.display = 'flex';
                         S.hud.style.display = 'none';
+                        document.getElementById('on-screen-controls').style.display = 'none'; // ADDED
                     }
                 },
                 
@@ -423,6 +492,7 @@
                     S.startMenu.style.display = 'none';
                     S.gameOverMenu.style.display = 'none';
                     S.hud.style.display = 'block';
+                    document.getElementById('on-screen-controls').style.display = 'flex'; // ADDED
                     
                     if (Game.Core.animationFrameId) cancelAnimationFrame(Game.Core.animationFrameId);
                     
@@ -641,8 +711,9 @@
                     }
 
                     if (Math.abs(player.dx) < 0.1) player.dx = 0;
-
-                    if (keys.up && player.onGround && Game.State.canJump) {
+                    
+                    // MODIFIED: Added `|| keys.a` to allow jumping with A button
+                    if ((keys.up || keys.a) && player.onGround && Game.State.canJump) {
                         if (player.isCrouching && player.standingOnPlatform && player.standingOnPlatform !== Game.State.platforms[0] && player.canDropDown) {
                             player.dy = -2;
                             player.onGround = false;
@@ -1121,7 +1192,7 @@
                                 if (S.stage >= 21 && S.stage <= 30) {
                                     speedMultiplier = 1.0 + (S.stage - 21) * 0.05;
                                 } else if (S.stage > 30) {
-                                     speedMultiplier = 1.5;
+                                    speedMultiplier = 1.5;
                                 }
                                 p.dx = (Math.random() < 0.5 ? 1 : -1) * speedMultiplier;
                             }
@@ -1198,7 +1269,7 @@
                     if (['C', 'M', 'G'].includes(newLayout[C.LEVEL_SLOTS - 1])) newLayout[C.LEVEL_SLOTS - 1] = 'B';
                     for (let j = 1; j < C.LEVEL_SLOTS -1; j++) {
                          if (['G', 'C'].includes(newLayout[j-1]) && !['G', 'C', 'M'].includes(newLayout[j]) && ['G', 'C'].includes(newLayout[j+1])) {
-                            newLayout[j] = newLayout[j-1];
+                             newLayout[j] = newLayout[j-1];
                          }
                     }
                     
@@ -1220,10 +1291,10 @@
                             S.platforms.push(floor);
                             let y = canvas.height - 40 - verticalGap;
                             for (let i = 0; i < 3; i++) {
-                                 S.platforms.push({ x: 0, y: y, width: platformWidth, height: C.PLATFORM_HEIGHT });
-                                 S.platforms.push({ x: platformWidth + gapWidth, y: y, width: platformWidth, height: C.PLATFORM_HEIGHT });
-                                 S.platforms.push({ x: (platformWidth + gapWidth) * 2, y: y, width: platformWidth, height: C.PLATFORM_HEIGHT });
-                                 y -= verticalGap;
+                                S.platforms.push({ x: 0, y: y, width: platformWidth, height: C.PLATFORM_HEIGHT });
+                                S.platforms.push({ x: platformWidth + gapWidth, y: y, width: platformWidth, height: C.PLATFORM_HEIGHT });
+                                S.platforms.push({ x: (platformWidth + gapWidth) * 2, y: y, width: platformWidth, height: C.PLATFORM_HEIGHT });
+                                y -= verticalGap;
                             }
                             S.showcaseCharacters.push({ type: 'ESKIMO', x: 120, y: floor.y - S.player.height });
                             S.showcaseCharacters.push({ type: 'PENGUIN', x: 180, y: floor.y - S.player.height });
@@ -1476,38 +1547,100 @@
             },
 
             Controls: {
-                keys: { left: false, right: false, up: false, down: false },
+                // MODIFIED: Added `a` and `b` keys for new controls
+                keys: { left: false, right: false, up: false, down: false, a: false, b: false },
+                
+                // REPLACED: Entire function replaced with merged logic
                 setupEventListeners: function() {
-                    const S = Game.State; const C = Game.Constants;
-                    document.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') this.keys.left = true; if (e.key === 'ArrowRight') this.keys.right = true; if (e.key === 'ArrowUp') this.keys.up = true; if (e.key === 'ArrowDown') this.keys.down = true; });
-                    document.addEventListener('keyup', (e) => { if (e.key === 'ArrowLeft') this.keys.left = false; if (e.key === 'ArrowRight') this.keys.right = false; if (e.key === 'ArrowUp') this.keys.up = false; if (e.key === 'ArrowDown') this.keys.down = false; });
+                    const S = Game.State;
+                    const C = Game.Constants;
+
+                    // --- Start of Merged Keyboard Listeners ---
+                    document.addEventListener('keydown', (e) => {
+                        const key = e.key.toLowerCase();
+                        if (key === 'arrowleft') this.keys.left = true;
+                        if (key === 'arrowright') this.keys.right = true;
+                        if (key === 'arrowdown') this.keys.down = true;
+
+                        if (key === 'arrowup' || key === 'd') {
+                            e.preventDefault();
+                            this.keys.up = true;
+                            this.keys.a = true;
+                        }
+                        if (key === 's') this.keys.b = true; // This key does nothing in stable game
+                    });
+
+                    document.addEventListener('keyup', (e) => {
+                        const key = e.key.toLowerCase();
+                        if (key === 'arrowleft') this.keys.left = false;
+                        if (key === 'arrowright') this.keys.right = false;
+                        if (key === 'arrowdown') this.keys.down = false;
+                        
+                        if (key === 'arrowup' || key === 'd') {
+                            this.keys.up = false;
+                            this.keys.a = false;
+                        }
+                        if (key === 's') this.keys.b = false;
+                    });
+                    // --- End of Merged Keyboard Listeners ---
+
+                    // --- Start of Original Button Listeners ---
                     S.startButton.addEventListener('click', Game.Core.startGame);
                     S.continueButton.addEventListener('click', () => { Game.Core.startGame(); });
-                    S.restartButton.addEventListener('click', () => { S.checkpointStage = 1; S.stage = 1; S.gameOverMenu.style.display = 'none'; S.startMenu.style.display = 'flex'; Game.Core.resetGame(); Game.Graphics.draw(); });
+                    S.restartButton.addEventListener('click', () => {
+                        S.checkpointStage = 1; S.stage = 1; S.gameOverMenu.style.display = 'none'; S.startMenu.style.display = 'flex';
+                        document.getElementById('on-screen-controls').style.display = 'none'; // ADDED
+                        Game.Core.resetGame(); Game.Graphics.draw();
+                    });
                     S.decorationSlider.addEventListener('input', (e) => { const v = parseInt(e.target.value, 10); S.decorationProbability = v / 100; S.decorationValue.textContent = `${v}%`; });
                     S.enemySelectionButtons.forEach(b => { b.addEventListener('click', () => { S.enemySelectionButtons.forEach(btn => btn.classList.remove('selected')); b.classList.add('selected'); S.testEnemyType = b.dataset.enemy; if (S.stage === 102) { Game.Enemies.generateEnemies(); Game.Graphics.draw(); } }); });
                     S.characterSelectors.forEach(s => { s.addEventListener('click', () => { S.characterSelectors.forEach(sel => sel.classList.remove('selected')); s.classList.add('selected'); S.selectedCharacter = s.dataset.char; }); });
                     S.stagePresetButtons.forEach(b => { b.addEventListener('click', (e) => {
                         const newStage = parseInt(e.target.dataset.stage, 10); if (isNaN(newStage)) return;
-                        S.stage = newStage; S.checkpointStage = S.stage; 
+                        S.stage = newStage; S.checkpointStage = S.stage;
                         S.stageDisplay.textContent = S.stage; S.gameOver = false; S.isTransitioning = false; S.score = 0; S.scoreDisplay.textContent = S.score; S.landedYLevels = new Set();
-                        
+
                         if (newStage > 1 && ![101,102].includes(newStage)) {
                             const baseW = S.player.width * 3;
                             const base = [{ x: (S.canvas.width/2)-(baseW/2), width: baseW, type: 'top' }];
                             Game.Level.generatePlatforms(base);
-                        } else { 
-                            Game.Level.generatePlatforms(); 
+                        } else {
+                            Game.Level.generatePlatforms();
                         }
 
                         const startP = S.platforms[0]; S.player.y = startP.y - S.player.height; S.player.x = ([101,102].includes(S.stage)) ? 20 : startP.x + (startP.width / 2) - (S.player.width / 2); S.player.dx = 0; S.player.dy = 0; S.player.onGround = true;
                         if (S.startMenu.style.display !== 'none' || S.gameOverMenu.style.display !== 'none') { Game.Graphics.draw(); } else { if (Game.Core.animationFrameId) cancelAnimationFrame(Game.Core.animationFrameId); Game.Core.gameLoop(); }
                     }); });
-                    S.resetPlatformsButton.addEventListener('click', () => { 
-                        if ([101, 102].includes(S.stage)) return; 
+                    S.resetPlatformsButton.addEventListener('click', () => {
+                        if ([101, 102].includes(S.stage)) return;
                         Game.Level.generatePlatforms(null);
-                        const startP = S.platforms[0]; S.player.y = startP.y - S.player.height; S.player.x = startP.x + (startP.width / 2) - (S.player.width / 2); S.player.dx = 0; S.player.dy = 0; S.player.onGround = true; Game.Graphics.draw(); 
+                        const startP = S.platforms[0]; S.player.y = startP.y - S.player.height; S.player.x = startP.x + (startP.width / 2) - (S.player.width / 2); S.player.dx = 0; S.player.dy = 0; S.player.onGround = true; Game.Graphics.draw();
                     });
+                    // --- End of Original Button Listeners ---
+
+                    // --- Start of Touch Controls Logic ---
+                    const btnLeft = document.getElementById('btn-left');
+                    const btnRight = document.getElementById('btn-right');
+                    const btnUp = document.getElementById('btn-up');
+                    const btnDown = document.getElementById('btn-down');
+                    const btnA = document.getElementById('btn-a');
+                    const btnB = document.getElementById('btn-b');
+
+                    const handleTouch = (element, key, isPressed) => {
+                        element.addEventListener(isPressed ? 'touchstart' : 'touchend', (e) => {
+                            e.preventDefault();
+                            this.keys[key] = isPressed;
+                            element.classList.toggle('pressed', isPressed);
+                        }, { passive: false });
+                    };
+
+                    handleTouch(btnLeft, 'left', true); handleTouch(btnLeft, 'left', false);
+                    handleTouch(btnRight, 'right', true); handleTouch(btnRight, 'right', false);
+                    handleTouch(btnDown, 'down', true); handleTouch(btnDown, 'down', false);
+                    handleTouch(btnUp, 'up', true); handleTouch(btnUp, 'up', false);
+                    handleTouch(btnA, 'a', true); handleTouch(btnA, 'a', false);
+                    handleTouch(btnB, 'b', true); handleTouch(btnB, 'b', false);
+                    // --- End of Touch Controls Logic ---
                 }
             },
 
@@ -1525,4 +1658,3 @@
     </script>
 </body>
 </html>
-
