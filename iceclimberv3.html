@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ice Climber v0.8.1.0 (Kawalan Dibetulkan)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ice Climber v0.8.0.0 (Zon Tematik)</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         body {
@@ -52,8 +52,6 @@
         .menu h2, .menu h3 {
             font-size: 2rem;
             margin-bottom: 20px;
-            color: #fff;
-            text-shadow: 3px 3px #000;
         }
          .menu h3 {
             font-size: 1.5rem;
@@ -140,7 +138,6 @@
             font-size: 1rem;
             color: #fff;
             text-shadow: 2px 2px #000;
-            pointer-events: none;
         }
         .version-info {
             font-size: 0.7rem;
@@ -214,88 +211,6 @@
             min-width: 60px;
             text-align: right;
         }
-        #on-screen-controls {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            pointer-events: none;
-        }
-        #on-screen-controls > div {
-             pointer-events: auto;
-        }
-        .d-pad { position: relative; width: 120px; height: 120px; }
-        .d-pad-btn {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.5rem;
-            -webkit-user-select: none; user-select: none;
-            transition: background-color 0.1s;
-        }
-        .d-pad .up { top: 0; left: 40px; }
-        .d-pad .left { top: 40px; left: 0; }
-        .d-pad .right { top: 40px; left: 80px; }
-        .d-pad .down { top: 80px; left: 40px; }
-
-        .action-buttons { display: flex; gap: 15px; }
-        .action-btn {
-            width: 50px;
-            height: 50px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.7);
-             -webkit-user-select: none; user-select: none;
-             transition: background-color 0.1s;
-        }
-        .d-pad-btn.pressed, .action-btn.pressed {
-            background-color: rgba(255, 255, 255, 0.5);
-        }
-        .menu-option {
-            font-size: 1.2rem;
-            color: #fff;
-            margin-top: 25px;
-            padding: 10px;
-            position: relative;
-            cursor: pointer;
-        }
-        .menu-option.selected {
-            color: #ffff00;
-        }
-        .instructions-text {
-            font-size: 0.8rem;
-            line-height: 1.8;
-            max-width: 80%;
-            text-align: left;
-            margin-bottom: 30px;
-        }
-        .instructions-text span {
-            color: #ffff00;
-            display: inline-block;
-            width: 120px;
-        }
-        #menu-cursor {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            display: none; /* Hidden by default */
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30"><path fill="%238B4513" d="M3 0 L27 0 L27 28 L3 28 Z" /><path fill="%234682B4" d="M0 22 L30 22 L30 27 L0 27 Z" /><path fill="%23FFDAB9" d="M8 5 L22 5 L22 17 L8 17 Z" /><path fill="%23000" d="M11 10 L14 10 L14 13 L11 13 Z M16 10 L19 10 L19 13 L16 13 Z" /></svg>');
-            background-size: contain;
-        }
     </style>
 </head>
 <body>
@@ -311,19 +226,14 @@
         </div>
         <div class="game-column">
             <h1>Ice Climber</h1>
-            <p class="version-info">v0.8.1.0 (Kawalan Dibetulkan)</p>
+            <p class="version-info">v0.8.0.0 (Zon Tematik)</p>
             <div class="game-wrapper">
                 <canvas id="game-canvas" width="400" height="600"></canvas>
                 <div id="hud" style="display: none;">
                     <span>SCORE: <span id="score">0</span></span>
                     <span>STAGE: <span id="stage">1</span></span>
                 </div>
-                <div id="main-menu" class="menu">
-                    <h2>ICE CLIMBER</h2>
-                    <div class="menu-option" data-action="start">MULA</div>
-                    <div class="menu-option" data-action="instructions">ARAHAN</div>
-                </div>
-                <div id="character-select-menu" class="menu" style="display: none;">
+                <div id="start-menu" class="menu">
                     <h3>Pilih Watak:</h3>
                     <div id="character-selection">
                         <div class="char-select selected" data-char="ESKIMO">
@@ -336,21 +246,7 @@
                             <canvas id="eskimo-female-preview" width="60" height="60"></canvas>
                         </div>
                     </div>
-                    <button id="start-game-button">Start Game</button>
-                </div>
-                 <div id="instructions-menu" class="menu" style="display: none;">
-                    <h2>ARAHAN</h2>
-                    <div class="instructions-text">
-                        <p><span>Anak Panah</span> : Bergerak/Tunduk</p>
-                        <p><span>Anak Panah Atas</span> : Lompat</p>
-                        <p><span>S</span> : Aksi (B)</p>
-                        <p><span>D</span> : Lompat (A)</p>
-                        <hr style="border-color: #555; margin: 15px 0;">
-                        <p><span>Menu Atas/Bwh</span> : Anak Panah</p>
-                        <p><span>Menu Pilih</span> : D / Butang A</p>
-                        <p><span>Menu Kembali</span> : S / Butang B</p>
-                    </div>
-                    <div class="menu-option" data-action="back">KEMBALI</div>
+                    <button id="start-button">Start Game</button>
                 </div>
                 <div id="game-over-menu" class="menu" style="display: none;">
                     <h2 style="color: #ff4136;">GAME OVER</h2>
@@ -361,19 +257,6 @@
                         <button id="restart-button">Mula Semula</button>
                     </div>
                 </div>
-                <div id="on-screen-controls" style="display: none;">
-                    <div class="d-pad">
-                        <div id="btn-up" class="d-pad-btn up">&#9652;</div>
-                        <div id="btn-left" class="d-pad-btn left">&#9664;</div>
-                        <div id="btn-right" class="d-pad-btn right">&#9654;</div>
-                        <div id="btn-down" class="d-pad-btn down">&#9662;</div>
-                    </div>
-                    <div class="action-buttons">
-                        <div id="btn-b" class="action-btn">B</div>
-                        <div id="btn-a" class="action-btn">A</div>
-                    </div>
-                </div>
-                <div id="menu-cursor"></div>
             </div>
             <div class="controls-info">
                 <p>Use Arrow Keys to Move, Arrow Up to Jump</p>
@@ -385,9 +268,15 @@
                 <label>Peringkat:</label>
                 <div class="stage-presets">
                     <button data-stage="1">1</button>
-                    <button data-stage="11">11</button>
-                    <button data-stage="21">21</button>
+                    <button data-stage="3">3</button>
+                    <button data-stage="7">7</button>
+                    <button data-stage="10">10</button>
+                    <button data-stage="15">15</button>
+                    <button data-stage="20">20</button>
                     <button data-stage="31">31</button>
+                    <button data-stage="50">50</button>
+                    <button data-stage="90">90</button>
+                    <button data-stage="101">101</button>
                 </div>
             </div>
             <div class="control-container">
@@ -410,43 +299,37 @@
 
     <script>
         const Game = {
+            // --- CORE MODULE: Main game loop and state management ---
             Core: {
                 animationFrameId: null,
+
                 init: function() {
                     Game.State.decorationValue.textContent = `${Game.State.decorationSlider.value}%`;
-                    Game.Controls.setupEventListeners();
-                    Game.Level.generatePlatforms();
-                    this.resetGame();
+                    Game.Core.resetGame();
                     Game.Graphics.draw();
                     Game.Graphics.drawCharacterPreviews();
-                    Game.Controls.updateActiveMenu(); 
+                    Game.Controls.setupEventListeners();
                 },
-                gameLoop: function() {
-                    this.update();
-                    Game.Graphics.draw();
-                    this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this));
-                },
-                update: function() {
-                    const S = Game.State;
-                    S.globalAnimationTick++;
 
-                    if (S.isMenuVisible) {
-                         Game.Graphics.updateMenuCursor();
-                         return;
-                    }
-                    if (S.isTransitioning) {
-                        this.handleStageTransition();
+                gameLoop: function() {
+                    Game.Core.update();
+                    Game.Graphics.draw();
+                    Game.Core.animationFrameId = requestAnimationFrame(Game.Core.gameLoop);
+                },
+
+                update: function() {
+                    if (Game.State.gameOver) return;
+                    Game.State.globalAnimationTick++;
+                    
+                    if (Game.State.isTransitioning) {
+                        Game.Core.handleStageTransition();
                         return;
                     }
 
-                    if (S.player.platformToDropThrough && S.player.y > S.player.platformToDropThrough.y + Game.Constants.PLATFORM_HEIGHT) {
-                        S.player.platformToDropThrough = null;
+                    if (Game.State.player.platformToDropThrough && Game.State.player.y > Game.State.player.platformToDropThrough.y + Game.Constants.PLATFORM_HEIGHT) {
+                        Game.State.player.platformToDropThrough = null;
                     }
-                    if (S.player.actionBlinkTimer > 0) {
-                        S.player.actionBlinkTimer--;
-                    } else {
-                        S.player.isActionBlinking = false;
-                    }
+                    
                     Game.Enemies.updateEnemies();
                     Game.Enemies.updateProjectiles();
                     Game.Player.handlePlayerInput();
@@ -454,6 +337,7 @@
                     const collisionDetected = Game.Player.checkPlayerCollisions();
                     Game.Debug.updateDebugInfo(collisionDetected);
 
+                    const S = Game.State;
                     const standingPlat = S.player.standingOnPlatform;
                     if (standingPlat && standingPlat.subType === 'crumbling' && S.player.dx === 0) {
                         if (standingPlat !== S.crumblingPlatformCandidate) {
@@ -469,139 +353,188 @@
                         S.crumblingPlatformCandidate = null;
                         S.crumbleCounter = 0;
                     }
+                    
                     for (let i = S.platforms.length - 1; i >= 0; i--) {
                         const p = S.platforms[i];
                         if (p.subType === 'moving') {
                             const nextX = p.x + p.dx;
                             let collision = false;
+
                             if (nextX < 0 || nextX + p.width > S.canvas.width) {
                                 collision = true;
                             } else {
                                 for (let j = 0; j < S.platforms.length; j++) {
-                                    if (i === j || S.platforms[j].isFalling) continue;
+                                    if (i === j) continue;
                                     const other = S.platforms[j];
-                                    if (nextX < other.x + other.width && nextX + p.width > other.x && p.y < other.y + other.height && p.y + p.height > other.y) {
+                                    if (other.isFalling) continue;
+
+                                    if (nextX < other.x + other.width &&
+                                        nextX + p.width > other.x &&
+                                        p.y < other.y + other.height &&
+                                        p.y + p.height > other.y) {
                                         collision = true;
                                         break;
                                     }
                                 }
                             }
-                            if (collision) { p.dx *= -1; }
+                            
+                            if (collision) {
+                                p.dx *= -1;
+                            }
                             p.x += p.dx;
                         }
+
                         if (p.isFalling) {
                             p.y += 5;
-                            if (p.y > S.canvas.height) { S.platforms.splice(i, 1); }
+                            if (p.y > S.canvas.height) {
+                                S.platforms.splice(i, 1);
+                            }
                         }
                     }
-                    if (S.player.onGround && S.player.standingOnPlatform && S.player.standingOnPlatform.type === 'top' && ![101, 102].includes(S.stage)) {
-                        S.isTransitioning = true;
+                    
+                    if (Game.State.player.onGround && Game.State.player.standingOnPlatform && Game.State.player.standingOnPlatform.type === 'top' && ![101, 102].includes(Game.State.stage)) {
+                        Game.State.isTransitioning = true;
                     }
-                    if (S.player.y > S.canvas.height) {
-                        if (![101, 102].includes(S.stage)) {
-                            S.gameOver = true;
+
+                    if (Game.State.player.y > Game.State.canvas.height) {
+                        if (![101, 102].includes(Game.State.stage)) {
+                            Game.State.gameOver = true;
                         } else {
-                            const floor = S.platforms[0];
-                            S.player.y = floor.y - S.player.height;
-                            S.player.x = 20;
-                            S.player.dy = 0; S.player.dx = 0;
+                            const floor = Game.State.platforms[0];
+                            Game.State.player.y = floor.y - Game.State.player.height;
+                            Game.State.player.x = 20;
+                            Game.State.player.dy = 0;
+                            Game.State.player.dx = 0;
                         }
                     }
-                    if (S.gameOver) {
-                        cancelAnimationFrame(this.animationFrameId);
+
+                    if (Game.State.gameOver) {
+                        cancelAnimationFrame(Game.Core.animationFrameId);
                         S.finalScoreDisplay.textContent = S.score;
                         S.finalStageDisplay.textContent = S.stage;
                         S.continueButton.disabled = S.checkpointStage <= 1;
                         S.gameOverMenu.style.display = 'flex';
                         S.hud.style.display = 'none';
-                        S.onScreenControls.style.display = 'none';
                     }
                 },
+                
                 startGame: function() {
                     const S = Game.State;
-                    S.characterSelectMenu.style.display = 'none';
+                    S.startMenu.style.display = 'none';
                     S.gameOverMenu.style.display = 'none';
-                    S.hud.style.display = 'flex';
-                    S.onScreenControls.style.display = 'flex';
-                    S.isMenuVisible = false;
+                    S.hud.style.display = 'block';
                     
-                    if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+                    if (Game.Core.animationFrameId) cancelAnimationFrame(Game.Core.animationFrameId);
                     
                     S.stage = S.checkpointStage; 
-                    this.resetGame();
-                    this.gameLoop();
+                    Game.Core.resetGame();
+                    Game.Core.gameLoop();
                 },
+
                 resetGame: function() {
                     const S = Game.State;
                     const player = S.player;
-                    player.x = 20; player.y = S.canvas.height - 40 - player.height;
-                    player.dx = 0; player.dy = 0;
-                    player.onGround = true; player.standingOnPlatform = null;
-                    player.isCrouching = false; player.canDropDown = true;
+                    player.x = 20;
+                    player.y = S.canvas.height - 40 - player.height;
+                    player.dx = 0;
+                    player.dy = 0;
+                    player.onGround = true;
+                    player.standingOnPlatform = null;
+                    player.isCrouching = false;
+                    player.canDropDown = true;
                     player.platformToDropThrough = null;
-                    S.score = 0; S.scoreDisplay.textContent = S.score;
-                    S.stageDisplay.textContent = S.stage; S.gameOver = false;
-                    S.isTransitioning = false; S.landedYLevels = new Set();
+
+                    S.score = 0;
+                    S.scoreDisplay.textContent = S.score;
+                    S.stageDisplay.textContent = S.stage;
+                    S.gameOver = false;
+                    S.isTransitioning = false;
+                    
+                    S.landedYLevels = new Set();
                     Game.Level.generatePlatforms();
                     if(S.platforms[0]) S.landedYLevels.add(S.platforms[0].y);
                 },
+
                 handleStageTransition: function() {
                     const S = Game.State;
                     const scrollSpeed = 5;
                     const targetY = S.canvas.height - S.goalPlatform.height;
+                    
                     S.platforms.forEach(p => p.y += scrollSpeed);
                     S.player.y += scrollSpeed;
                     S.enemies.forEach(e => e.y += scrollSpeed);
                     S.decorations.forEach(d => d.y += scrollSpeed);
+
                     if (S.goalPlatform.y >= targetY) {
                         const finalShift = targetY - S.goalPlatform.y;
                         S.platforms.forEach(p => p.y += finalShift);
                         S.player.y += finalShift;
+                        
                         S.isTransitioning = false;
                         S.stage++;
+
                         if ((S.stage - 1) > 0 && (S.stage - 1) % 10 === 0) {
                             S.checkpointStage = S.stage;
                         }
+
                         S.stageDisplay.textContent = S.stage;
+                        
                         const previousTopPlatforms = S.platforms.filter(p => p.type === 'top');
                         Game.Level.generatePlatforms(previousTopPlatforms);
+                        
                         const startPlatform = S.platforms[0];
                         S.player.y = startPlatform.y - S.player.height;
                         S.player.x = startPlatform.x + (startPlatform.width / 2) - (S.player.width / 2);
-                        S.player.onGround = true; S.player.dy = 0; S.player.dx = 0;
-                        S.landedYLevels.clear(); S.landedYLevels.add(startPlatform.y);
+
+                        S.player.onGround = true;
+                        S.player.dy = 0;
+                        S.player.dx = 0;
+                        S.landedYLevels.clear();
+                        S.landedYLevels.add(startPlatform.y);
                     }
                 }
             },
+
             Constants: {
-                GRAVITY: 0.5, JUMP_POWER: -12, ENEMY_TURN_DELAY: 500,
-                PLATFORM_HEIGHT: 20, VERTICAL_GAP: 120,
-                AWAN_HANTU_DETECTION_X_BASE: 60, AWAN_HANTU_DETECTION_Y: 50,
-                AWAN_HANTU_PAUSE_DURATION: 30, AWAN_HANTU_DASH_SPEED: 8,
-                EYE_SWEEP_RANGE: 4, ICICLE_SHAKE_DURATION: 40,
-                ICICLE_FALL_SPEED: 7, ICICLE_WAIT_DURATION: 120,
-                ICICLE_DETECTION_RANGE: 60, BAT_WAKE_DURATION: 30,
-                BAT_FLIGHT_RANGE: 90, BAT_FLIGHT_SPEED: 2,
-                BAT_DIP_HEIGHT: 60, BAT_FLIGHT_HEIGHT: -40,
-                GROUND_MONSTER_ATTACK_RANGE: 120, BAT_DETECTION_RANGE_X: 150,
-                BAT_ATTACK_RANGE_X: 50, BLOCK_WIDTH: 40,
-                LEVEL_SLOTS: 10, GAP_PROBABILITY: 0.35, 
-                MOVING_PLATFORM_PROB: 0.25, ICY_PLATFORM_PROB: 0.20,
+                GRAVITY: 0.5,
+                JUMP_POWER: -12,
+                ENEMY_TURN_DELAY: 500,
+                PLATFORM_HEIGHT: 20,
+                VERTICAL_GAP: 120,
+                AWAN_HANTU_DETECTION_X_BASE: 60,
+                AWAN_HANTU_DETECTION_Y: 50,
+                AWAN_HANTU_PAUSE_DURATION: 30,
+                AWAN_HANTU_DASH_SPEED: 8,
+                EYE_SWEEP_RANGE: 4,
+                ICICLE_SHAKE_DURATION: 40,
+                ICICLE_FALL_SPEED: 7,
+                ICICLE_WAIT_DURATION: 120,
+                ICICLE_DETECTION_RANGE: 60,
+                BAT_WAKE_DURATION: 30,
+                BAT_FLIGHT_RANGE: 90,
+                BAT_FLIGHT_SPEED: 2,
+                BAT_DIP_HEIGHT: 60,
+                BAT_FLIGHT_HEIGHT: -40,
+                GROUND_MONSTER_ATTACK_RANGE: 120,
+                BAT_DETECTION_RANGE_X: 150,
+                BAT_ATTACK_RANGE_X: 50,
+                BLOCK_WIDTH: 40,
+                LEVEL_SLOTS: 10,
+                GAP_PROBABILITY: 0.35, 
+                MOVING_PLATFORM_PROB: 0.25,
+                ICY_PLATFORM_PROB: 0.20,
                 ICE_FRICTION: 0.98,
             },
+
             State: {
                 canvas: document.getElementById('game-canvas'),
                 ctx: document.getElementById('game-canvas').getContext('2d'),
-                mainMenu: document.getElementById('main-menu'),
-                characterSelectMenu: document.getElementById('character-select-menu'),
-                instructionsMenu: document.getElementById('instructions-menu'),
+                startMenu: document.getElementById('start-menu'),
+                startButton: document.getElementById('start-button'),
                 gameOverMenu: document.getElementById('game-over-menu'),
-                menuCursor: document.getElementById('menu-cursor'),
-                startButton: document.getElementById('start-game-button'),
-                continueButton: document.getElementById('continue-button'),
                 restartButton: document.getElementById('restart-button'),
+                continueButton: document.getElementById('continue-button'),
                 hud: document.getElementById('hud'),
-                onScreenControls: document.getElementById('on-screen-controls'),
                 scoreDisplay: document.getElementById('score'),
                 finalScoreDisplay: document.getElementById('final-score'),
                 stageDisplay: document.getElementById('stage'),
@@ -618,35 +551,57 @@
                 debugPlayerDY: document.getElementById('debug-player-dy'),
                 debugPlayerOnGround: document.getElementById('debug-player-onground'),
                 debugCollision: document.getElementById('debug-collision'),
-                score: 0, gameOver: false, stage: 1, checkpointStage: 1,
-                isTransitioning: false, isMenuVisible: true, currentMenuSelection: 0,
-                activeMenu: null, menuOptions: null,
-                landedYLevels: new Set(), globalAnimationTick: 0,
-                selectedCharacter: 'ESKIMO', testEnemyType: 'GROUND_MONSTER',
-                crumblingPlatformCandidate: null, crumbleCounter: 0,
+                score: 0,
+                gameOver: false,
+                stage: 1,
+                checkpointStage: 1,
+                isTransitioning: false,
+                landedYLevels: new Set(),
+                globalAnimationTick: 0,
+                selectedCharacter: 'ESKIMO',
+                testEnemyType: 'GROUND_MONSTER',
+                crumblingPlatformCandidate: null,
+                crumbleCounter: 0,
                 player: {
                     width: 30, height: 30, x: 0, y: 0, dx: 0, dy: 0,
                     onGround: false, standingOnPlatform: null, isCrouching: false,
-                    canDropDown: true, platformToDropThrough: null,
-                    isActionBlinking: false, actionBlinkTimer: 0
+                    canDropDown: true, platformToDropThrough: null
                 },
-                enemies: [], platforms: [], projectiles: [],
-                goalPlatform: null, decorations: [], showcaseCharacters: [],
-                playerSpeed: 3, friction: 0.97, enemySpeed: 1,
-                jumpDelay: 500, canJump: true, decorationProbability: 0.50
+                enemies: [],
+                platforms: [],
+                projectiles: [],
+                goalPlatform: null,
+                decorations: [],
+                showcaseCharacters: [],
+                reachabilityFactor: 0.5,
+                playerSpeed: 3,
+                friction: 0.97,
+                enemySpeed: 1,
+                jumpDelay: 500,
+                canJump: true,
+                decorationProbability: 0.50
             },
+
             Player: {
                 getPointsPerLevel: function() {
                     const stage = Game.State.stage;
                     if (stage < 5) return 10;
                     return 20 + Math.floor((stage - 5) / 5) * 10;
                 },
+
                 handlePlayerInput: function() {
                     const player = Game.State.player;
+                    const stage = Game.State.stage;
                     const keys = Game.Controls.keys;
                     const C = Game.Constants;
-                    
+
+                    if (stage === 101) {
+                        player.dx = 0;
+                        return;
+                    }
+
                     player.isCrouching = (keys.down && player.onGround);
+
                     const onIce = player.onGround && player.standingOnPlatform && player.standingOnPlatform.subType === 'icy';
 
                     if (keys.left) {
@@ -654,66 +609,91 @@
                              if (player.dx > 0) player.dx -= 0.4;
                              player.dx = Math.max(player.dx - 0.2, -Game.State.playerSpeed);
                         } else {
-                            player.dx = -Game.State.playerSpeed;
+                            if (player.onGround && stage >= 5 && stage !== 102 && (stage >= 10 || player.standingOnPlatform !== Game.State.platforms[0])) {
+                                if (player.dx > 0) player.dx *= Game.State.friction;
+                                player.dx = Math.max(player.dx - 0.4, -Game.State.playerSpeed);
+                            } else {
+                                player.dx = -Game.State.playerSpeed;
+                            }
                         }
                     } else if (keys.right) {
                         if (onIce) {
                             if (player.dx < 0) player.dx += 0.4;
                             player.dx = Math.min(player.dx + 0.2, Game.State.playerSpeed);
                         } else {
-                            player.dx = Game.State.playerSpeed;
+                            if (player.onGround && stage >= 5 && stage !== 102 && (stage >= 10 || player.standingOnPlatform !== Game.State.platforms[0])) {
+                                if (player.dx < 0) player.dx *= Game.State.friction;
+                                player.dx = Math.min(player.dx + 0.4, Game.State.playerSpeed);
+                            } else {
+                                player.dx = Game.State.playerSpeed;
+                            }
                         }
                     } else if (player.onGround) {
-                        if (onIce) { player.dx *= C.ICE_FRICTION; } 
-                        else { player.dx = 0; }
+                        if (onIce) {
+                            player.dx *= C.ICE_FRICTION;
+                        } else {
+                            if (stage >= 5 && stage !== 102 && (stage >= 10 || player.standingOnPlatform !== Game.State.platforms[0])) {
+                                player.dx *= Game.State.friction;
+                            } else {
+                                player.dx = 0;
+                            }
+                        }
                     }
 
                     if (Math.abs(player.dx) < 0.1) player.dx = 0;
 
-                    if ((keys.up || keys.a) && player.onGround && Game.State.canJump) {
+                    if (keys.up && player.onGround && Game.State.canJump) {
                         if (player.isCrouching && player.standingOnPlatform && player.standingOnPlatform !== Game.State.platforms[0] && player.canDropDown) {
-                            player.dy = -2; player.onGround = false;
+                            player.dy = -2;
+                            player.onGround = false;
                             player.platformToDropThrough = player.standingOnPlatform;
                             player.canDropDown = false;
                             setTimeout(() => { player.canDropDown = true; }, 300);
                         } else if (!player.isCrouching) {
-                            player.dy = C.JUMP_POWER;
-                            player.onGround = false; Game.State.canJump = false;
+                            player.dy = Game.Constants.JUMP_POWER;
+                            player.onGround = false;
+                            Game.State.canJump = false;
                             setTimeout(() => { Game.State.canJump = true; }, Game.State.jumpDelay);
                         }
                     }
-                     if (keys.b && !player.isActionBlinking) {
-                        player.isActionBlinking = true;
-                        player.actionBlinkTimer = 15;
-                    }
                 },
+
                 updatePlayerPosition: function() {
                     const player = Game.State.player;
+                    if (Game.State.stage === 101) return;
+
                     player.dy += Game.Constants.GRAVITY;
                     player.x += player.dx;
                     player.y += player.dy;
 
-                    if (player.x + player.width < 0) { player.x = Game.State.canvas.width; } 
-                    else if (player.x > Game.State.canvas.width) { player.x = -player.width; }
+                    if (player.x + player.width < 0) {
+                        player.x = Game.State.canvas.width;
+                    } else if (player.x > Game.State.canvas.width) {
+                        player.x = -player.width;
+                    }
                 },
+
                 checkPlayerCollisions: function() {
                     const player = Game.State.player;
+                    const stage = Game.State.stage;
                     let collisionDetected = false;
                     player.onGround = false;
                     player.standingOnPlatform = null;
 
                     for (const plat of Game.State.platforms) {
-                        if(player.platformToDropThrough === plat || plat.isFalling) continue;
+                        if(player.platformToDropThrough === plat) continue;
+                        if (plat.isFalling) continue;
 
                         if (player.x + player.width > plat.x && player.x < plat.x + plat.width) {
                             if (player.dy >= 0 && player.y + player.height >= plat.y && (player.y + player.height - player.dy) <= plat.y) {
-                                player.dy = 0; player.onGround = true;
+                                player.dy = 0;
+                                player.onGround = true;
                                 player.y = plat.y - player.height;
                                 player.standingOnPlatform = plat;
                                 
                                 if (plat.subType === 'moving') player.x += plat.dx;
 
-                                if (!Game.State.landedYLevels.has(plat.y) && ![101, 102].includes(Game.State.stage)) {
+                                if (!Game.State.landedYLevels.has(plat.y) && ![101, 102].includes(stage)) {
                                     Game.State.score += Game.Player.getPointsPerLevel();
                                     Game.State.scoreDisplay.textContent = Game.State.score;
                                     Game.State.landedYLevels.add(plat.y);
@@ -721,48 +701,111 @@
                             }
                             
                             if (player.dy < 0 && player.y <= (plat.y + plat.height) && (player.y - player.dy) > (plat.y + plat.height)) {
-                                if (![101, 102].includes(Game.State.stage)) { player.dy = 0; }
-                                if (plat.subType === 'crumbling') { plat.isFalling = true; }
+                                if (![101, 102].includes(stage)) {
+                                    player.dy = 0;
+                                }
+                                if (plat.subType === 'crumbling') {
+                                    plat.isFalling = true;
+                                }
                             }
                         }
                     }
                     
                     for (const enemy of Game.State.enemies) {
                         if (enemy.type === 'ICICLE' && enemy.state === 'STUCK') {
-                            if (player.x < enemy.x + enemy.width && player.x + player.width > enemy.x && player.y < enemy.y + enemy.height && player.y + player.height > enemy.y) {
-                                if (player.dx < 0 && (player.x - player.dx) >= (enemy.x + enemy.width)) { player.x = enemy.x + enemy.width; player.dx = 0; } 
-                                else if (player.dx > 0 && (player.x + player.width - player.dx) <= enemy.x) { player.x = enemy.x - player.width; player.dx = 0; }
+                            if (player.x < enemy.x + enemy.width &&
+                                player.x + player.width > enemy.x &&
+                                player.y < enemy.y + enemy.height &&
+                                player.y + player.height > enemy.y) {
+                                
+                                if (player.dx < 0 && (player.x - player.dx) >= (enemy.x + enemy.width)) {
+                                    player.x = enemy.x + enemy.width;
+                                    player.dx = 0;
+                                } 
+                                else if (player.dx > 0 && (player.x + player.width - player.dx) <= enemy.x) {
+                                    player.x = enemy.x - player.width;
+                                    player.dx = 0;
+                                }
                             }
                             continue;
                         }
 
-                        if (player.x < enemy.x + enemy.width && player.x + player.width > enemy.x && player.y < enemy.y + enemy.height && player.y + player.height > enemy.y) {
+                        if (player.x < enemy.x + enemy.width &&
+                            player.x + player.width > enemy.x &&
+                            player.y < enemy.y + enemy.height &&
+                            player.y + player.height > enemy.y) {
                             collisionDetected = true;
-                            if (![101, 102].includes(Game.State.stage)) { Game.State.gameOver = true; }
+                            if (![101, 102].includes(stage)) {
+                                Game.State.gameOver = true;
+                            }
                         }
                     }
                     return collisionDetected;
                 }
             },
+
             Enemies: {
                 generateEnemies: function() {
                     const S = Game.State;
                     const stage = S.stage;
-                    S.enemies = []; S.projectiles = [];
-                    const platforms = S.platforms; const goalPlatform = S.goalPlatform;
-                    if (stage === 101 || stage === 102) { 
-                        // Simplified enemy placement for special stages, you might need to adjust selectors
-                        const p1 = platforms[1], p2 = platforms[2], p3 = platforms[3], p6 = platforms[6]; 
+                    S.enemies = [];
+                    S.projectiles = [];
+                    const platforms = S.platforms;
+                    const goalPlatform = S.goalPlatform;
+                    
+                    if (stage === 101) {
+                        const p1 = platforms.find(p => p.y < 400 && p.x === 0);
+                        const p2 = platforms.find(p => p.y < 400 && p.x > 100 && p.x < 200);
+                        const p3 = platforms.find(p => p.y < 400 && p.x > 200);
+                        const p6 = platforms.find(p => p.y < 200 && p.x > 100 && p.x < 200);
+                        
                         if(p1) S.enemies.push({ type: 'GROUND_MONSTER', width: 25, height: 25, x: p1.x + (p1.width / 2) - 12.5, y: p1.y - 25, dx: 0, platform: p1, isTurning: false, animationTick: 0, facing: 'right', animationTimer: 0 });
-                        if(p2) { const baseX = p2.x + (p2.width / 2) - 17.5, baseY = p2.y - 40; S.enemies.push({ type: 'AWAN_HANTU', width: 35, height: 25, x: baseX, y: baseY, originalX: baseX, originalY: baseY, baseY: baseY, dx: 0, platform: p2, animationAngle: Math.random() * Math.PI * 2, eyeAngle: 0, state: 'SCANNING', detectionTimer: 0, dashTargetX: 0 }); }
-                        if(p3) { const icicleX = p3.x + (p3.width / 2), icicleY = p3.y + C.PLATFORM_HEIGHT; S.enemies.push({ type: 'ICICLE', width: 15, height: 30, x: icicleX, y: icicleY, originalX: icicleX, originalY: icicleY, state: 'IDLE', shakeTimer: 0 }); }
-                        if(p6) { const batX = p6.x + (p6.width / 2), batY = p6.y + C.PLATFORM_HEIGHT; S.enemies.push({type: 'BAT', width: 30, height: 20, x: batX, y: batY, originalX: batX, originalY: batY, state: 'HANGING', wakeTimer: 0, dx: 0 }); }
-                        return; 
+                        if(p2) {
+                            const baseX = p2.x + (p2.width / 2) - 17.5;
+                            const baseY = p2.y - 40;
+                            S.enemies.push({ type: 'AWAN_HANTU', width: 35, height: 25, x: baseX, y: baseY, originalX: baseX, originalY: baseY, baseY: baseY, dx: 0, platform: p2, animationAngle: Math.random() * Math.PI * 2, eyeAngle: 0, state: 'SCANNING', detectionTimer: 0, dashTargetX: 0 });
+                        }
+                        if(p3) {
+                            const icicleX = p3.x + (p3.width / 2);
+                            const icicleY = p3.y + Game.Constants.PLATFORM_HEIGHT;
+                            S.enemies.push({ type: 'ICICLE', width: 15, height: 30, x: icicleX, y: icicleY, originalX: icicleX, originalY: icicleY, state: 'IDLE', shakeTimer: 0 });
+                        }
+                        if(p6) {
+                            const batX = p6.x + (p6.width / 2);
+                            const batY = p6.y + Game.Constants.PLATFORM_HEIGHT;
+                            S.enemies.push({type: 'BAT', width: 30, height: 20, x: batX, y: batY, originalX: batX, originalY: batY, state: 'HANGING', wakeTimer: 0, dx: 0 });
+                        }
+                        return;
                     }
+
+                    if (stage === 102) {
+                        const p_mid = platforms[1];
+                        const p_top = platforms[2];
+                        const testEnemyType = S.testEnemyType;
+
+                        if(p_mid && testEnemyType === 'GROUND_MONSTER') {
+                            S.enemies.push({ type: 'GROUND_MONSTER', width: 25, height: 25, x: p_mid.x + p_mid.width/2 - 12.5, y: p_mid.y - 25, dx: S.enemySpeed, platform: p_mid, isTurning: false, animationTick: 0, facing: 'right', attackCooldown: 120, isAttacking: false });
+                        }
+                        if(p_mid && testEnemyType === 'AWAN_HANTU') {
+                            const baseX = p_mid.x + p_mid.width/2 - 17.5;
+                            const baseY = p_mid.y - 40;
+                            S.enemies.push({ type: 'AWAN_HANTU', width: 35, height: 25, x: baseX, y: baseY, originalX: baseX, originalY: baseY, baseY: baseY, dx: 0, platform: p_mid, animationAngle: 0, eyeAngle: 0, state: 'SCANNING', detectionTimer: 0, dashTargetX: 0 });
+                        }
+                        if (p_top && testEnemyType === 'ICICLE') {
+                            S.enemies.push({ type: 'ICICLE', width: 15, height: 30, x: p_top.x + p_top.width/2, y: p_top.y + Game.Constants.PLATFORM_HEIGHT, originalX: p_top.x + p_top.width/2, originalY: p_top.y + Game.Constants.PLATFORM_HEIGHT, state: 'IDLE', shakeTimer: 0 });
+                        }
+                        if (p_top && testEnemyType === 'BAT') {
+                            S.enemies.push({type: 'BAT', width: 30, height: 20, x: p_top.x + p_top.width/2, y: p_top.y + Game.Constants.PLATFORM_HEIGHT, originalX: p_top.x + p_top.width/2, originalY: p_top.y + Game.Constants.PLATFORM_HEIGHT, state: 'HANGING', wakeTimer: 0, dx: 0 });
+                        }
+                        return;
+                    }
+
                     const spawnablePlatforms = platforms.filter(p => p.type !== 'base' && p.type !== 'top' && p !== goalPlatform);
                     if (spawnablePlatforms.length === 0) return;
                     
                     const lowerTierPlatforms = spawnablePlatforms.filter(p => p.y > 100);
+
+                    // Penjanaan GROUND_MONSTER
                     let numEnemies = 0;
                     if (stage >= 3) numEnemies = 1;
                     if (stage >= 7) numEnemies = 2;
@@ -778,14 +821,15 @@
                             const platform = platformsAtLevel[Math.floor(Math.random() * platformsAtLevel.length)];
                             const initialDirection = Math.random() < 0.5 ? 1 : -1;
                             const monster = { type: 'GROUND_MONSTER', width: 25, height: 25, x: platform.x + (platform.width / 2) - 12.5, y: platform.y - 25, dx: S.enemySpeed * initialDirection, platform: platform, isTurning: false, animationTick: 0, facing: initialDirection > 0 ? 'right' : 'left' };
-                            if (stage >= 31) {
-                                monster.attackCooldown = (90 + Math.random() * 40);
+                            if (stage >= 20) {
+                                monster.attackCooldown = (stage > 30) ? (90 + Math.random() * 40) : (120 + Math.random() * 60);
                                 monster.isAttacking = false;
                             }
                             S.enemies.push(monster);
                         }
                     }
 
+                    // Penjanaan AWAN_HANTU (Zon 3+)
                     let awanHantuChance = 0;
                     if (stage > 0 && stage % 10 === 0) { awanHantuChance = 1.0; } 
                     else if (stage >= 21) { awanHantuChance = 0.25; }
@@ -800,13 +844,14 @@
                         }
                     }
 
-                    if (stage >= 11) {
-                        const spawnChance = 0.05 + (stage - 11) * 0.002;
+                    // Penjanaan ICICLE & BAT (Zon 2+)
+                    if (stage >= 5) {
+                        const spawnChance = 0.05 + (stage - 5) * 0.002;
+                        
                         spawnablePlatforms.forEach(platform => {
                             if (platform.y > 50 && platform.y < S.canvas.height - 150 && Math.random() < spawnChance) {
-                                let batChance = 0.75;
-                                if (stage >= 21) { batChance = 0.5; }
-                                if (stage >= 31) { batChance = 0.25; }
+                                let batChance = 0.5;
+                                if (stage >= 11 && stage <= 20) { batChance = 0.75; }
                                 
                                 if (Math.random() < batChance) {
                                     const batX = platform.x + Math.random() * (platform.width - 30);
@@ -821,6 +866,7 @@
                         });
                     }
                 },
+
                 updateEnemies: function() {
                     const C = Game.Constants;
                     const S = Game.State;
@@ -842,12 +888,15 @@
                                     }, C.ENEMY_TURN_DELAY);
                                 }
                             }
+
                             if ((S.stage >= 20 || S.stage === 102) && enemy.attackCooldown > 0) {
                                 enemy.attackCooldown--;
                             }
+                            
                             const distanceToPlayer = Math.abs((S.player.x + S.player.width / 2) - (enemy.x + enemy.width / 2));
                             const onSamePlatform = S.player.standingOnPlatform === enemy.platform;
                             const isPlayerInFront = (enemy.facing === 'right' && S.player.x > enemy.x) || (enemy.facing === 'left' && S.player.x < enemy.x);
+
                             if ((S.stage >= 20 || S.stage === 102) && onSamePlatform && isPlayerInFront && !enemy.isAttacking && enemy.attackCooldown <= 0 && distanceToPlayer < C.GROUND_MONSTER_ATTACK_RANGE) {
                                 enemy.isAttacking = true;
                                 enemy.dx = 0;
@@ -958,6 +1007,7 @@
                         } else if (enemy.type === 'BAT') {
                             const xDist = Math.abs((S.player.x + S.player.width/2) - (enemy.x + enemy.width/2));
                             const isPlayerBelow = S.player.y > enemy.y;
+                            
                             switch(enemy.state) {
                                 case 'HANGING':
                                      if (S.stage === 101 || S.stage === 102) {
@@ -1025,16 +1075,23 @@
                         }
                     }
                 },
+
                 updateProjectiles: function() {
                     const S = Game.State;
                     for (let i = S.projectiles.length - 1; i >= 0; i--) {
                         const p = S.projectiles[i];
                         p.x += p.dx;
+
                         if (p.x < 0 || p.x > S.canvas.width) {
                             S.projectiles.splice(i, 1);
                             continue;
                         }
-                        if (S.player.x < p.x + p.width && S.player.x + S.player.width > p.x && S.player.y < p.y + p.height && S.player.y + S.player.height > p.y) {
+
+                        if (S.player.x < p.x + p.width &&
+                            S.player.x + S.player.width > p.x &&
+                            S.player.y < p.y + p.height &&
+                            S.player.y + S.player.height > p.y)
+                        {
                             if (![101, 102].includes(S.stage)) {
                                 S.gameOver = true;
                             }
@@ -1043,6 +1100,7 @@
                     }
                 }
             },
+
             Level: {
                 parseLayoutToPlatforms: function(layout, y, type = 'normal') {
                     const C = Game.Constants;
@@ -1059,8 +1117,12 @@
                                 p.subType = 'moving';
                                 p.originalX = x;
                                 let speedMultiplier = 0.8;
-                                if (S.stage >= 21 && S.stage <= 30) { speedMultiplier = 1.0 + (S.stage - 21) * 0.05; } 
-                                else if (S.stage > 30) { speedMultiplier = 1.5; }
+                                // Peningkatan kelajuan di Zon 3
+                                if (S.stage >= 21 && S.stage <= 30) {
+                                    speedMultiplier = 1.0 + (S.stage - 21) * 0.05;
+                                } else if (S.stage > 30) {
+                                     speedMultiplier = 1.5;
+                                }
                                 p.dx = (Math.random() < 0.5 ? 1 : -1) * speedMultiplier;
                             }
                             platforms.push(p);
@@ -1071,33 +1133,116 @@
                     }
                     return platforms;
                 },
+
                 generatePlatformRow: function(isFirstRow) {
-                    const C = Game.Constants; const S = Game.State; const stage = S.stage;
+                    const C = Game.Constants;
+                    const S = Game.State;
+                    const stage = S.stage;
                     let newLayout = Array(C.LEVEL_SLOTS).fill('B');
+                    
                     if (isFirstRow) {
                         const gapStart = 3 + Math.floor(Math.random() * 3);
-                        newLayout[gapStart] = 'G'; newLayout[gapStart + 1] = 'G'; return newLayout;
+                        newLayout[gapStart] = 'G';
+                        newLayout[gapStart + 1] = 'G';
+                        return newLayout;
                     }
-                    let gapProb = C.GAP_PROBABILITY + (stage * 0.005); let movingProb = C.MOVING_PLATFORM_PROB + (stage * 0.003);
-                    let icyProb = C.ICY_PLATFORM_PROB + (stage * 0.005); let crumblingInsteadOfGapProb = 0.5;
+                    
+                    let gapProb = C.GAP_PROBABILITY + (stage * 0.005);
+                    let movingProb = C.MOVING_PLATFORM_PROB + (stage * 0.003);
+                    let icyProb = C.ICY_PLATFORM_PROB + (stage * 0.005);
+                    let crumblingInsteadOfGapProb = 0.5;
+
+                    // Zon 2: Gua Kristal Rapuh (11-20)
                     if (stage >= 11 && stage <= 20) { crumblingInsteadOfGapProb = 0.75; }
+                    // Zon 3: Puncak Berangin (21-30)
                     else if (stage >= 21 && stage <= 30) { movingProb += 0.2; }
+                    // Zon 4: Glasier Abadi (31+)
                     else if (stage > 30) { icyProb += 0.3; }
+
+                    const patternRoll = Math.random();
+                    if (patternRoll < 0.1) {
+                        const patterns = [['B','I','G','G','B','B','I','I','G','G'],['B','B','B','G','G','G','G','B','B','B'],['B','B','G','G','C','C','G','G','B','B']];
+                        return patterns[Math.floor(Math.random() * patterns.length)];
+                    }
+
                     let hasPlacedGap = false;
                     for (let j = 1; j < C.LEVEL_SLOTS - 1; j++) {
-                        if (j === 6 && !hasPlacedGap) { const doubleGapType = Math.random() < crumblingInsteadOfGapProb ? 'C' : 'G'; newLayout[j] = doubleGapType; newLayout[j+1] = doubleGapType; j++; hasPlacedGap = true; continue; }
-                        if (!hasPlacedGap && Math.random() < gapProb && j < C.LEVEL_SLOTS - 2) { const doubleGapType = Math.random() < crumblingInsteadOfGapProb ? 'C' : 'G'; newLayout[j] = doubleGapType; newLayout[j+1] = doubleGapType; j++; hasPlacedGap = true;
-                        } else { newLayout[j] = (Math.random() < icyProb) ? 'I' : 'B'; }
+                        if (j === 6 && !hasPlacedGap) {
+                            const doubleGapType = Math.random() < crumblingInsteadOfGapProb ? 'C' : 'G';
+                            newLayout[j] = doubleGapType; newLayout[j+1] = doubleGapType;
+                            j++; hasPlacedGap = true; continue;
+                        }
+
+                        if (!hasPlacedGap && Math.random() < gapProb && j < C.LEVEL_SLOTS - 2) {
+                            const doubleGapType = Math.random() < crumblingInsteadOfGapProb ? 'C' : 'G';
+                            newLayout[j] = doubleGapType; newLayout[j+1] = doubleGapType;
+                            j++; hasPlacedGap = true;
+                        } else {
+                            newLayout[j] = (Math.random() < icyProb) ? 'I' : 'B';
+                        }
                     }
-                    if (!hasPlacedGap) { let gapStart = 3 + Math.floor(Math.random() * 3); const doubleGapType = Math.random() < crumblingInsteadOfGapProb ? 'C' : 'G'; newLayout[gapStart] = doubleGapType; newLayout[gapStart + 1] = doubleGapType; }
-                    for (let j = 1; j < C.LEVEL_SLOTS - 2; j++) { if (newLayout[j-1] !== 'G' && newLayout[j-1] !== 'C' && newLayout[j+1] !== 'G' && newLayout[j+1] !== 'C' && Math.random() < movingProb) { newLayout[j-1] = 'G'; newLayout[j] = 'M'; newLayout[j+1] = 'G'; j += 2; }}
-                    if (['C', 'M', 'G'].includes(newLayout[0])) newLayout[0] = 'B'; if (['C', 'M', 'G'].includes(newLayout[C.LEVEL_SLOTS - 1])) newLayout[C.LEVEL_SLOTS - 1] = 'B';
-                    for (let j = 1; j < C.LEVEL_SLOTS -1; j++) { if (['G', 'C'].includes(newLayout[j-1]) && !['G', 'C', 'M'].includes(newLayout[j]) && ['G', 'C'].includes(newLayout[j+1])) { newLayout[j] = newLayout[j-1]; }}
+                    if (!hasPlacedGap) {
+                        let gapStart = 3 + Math.floor(Math.random() * 3);
+                        const doubleGapType = Math.random() < crumblingInsteadOfGapProb ? 'C' : 'G';
+                        newLayout[gapStart] = doubleGapType; newLayout[gapStart + 1] = doubleGapType;
+                    }
+
+                    for (let j = 1; j < C.LEVEL_SLOTS - 2; j++) {
+                        if (newLayout[j-1] !== 'G' && newLayout[j-1] !== 'C' && newLayout[j+1] !== 'G' && newLayout[j+1] !== 'C' && Math.random() < movingProb) {
+                            newLayout[j-1] = 'G'; newLayout[j] = 'M'; newLayout[j+1] = 'G';
+                            j += 2; 
+                        }
+                    }
+
+                    if (['C', 'M', 'G'].includes(newLayout[0])) newLayout[0] = 'B';
+                    if (['C', 'M', 'G'].includes(newLayout[C.LEVEL_SLOTS - 1])) newLayout[C.LEVEL_SLOTS - 1] = 'B';
+                    for (let j = 1; j < C.LEVEL_SLOTS -1; j++) {
+                         if (['G', 'C'].includes(newLayout[j-1]) && !['G', 'C', 'M'].includes(newLayout[j]) && ['G', 'C'].includes(newLayout[j+1])) {
+                            newLayout[j] = newLayout[j-1];
+                         }
+                    }
+                    
                     return newLayout;
                 },
+
                 generatePlatforms: function(basePlatformsArg = null) {
-                    const S = Game.State; const C = Game.Constants;
-                    if ([101, 102].includes(S.stage)) { /* ... Logic Peringkat Khas ... */ return; }
+                    const S = Game.State;
+                    const C = Game.Constants;
+
+                    if ([101, 102].includes(S.stage)) {
+                        const canvas = S.canvas;
+                        S.showcaseCharacters = [];
+                        
+                        if (S.stage === 101) {
+                            S.platforms = [];
+                            const platformWidth = 110; const gapWidth = 35; const verticalGap = 130;
+                            const floor = { x: 0, y: canvas.height - 40, width: canvas.width, height: 40 };
+                            S.platforms.push(floor);
+                            let y = canvas.height - 40 - verticalGap;
+                            for (let i = 0; i < 3; i++) {
+                                 S.platforms.push({ x: 0, y: y, width: platformWidth, height: C.PLATFORM_HEIGHT });
+                                 S.platforms.push({ x: platformWidth + gapWidth, y: y, width: platformWidth, height: C.PLATFORM_HEIGHT });
+                                 S.platforms.push({ x: (platformWidth + gapWidth) * 2, y: y, width: platformWidth, height: C.PLATFORM_HEIGHT });
+                                 y -= verticalGap;
+                            }
+                            S.showcaseCharacters.push({ type: 'ESKIMO', x: 120, y: floor.y - S.player.height });
+                            S.showcaseCharacters.push({ type: 'PENGUIN', x: 180, y: floor.y - S.player.height });
+                            S.showcaseCharacters.push({ type: 'ESKIMO_FEMALE', x: 240, y: floor.y - S.player.height });
+                            S.goalPlatform = { x: -200, y: -200, width: 0, height: 0, type: 'goal' }; 
+                            S.platforms.push(S.goalPlatform);
+                        } else { // Stage 102
+                            S.platforms = [];
+                            const floor = { x: 0, y: canvas.height - 40, width: canvas.width, height: 40 };
+                            S.platforms.push(floor);
+                            S.platforms.push({ x: 0, y: canvas.height - 40 - C.VERTICAL_GAP, width: canvas.width, height: C.PLATFORM_HEIGHT });
+                            S.platforms.push({ x: 0, y: canvas.height - 40 - (C.VERTICAL_GAP * 2), width: canvas.width, height: C.PLATFORM_HEIGHT });
+                            S.goalPlatform = { x: -200, y: -200, width: 0, height: 0, type: 'goal' }; 
+                        }
+                        Game.Enemies.generateEnemies(); 
+                        Game.Level.generateDecorations();
+                        return;
+                    }
+
                     S.platforms = [];
                     let basePlatform;
                     if (basePlatformsArg && basePlatformsArg.length > 0) {
@@ -1107,20 +1252,28 @@
                     } else {
                         basePlatform = { x: 0, y: S.canvas.height - 20, width: S.canvas.width, height: C.PLATFORM_HEIGHT, type: 'base', subType: 'normal' };
                     }
-                    basePlatform.x -= 30; basePlatform.width += 60;
+                    
+                    basePlatform.x -= 30;
+                    basePlatform.width += 60;
                     S.platforms.push(basePlatform);
+                    
                     let currentY = basePlatform.y;
                     while (currentY > C.VERTICAL_GAP + 80) { 
                         const newY = currentY - C.VERTICAL_GAP;
-                        const newLayout = this.generatePlatformRow(newY === basePlatform.y - C.VERTICAL_GAP);
+                        const isFirst = (newY === basePlatform.y - C.VERTICAL_GAP);
+                        const newLayout = this.generatePlatformRow(isFirst);
                         const newPlatforms = this.parseLayoutToPlatforms(newLayout, newY);
+                        
                         if (newPlatforms.length > 0) {
-                            newPlatforms[0].x -= 30; newPlatforms[0].width += 30;
+                            newPlatforms[0].x -= 30;
+                            newPlatforms[0].width += 30;
                             newPlatforms[newPlatforms.length - 1].width += 30;
                         }
+                        
                         S.platforms.push(...newPlatforms);
                         currentY = newY;
                     }
+
                     const topPlatformY = 0 - C.PLATFORM_HEIGHT / 2;
                     const topLayout = Array(C.LEVEL_SLOTS).fill('G');
                     const startPos = 3 + Math.floor(Math.random() * 3);
@@ -1132,30 +1285,59 @@
                         S.goalPlatform = {x: 150, y: topPlatformY, width: 120, height: C.PLATFORM_HEIGHT, type: 'top'};
                         goalPlatforms.push(S.goalPlatform);
                     }
+                    
                     if (goalPlatforms.length > 0) {
-                        goalPlatforms[0].x -= 30; goalPlatforms[0].width += 30;
+                        goalPlatforms[0].x -= 30;
+                        goalPlatforms[0].width += 30;
                         goalPlatforms[goalPlatforms.length - 1].width += 30;
                     }
                     S.platforms.push(...goalPlatforms);
+
                     Game.Enemies.generateEnemies();
                     Game.Level.generateDecorations();
                 },
+                
                 generateDecorations: function() {
                     const S = Game.State;
                     S.decorations = [];
-                    if ([101, 102].includes(S.stage)) { /* ... Logic Hiasan Khas ... */ return; }
+                    const verticalGapShowcase = 130;
+                    const levelYShowcase = {
+                        aras2: S.canvas.height - 40 - verticalGapShowcase,
+                        aras3: S.canvas.height - 40 - (verticalGapShowcase * 2),
+                        aras4: S.canvas.height - 40 - (verticalGapShowcase * 3)
+                    };
+
+                    if (S.stage === 101) {
+                        S.platforms.forEach(p => {
+                            if (p.y === levelYShowcase.aras2) {
+                                S.decorations.push({ type: 'ICY_GRASS', x: p.x + 20, y: p.y });
+                                S.decorations.push({ type: 'SNOW_PILE', x: p.x + 70, y: p.y });
+                            } else if (p.y === levelYShowcase.aras3) {
+                                S.decorations.push({ type: 'FROZEN_PUDDLE', x: p.x + 40, y: p.y });
+                                S.decorations.push({ type: 'ICE_ROCK', x: p.x + 90, y: p.y });
+                            } else if (p.y === levelYShowcase.aras4) {
+                                S.decorations.push({ type: 'SNOWY_TREE', x: p.x + 50, y: p.y });
+                                S.decorations.push({ type: 'SIGNPOST', x: p.x + 20, y: p.y });
+                            }
+                        });
+                        return;
+                    }
+                    if (S.stage === 102) return;
+                    
                     if (S.stage > 1 && S.stage % 10 === 1) {
                         const startPlatform = S.platforms[0];
                         const flagX = startPlatform.x + (startPlatform.width / 2) + (S.player.width);
                         const flagY = startPlatform.y;
                         S.decorations.push({ type: 'CHECKPOINT_FLAG', x: flagX, y: flagY });
                     }
+
                     S.platforms.forEach(p => {
                         if (p !== S.platforms[0] && p !== S.goalPlatform) {
                             for(let i=0; i < 3; i++) { 
                                 if (Math.random() < S.decorationProbability) {
                                     const sizeRoll = Math.random();
                                     const decor = { type: '', x: p.x + Math.random() * (p.width - 40) + 20, y: p.y };
+
                                     if (sizeRoll < 0.2) { decor.type = 'SNOWY_TREE'; } 
                                     else if (sizeRoll < 0.5) {
                                         const mediumTypeRoll = Math.random();
@@ -1168,6 +1350,7 @@
                                         else if (smallTypeRoll < 0.66) decor.type = 'ICE_SHARD';
                                         else decor.type = 'ICY_GRASS';
                                     }
+                                    
                                     if (decor.type) S.decorations.push(decor);
                                 }
                             }
@@ -1175,6 +1358,7 @@
                     });
                 }
             },
+
             Graphics: {
                 draw: function() {
                     this.drawBackground();
@@ -1184,10 +1368,14 @@
                         if(p === Game.State.crumblingPlatformCandidate && !p.isFalling) {
                              shakeX = Math.sin(Game.State.globalAnimationTick * 0.8) * 1.5;
                         }
+
                         switch(p.subType) {
                             case 'icy': ctx.fillStyle = '#A8D8F0'; break;
                             case 'moving': ctx.fillStyle = '#B2B2B2'; break;
-                            case 'crumbling': ctx.fillStyle = '#E0E0E0'; ctx.fillRect(p.x + shakeX, p.y, p.width, p.height); return;
+                            case 'crumbling':
+                                ctx.fillStyle = '#E0E0E0';
+                                ctx.fillRect(p.x + shakeX, p.y, p.width, p.height);
+                                return;
                             default:
                                 if (p.type === 'base') ctx.fillStyle = '#CCCCCC';
                                 else if (p.type === 'top' || p === Game.State.goalPlatform) ctx.fillStyle = '#FFD700';
@@ -1197,25 +1385,9 @@
                     });
                     this.drawDecorations(); this.drawProjectiles(); this.drawEnemies(); this.drawPlayer(); this.drawShowcaseCharacters();
                 },
-                updateMenuCursor: function() {
-                    const S = Game.State;
-                    if (!S.isMenuVisible || !S.menuOptions || S.menuOptions.length === 0) {
-                        S.menuCursor.style.display = 'none'; return;
-                    }
-                    S.menuOptions.forEach((opt, index) => {
-                        opt.classList.toggle('selected', index === S.currentMenuSelection);
-                    });
-                    const selectedOption = S.menuOptions[S.currentMenuSelection];
-                    if (selectedOption) {
-                        S.menuCursor.style.display = 'block';
-                        S.menuCursor.style.left = `${selectedOption.offsetLeft - 30}px`;
-                        S.menuCursor.style.top = `${selectedOption.offsetTop + selectedOption.offsetHeight / 2 - 10}px`;
-                    }
-                },
-                drawCharacter: function(charType, x, y, isCrouching = false, targetCtx = Game.State.ctx) {
-                    const player = Game.State.player;
-                    if (player.isActionBlinking && Math.floor(Game.State.globalAnimationTick / 4) % 2 === 0) { return; }
-                    let heightModifier = isCrouching ? 6 : 0; let yOffset = isCrouching ? 6 : 0;
+                
+                drawCharacter: function(charType, x, y, isCrouching, targetCtx = Game.State.ctx) {
+                    const player = Game.State.player; let heightModifier = isCrouching ? 6 : 0; let yOffset = isCrouching ? 6 : 0;
                     switch (charType) {
                         case 'ESKIMO':
                             targetCtx.fillStyle = '#8B4513'; targetCtx.fillRect(x + 2, y + yOffset, player.width - 4, player.height - 2 - heightModifier);
@@ -1245,128 +1417,112 @@
                             break;
                     }
                 },
-                drawPlayer: function() { if (!Game.State.isMenuVisible) this.drawCharacter(Game.State.selectedCharacter, Game.State.player.x, Game.State.player.y, Game.State.player.isCrouching); },
-                drawShowcaseCharacters: function() { /* ... */ },
-                drawBackground: function() { /* ... */ },
-                drawEnemies: function() { /* ... */ },
-                drawProjectiles: function() { /* ... */ },
-                drawDecorations: function() { /* ... */ },
-                drawCharacterPreviews: function() {
-                    const G = this;
-                    const eskimoCanvas = document.getElementById('eskimo-preview'); if (eskimoCanvas) { const pCtx = eskimoCanvas.getContext('2d'); pCtx.clearRect(0,0,60,60); G.drawCharacter('ESKIMO', 15, 15, false, pCtx); }
-                    const penguinCanvas = document.getElementById('penguin-preview'); if (penguinCanvas) { const pCtx = penguinCanvas.getContext('2d'); pCtx.clearRect(0,0,60,60); G.drawCharacter('PENGUIN', 15, 15, false, pCtx); }
-                    const eskimoFemaleCanvas = document.getElementById('eskimo-female-preview'); if (eskimoFemaleCanvas) { const pCtx = eskimoFemaleCanvas.getContext('2d'); pCtx.clearRect(0,0,60,60); G.drawCharacter('ESKIMO_FEMALE', 15, 15, false, pCtx); }
+                
+                drawPlayer: function() { if (Game.State.stage !== 101) this.drawCharacter(Game.State.selectedCharacter, Game.State.player.x, Game.State.player.y, Game.State.player.isCrouching); },
+                drawShowcaseCharacters: function() { if (Game.State.stage === 101) Game.State.showcaseCharacters.forEach(char => this.drawCharacter(char.type, char.x, char.y, false)); },
+                drawBackground: function() {
+                    const S = Game.State, ctx = S.ctx, canvas = S.canvas;
+                    const stage = S.stage;
+                    
+                    let skyColor0 = '#0c1445', skyColor1 = '#346888';
+                    let mount1Color = '#1e2d40', mount2Color = '#15202e', mount3Color = '#0d1520';
+
+                    // Zon 2: Gua Kristal Rapuh (11-20)
+                    if (stage >= 11 && stage <= 20) {
+                        skyColor0 = '#1c1445'; skyColor1 = '#433488';
+                        mount1Color = '#2d1e40'; mount2Color = '#20152e'; mount3Color = '#150d20';
+                    }
+                    // Zon 3: Puncak Berangin (21-30)
+                    else if (stage >= 21 && stage <= 30) {
+                        skyColor0 = '#607D8B'; skyColor1 = '#B0BEC5';
+                        mount1Color = '#78909C'; mount2Color = '#546E7A'; mount3Color = '#37474F';
+                    }
+                    // Zon 4: Glasier Abadi (31+)
+                    else if (stage > 30) {
+                        skyColor0 = '#023047'; skyColor1 = '#0288D1';
+                        mount1Color = '#01579B'; mount2Color = '#014073'; mount3Color = '#002340';
+                    }
+
+                    const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    sky.addColorStop(0, skyColor0);
+                    sky.addColorStop(1, skyColor1);
+                    ctx.fillStyle = sky;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    if(stage >= 20 || [101, 102].includes(stage)) {
+                        ctx.fillStyle = '#f0f0d0'; ctx.beginPath(); ctx.arc(320, 100, 30, 0, Math.PI * 2); ctx.fill();
+                    }
+                    
+                    const m_y = { m1: [[250, 450], [150, 350], [220, 420], [120, 320], [250, 450], [200, 400]], m2: [[300, 500], [250, 450], [320, 520], [260, 460], [300, 500], [280, 480]], m3: [[400, 600], [380, 580], [410, 610], [370, 570], [420, 620], [390, 590]] }; 
+                    function lerp(start, end, amt) { return (1 - amt) * start + amt * end; } 
+                    const progressFactor = ([101, 102].includes(stage)) ? 1 : Math.min(1, (stage - 1) / 89);
+                    function drawMount(color, points, y_data) { ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(0, canvas.height); points.forEach((p, i) => ctx.lineTo(p, lerp(y_data[i][0], y_data[i][1], progressFactor))); ctx.lineTo(canvas.width, canvas.height); ctx.closePath(); ctx.fill(); } 
+                    drawMount(mount1Color, [0, 80, 150, 220, 300, canvas.width], m_y.m1); 
+                    drawMount(mount2Color, [50, 120, 200, 280, 350, canvas.width], m_y.m2); 
+                    drawMount(mount3Color, [30, 100, 180, 260, 330, canvas.width], m_y.m3);
                 },
+                drawEnemies: function() { const S = Game.State, ctx = S.ctx, C = Game.Constants; S.enemies.forEach(e => { if (e.type === 'ICICLE') { if (e.state === 'STUCK' && e.y > S.canvas.height) return; ctx.fillStyle = '#bdeeff'; ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + e.width, e.y); ctx.lineTo(e.x + e.width / 2, e.y + e.height); ctx.closePath(); ctx.fill(); } else if (e.type === 'AWAN_HANTU') { const isAngry = e.state === 'PAUSING' || e.state === 'DASHING' || e.state === 'RETURNING'; ctx.fillStyle = isAngry ? '#ff4136' : '#ADD8E6'; ctx.beginPath(); ctx.arc(e.x + e.width / 2, e.y + e.height / 2, e.width / 2, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(e.x, e.y + e.height/2, e.width, e.height/2); ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(e.x + e.width / 2, e.y + e.height / 2, 8, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#000000'; const pupilX = e.x + e.width / 2 + (Math.sin(e.eyeAngle) * C.EYE_SWEEP_RANGE); ctx.beginPath(); ctx.arc(pupilX, e.y + e.height / 2, 4, 0, Math.PI * 2); ctx.fill(); } else if (e.type === 'BAT') { const centerX = e.x + e.width / 2; ctx.fillStyle = '#3d5a80'; if (e.state === 'HANGING' || e.state === 'WAKING' || e.state === 'DETECTED') { ctx.beginPath(); ctx.moveTo(centerX - 8, e.y); ctx.lineTo(centerX, e.y + e.height); ctx.lineTo(centerX + 8, e.y); ctx.closePath(); ctx.fill(); if (e.state === 'DETECTED' || e.state === 'WAKING') { ctx.fillStyle = '#e71d36'; ctx.fillRect(centerX - 1.5, e.y + 8, 3, 3); } } else { const wingFlap = Math.sin(S.globalAnimationTick * 0.4) * 12; ctx.fillStyle = '#293241'; ctx.fillRect(centerX - 5, e.y, 10, e.height); ctx.fillStyle = '#98c1d9'; ctx.beginPath(); ctx.moveTo(centerX, e.y + 5); ctx.lineTo(centerX - e.width / 2 - 5, e.y + wingFlap); ctx.lineTo(centerX - e.width / 2 + 5, e.y + e.height); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(centerX, e.y + 5); ctx.lineTo(centerX + e.width / 2 + 5, e.y + wingFlap); ctx.lineTo(centerX + e.width / 2 - 5, e.y + e.height); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#e71d36'; ctx.fillRect(centerX - 1.5, e.y + 3, 3, 3); } } else { ctx.fillStyle = '#ff80ed'; ctx.fillRect(e.x + 2, e.y, e.width - 4, e.height - 2); ctx.fillStyle = '#000000'; const eyeSize = 5; const eyeY = e.y + 7; let eyeX = (e.facing === 'right') ? e.x + e.width - eyeSize - 6 : e.x + 6; ctx.fillRect(eyeX, eyeY, eyeSize, eyeSize); const mouthY = e.y + 15; const mouthWidth = 10; let mouthX = (e.facing === 'right') ? e.x + e.width - mouthWidth - 2 : e.x + 2; ctx.fillStyle = '#000000'; if (e.isAttacking) { ctx.fillRect(mouthX - 2, mouthY - 2, mouthWidth + 4, 8); } else { ctx.fillRect(mouthX, mouthY, mouthWidth, 4); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(mouthX + 1, mouthY, 2, 2); ctx.fillRect(mouthX + 7, mouthY, 2, 2); } ctx.strokeStyle = '#ff80ed'; ctx.lineWidth = 3; const legState = Math.floor(e.animationTick / 8) % 2; const legY = e.y + e.height - 2; if (legState === 0) { ctx.beginPath(); ctx.moveTo(e.x + 8, legY); ctx.lineTo(e.x + 4, legY + 5); ctx.moveTo(e.x + 17, legY); ctx.lineTo(e.x + 21, legY + 5); ctx.stroke(); } else { ctx.beginPath(); ctx.moveTo(e.x + 8, legY); ctx.lineTo(e.x + 12, legY + 5); ctx.moveTo(e.x + 17, legY); ctx.lineTo(e.x + 13, legY + 5); ctx.stroke(); } } }); },
+                drawProjectiles: function() { const S = Game.State; S.projectiles.forEach(p => { S.ctx.fillStyle = '#bdeeff'; S.ctx.fillRect(p.x, p.y, p.width, p.height); }); },
+                drawDecorations: function() { const G = Game.Graphics, S = Game.State; S.decorations.forEach(d => { switch (d.type) { case 'SNOW_PILE': G.drawSnowPile(d.x, d.y); break; case 'ICE_SHARD': G.drawIceShard(d.x, d.y); break; case 'ICY_GRASS': G.drawIcyGrass(d.x, d.y); break; case 'FROZEN_PUDDLE': G.drawFrozenPuddle(d.x, d.y); break; case 'ICE_ROCK': G.drawIceRock(d.x, d.y); break; case 'SIGNPOST': G.drawSignpost(d.x, d.y); break; case 'SNOWY_TREE': G.drawSnowyTree(d.x, d.y); break; case 'CHECKPOINT_FLAG': G.drawCheckpointFlag(d.x, d.y); break;} }); },
+                drawCharacterPreviews: function() { const G = Game.Graphics; const eskimoCanvas = document.getElementById('eskimo-preview'); if (eskimoCanvas) { const pCtx = eskimoCanvas.getContext('2d'); pCtx.clearRect(0,0,60,60); G.drawCharacter('ESKIMO', 15, 15, false, pCtx); } const penguinCanvas = document.getElementById('penguin-preview'); if (penguinCanvas) { const pCtx = penguinCanvas.getContext('2d'); pCtx.clearRect(0,0,60,60); G.drawCharacter('PENGUIN', 15, 15, false, pCtx); } const eskimoFemaleCanvas = document.getElementById('eskimo-female-preview'); if (eskimoFemaleCanvas) { const pCtx = eskimoFemaleCanvas.getContext('2d'); pCtx.clearRect(0,0,60,60); G.drawCharacter('ESKIMO_FEMALE', 15, 15, false, pCtx); } },
+                drawSnowPile: (x, y, tCtx = Game.State.ctx) => { const r = 8; tCtx.fillStyle = 'rgba(255, 255, 255, 0.8)'; tCtx.beginPath(); tCtx.arc(x, y, r, Math.PI, Math.PI * 2); tCtx.fill(); tCtx.beginPath(); tCtx.arc(x + (r*0.9), y, r*0.75, Math.PI, Math.PI * 2); tCtx.fill(); },
+                drawIceShard: (x, y, tCtx = Game.State.ctx) => { const h = 13, w = 6; tCtx.fillStyle = 'rgba(189, 234, 255, 0.7)'; tCtx.beginPath(); tCtx.moveTo(x, y); tCtx.lineTo(x + w, y - h); tCtx.lineTo(x + (w*2), y); tCtx.closePath(); tCtx.fill(); },
+                drawIcyGrass: (x, y, tCtx = Game.State.ctx) => { const h = [10,13,9]; tCtx.strokeStyle = 'rgba(200, 255, 255, 0.9)'; tCtx.lineWidth = 2; tCtx.beginPath(); tCtx.moveTo(x, y); tCtx.lineTo(x + 3, y - h[0]); tCtx.moveTo(x + 5, y); tCtx.lineTo(x + 6, y - h[1]); tCtx.moveTo(x + 10, y); tCtx.lineTo(x + 9, y - h[2]); tCtx.stroke(); },
+                drawFrozenPuddle: (x, y, tCtx = Game.State.ctx) => { const w = 30, h = 4; tCtx.fillStyle = 'rgba(173, 216, 230, 0.6)'; tCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; tCtx.lineWidth = 1; tCtx.beginPath(); tCtx.ellipse(x, y, w, h, 0, 0, 2 * Math.PI); tCtx.fill(); tCtx.stroke(); },
+                drawIceRock: (x, y, tCtx = Game.State.ctx) => { tCtx.fillStyle = 'rgba(210, 220, 230, 0.85)'; tCtx.strokeStyle = 'rgba(180, 190, 200, 0.9)'; tCtx.lineWidth = 1; tCtx.beginPath(); tCtx.moveTo(x, y); tCtx.lineTo(x - 8, y - 5); tCtx.lineTo(x - 2, y - 15); tCtx.lineTo(x + 10, y - 12); tCtx.lineTo(x + 12, y - 4); tCtx.closePath(); tCtx.fill(); tCtx.stroke(); },
+                drawSignpost: (x, y, tCtx = Game.State.ctx) => { tCtx.fillStyle = '#8B4513'; tCtx.fillRect(x, y - 20, 4, 20); tCtx.fillRect(x - 10, y - 18, 24, 10); tCtx.fillStyle = '#FFF'; tCtx.beginPath(); tCtx.moveTo(x + 8, y - 15); tCtx.lineTo(x + 12, y - 13); tCtx.lineTo(x + 8, y - 11); tCtx.fill(); },
+                drawSnowyTree: (x, y, tCtx = Game.State.ctx) => { tCtx.fillStyle = '#5C4033'; tCtx.fillRect(x, y - 15, 8, 15); tCtx.fillStyle = '#FFFFFF'; tCtx.beginPath(); tCtx.moveTo(x + 4, y - 45); tCtx.lineTo(x - 15, y - 25); tCtx.lineTo(x + 23, y - 25); tCtx.closePath(); tCtx.fill(); tCtx.beginPath(); tCtx.moveTo(x + 4, y - 30); tCtx.lineTo(x - 20, y - 10); tCtx.lineTo(x + 28, y - 10); tCtx.closePath(); tCtx.fill(); },
+                drawCheckpointFlag: (x, y, tCtx = Game.State.ctx) => { tCtx.fillStyle = '#964B00'; tCtx.fillRect(x, y - 30, 4, 30); tCtx.fillStyle = '#00FF00'; tCtx.beginPath(); tCtx.moveTo(x + 4, y - 28); tCtx.lineTo(x + 18, y - 22); tCtx.lineTo(x + 4, y - 16); tCtx.closePath(); tCtx.fill(); },
             },
+
             Controls: {
-                keys: { left: false, right: false, up: false, down: false, a: false, b: false },
-                updateActiveMenu: function() {
-                    const S = Game.State;
-                    if (S.mainMenu.style.display !== 'none') { S.activeMenu = S.mainMenu; }
-                    else if (S.instructionsMenu.style.display !== 'none') { S.activeMenu = S.instructionsMenu; }
-                    else { S.activeMenu = null; }
-                    if (S.activeMenu) {
-                        S.menuOptions = S.activeMenu.querySelectorAll('.menu-option');
-                        S.currentMenuSelection = 0;
-                    }
-                },
-                handleMenuAction: function() {
-                    const S = Game.State;
-                    if (!S.isMenuVisible || !S.menuOptions) return;
-                    const selectedOption = S.menuOptions[S.currentMenuSelection];
-                    if (!selectedOption) return;
-                    const action = selectedOption.dataset.action;
-
-                    if (S.activeMenu === S.mainMenu) {
-                        if (action === 'start') {
-                            S.mainMenu.style.display = 'none';
-                            S.characterSelectMenu.style.display = 'flex';
-                        } else if (action === 'instructions') {
-                            S.mainMenu.style.display = 'none';
-                            S.instructionsMenu.style.display = 'flex';
-                            this.updateActiveMenu();
-                        }
-                    } else if (S.activeMenu === S.instructionsMenu) {
-                        if (action === 'back') {
-                            S.instructionsMenu.style.display = 'none';
-                            S.mainMenu.style.display = 'flex';
-                            this.updateActiveMenu();
-                        }
-                    }
-                },
+                keys: { left: false, right: false, up: false, down: false },
                 setupEventListeners: function() {
-                    const S = Game.State;
-                    document.addEventListener('keydown', (e) => {
-                        const key = e.key.toLowerCase();
-                        if (S.isMenuVisible) {
-                            e.preventDefault();
-                            if (key === 'arrowdown') { S.currentMenuSelection = (S.currentMenuSelection + 1) % S.menuOptions.length; }
-                            if (key === 'arrowup') { S.currentMenuSelection = (S.currentMenuSelection - 1 + S.menuOptions.length) % S.menuOptions.length; }
-                            if (key === 'd' || key === 'enter') { this.handleMenuAction(); }
-                            if (key === 's' && S.activeMenu === S.instructionsMenu) { this.handleMenuAction(); }
-                        } else {
-                            if (key === 'arrowleft') this.keys.left = true;
-                            if (key === 'arrowright') this.keys.right = true;
-                            if (key === 'arrowup' || key === 'd') { e.preventDefault(); this.keys.up = true; this.keys.a = true; }
-                            if (key === 'arrowdown') this.keys.down = true;
-                            if (key === 's') this.keys.b = true;
-                        }
-                    });
-                    document.addEventListener('keyup', (e) => {
-                        const key = e.key.toLowerCase();
-                        if (key === 'arrowleft') this.keys.left = false;
-                        if (key === 'arrowright') this.keys.right = false;
-                        if (key === 'arrowup' || key === 'd') { this.keys.up = false; this.keys.a = false; }
-                        if (key === 'arrowdown') this.keys.down = false;
-                        if (key === 's') this.keys.b = false;
-                    });
-                    
-                    S.startButton.addEventListener('click', () => Game.Core.startGame());
-                    S.continueButton.addEventListener('click', () => { S.checkpointStage = S.stage; Game.Core.startGame(); });
-                    S.restartButton.addEventListener('click', () => { 
-                        S.checkpointStage = 1; S.stage = 1; 
-                        S.gameOverMenu.style.display = 'none'; 
-                        S.mainMenu.style.display = 'flex'; 
-                        S.onScreenControls.style.display = 'none';
-                        S.isMenuVisible = true;
-                        this.updateActiveMenu();
-                        Game.Core.resetGame(); 
-                        Game.Graphics.draw(); 
-                    });
-                    
-                    const handleTouch = (element, key, isPressed) => {
-                        element.addEventListener(isPressed ? 'touchstart' : 'touchend', (e) => {
-                            e.preventDefault();
-                             if (S.isMenuVisible) {
-                                if (isPressed) {
-                                    if (key === 'up') S.currentMenuSelection = (S.currentMenuSelection - 1 + S.menuOptions.length) % S.menuOptions.length;
-                                    if (key === 'down') S.currentMenuSelection = (S.currentMenuSelection + 1) % S.menuOptions.length;
-                                    if (key === 'a') this.handleMenuAction();
-                                    if (key === 'b' && S.activeMenu === S.instructionsMenu) { this.handleMenuAction(); }
-                                }
-                            } else { this.keys[key] = isPressed; }
-                            element.classList.toggle('pressed', isPressed);
-                        }, { passive: false });
-                    };
-
-                    handleTouch(document.getElementById('btn-left'), 'left', true); handleTouch(document.getElementById('btn-left'), 'left', false);
-                    handleTouch(document.getElementById('btn-right'), 'right', true); handleTouch(document.getElementById('btn-right'), 'right', false);
-                    handleTouch(document.getElementById('btn-down'), 'down', true); handleTouch(document.getElementById('btn-down'), 'down', false);
-                    handleTouch(document.getElementById('btn-up'), 'up', true); handleTouch(document.getElementById('btn-up'), 'up', false);
-                    handleTouch(document.getElementById('btn-a'), 'a', true); handleTouch(document.getElementById('btn-a'), 'a', false);
-                    handleTouch(document.getElementById('btn-b'), 'b', true); handleTouch(document.getElementById('btn-b'), 'b', false);
-                    
+                    const S = Game.State; const C = Game.Constants;
+                    document.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') this.keys.left = true; if (e.key === 'ArrowRight') this.keys.right = true; if (e.key === 'ArrowUp') this.keys.up = true; if (e.key === 'ArrowDown') this.keys.down = true; });
+                    document.addEventListener('keyup', (e) => { if (e.key === 'ArrowLeft') this.keys.left = false; if (e.key === 'ArrowRight') this.keys.right = false; if (e.key === 'ArrowUp') this.keys.up = false; if (e.key === 'ArrowDown') this.keys.down = false; });
+                    S.startButton.addEventListener('click', Game.Core.startGame);
+                    S.continueButton.addEventListener('click', () => { Game.Core.startGame(); });
+                    S.restartButton.addEventListener('click', () => { S.checkpointStage = 1; S.stage = 1; S.gameOverMenu.style.display = 'none'; S.startMenu.style.display = 'flex'; Game.Core.resetGame(); Game.Graphics.draw(); });
                     S.decorationSlider.addEventListener('input', (e) => { const v = parseInt(e.target.value, 10); S.decorationProbability = v / 100; S.decorationValue.textContent = `${v}%`; });
                     S.enemySelectionButtons.forEach(b => { b.addEventListener('click', () => { S.enemySelectionButtons.forEach(btn => btn.classList.remove('selected')); b.classList.add('selected'); S.testEnemyType = b.dataset.enemy; if (S.stage === 102) { Game.Enemies.generateEnemies(); Game.Graphics.draw(); } }); });
                     S.characterSelectors.forEach(s => { s.addEventListener('click', () => { S.characterSelectors.forEach(sel => sel.classList.remove('selected')); s.classList.add('selected'); S.selectedCharacter = s.dataset.char; }); });
-                    S.stagePresetButtons.forEach(b => { /* ... Logik Pratetap Peringkat ... */ });
-                    S.resetPlatformsButton.addEventListener('click', () => { /* ... Logik Reset ... */ });
+                    S.stagePresetButtons.forEach(b => { b.addEventListener('click', (e) => {
+                        const newStage = parseInt(e.target.dataset.stage, 10); if (isNaN(newStage)) return;
+                        S.stage = newStage; S.checkpointStage = S.stage; 
+                        S.stageDisplay.textContent = S.stage; S.gameOver = false; S.isTransitioning = false; S.score = 0; S.scoreDisplay.textContent = S.score; S.landedYLevels = new Set();
+                        
+                        if (newStage > 1 && ![101,102].includes(newStage)) {
+                            const baseW = S.player.width * 3;
+                            const base = [{ x: (S.canvas.width/2)-(baseW/2), width: baseW, type: 'top' }];
+                            Game.Level.generatePlatforms(base);
+                        } else { 
+                            Game.Level.generatePlatforms(); 
+                        }
+
+                        const startP = S.platforms[0]; S.player.y = startP.y - S.player.height; S.player.x = ([101,102].includes(S.stage)) ? 20 : startP.x + (startP.width / 2) - (S.player.width / 2); S.player.dx = 0; S.player.dy = 0; S.player.onGround = true;
+                        if (S.startMenu.style.display !== 'none' || S.gameOverMenu.style.display !== 'none') { Game.Graphics.draw(); } else { if (Game.Core.animationFrameId) cancelAnimationFrame(Game.Core.animationFrameId); Game.Core.gameLoop(); }
+                    }); });
+                    S.resetPlatformsButton.addEventListener('click', () => { 
+                        if ([101, 102].includes(S.stage)) return; 
+                        Game.Level.generatePlatforms(null);
+                        const startP = S.platforms[0]; S.player.y = startP.y - S.player.height; S.player.x = startP.x + (startP.width / 2) - (S.player.width / 2); S.player.dx = 0; S.player.dy = 0; S.player.onGround = true; Game.Graphics.draw(); 
+                    });
                 }
             },
-            Debug: { /* ... Logik Debug ... */ }
+
+            Debug: {
+                updateDebugInfo: function(collisionDetected) {
+                    const S = Game.State;
+                    S.debugPlayerX.textContent = S.player.x.toFixed(2); S.debugPlayerY.textContent = S.player.y.toFixed(2);
+                    S.debugPlayerDX.textContent = S.player.dx.toFixed(2); S.debugPlayerDY.textContent = S.player.dy.toFixed(2);
+                    S.debugPlayerOnGround.textContent = S.player.onGround; S.debugCollision.textContent = collisionDetected ? 'YA' : 'Tidak';
+                }
+            }
         };
-        
+
         Game.Core.init();
     </script>
 </body>
 </html>
+
