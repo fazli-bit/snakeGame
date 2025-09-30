@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ice Climber v0.9.1.0</title>
+    <title>Ice Climber v0.9.2.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         html, body {
@@ -35,7 +35,7 @@
         .char-select:hover { border-color: #ffff00; transform: scale(1.05); }
         .char-select.selected { border-color: #00ff00; }
         .char-select canvas { width: 60px; height: 60px; background-color: #333; border-radius: 4px; }
-        #hud { position: absolute; top: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; font-size: 1rem; color: #fff; text-shadow: 2px 2px #000; pointer-events: none; }
+        #hud { position: absolute; top: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 1rem; color: #fff; text-shadow: 2px 2px #000; pointer-events: none; }
         .version-info { font-size: 0.7rem; color: #888; margin-top: -15px; margin-bottom: 15px; }
         .side-controls { flex-direction: column; gap: 20px; background-color: #2b2b2b; padding: 20px; border-radius: 10px; border: 2px solid #555; width: 200px; }
         .control-container { display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 0.7rem; }
@@ -64,18 +64,22 @@
         body.is-mobile #game-canvas { width: 100%; height: 100%; object-fit: contain; border: none; border-radius: 0; }
         body.is-mobile #on-screen-controls { display: flex; justify-content: space-around; align-items: center; height: 180px; flex-shrink: 0; }
         body.is-mobile #debug-panel, body.is-mobile .side-controls { display: none !important; }
-        #highscore-list { margin-top: 20px; font-size: 0.8rem; line-height: 1.5; color: #ffff00; max-height: 150px; overflow-y: auto; text-align: left; padding: 0 15px;}
-        #highscore-list h4 { font-size: 1rem; color: #fff; margin-bottom: 10px; text-align: center;}
-        #highscore-list p { margin: 4px 0; white-space: pre; }
+        #highscore-list, #start-highscore-display { margin-top: 10px; font-size: 0.7rem; line-height: 1.6; color: #ffff00; max-height: 150px; overflow-y: auto; text-align: left; padding: 0 15px;}
+        #highscore-list h4, #start-menu-highscore h4 { font-size: 1rem; color: #fff; margin-bottom: 10px; text-align: center;}
+        #highscore-list p, #start-highscore-display p { margin: 4px 0; white-space: pre; }
+        #start-menu-highscore { width: 80%; margin-bottom: 20px; }
+        #refresh-highscore-btn { cursor: pointer; display: inline-block; transition: transform 0.2s; }
+        #refresh-highscore-btn:hover { transform: scale(1.2) rotate(90deg); }
         .menu-option { font-size: 1rem; color: #fff; cursor: pointer; margin-top: 15px; padding: 8px; transition: transform 0.2s, color 0.2s; }
         .menu-option:hover { color: #ffff00; transform: scale(1.05); }
         .instructions-text { font-size: 0.8rem; line-height: 1.8; max-width: 80%; text-align: left; margin-bottom: 30px; }
         .instructions-text span { color: #ffff00; display: inline-block; width: 100px; }
-        #hud > div { display: flex; align-items: center; gap: 20px; }
+        #hud > div:first-child { display: flex; align-items: center; gap: 20px; flex-basis: 50%;}
+        #hud > span:last-child { flex-basis: 50%; text-align: right;}
         #hp-hearts { color: red; letter-spacing: 2px; }
-        #debug-code-menu { z-index: 10; padding: 20px; background-color: #2b2b2b; border: 2px solid #555; border-radius: 10px;}
-        #debug-code-menu input { background-color: #1a1a1a; border: 1px solid #555; color: #fff; padding: 10px; text-align: center; font-family: 'Press Start 2P', cursive; }
-        #debug-code-menu button { font-size: 0.8rem; margin-top: 15px; text-shadow: none;}
+        #debug-code-menu, #name-input-menu { z-index: 10; padding: 20px; background-color: #2b2b2b; border: 2px solid #555; border-radius: 10px;}
+        #debug-code-menu input, #name-input-menu input { background-color: #1a1a1a; border: 1px solid #555; color: #fff; padding: 10px; text-align: center; font-family: 'Press Start 2P', cursive; }
+        #debug-code-menu button, #name-input-menu button { font-size: 0.8rem; margin-top: 15px; text-shadow: none;}
     </style>
 </head>
 <body>
@@ -104,6 +108,10 @@
                     <span>STAGE: <span id="stage">1</span></span>
                 </div>
                 <div id="start-menu" class="menu">
+                    <div id="start-menu-highscore">
+                         <h4>HIGH SCORE <span id="refresh-highscore-btn">🔄</span></h4>
+                         <div id="start-highscore-display"><p>Loading...</p></div>
+                    </div>
                     <h3>Pilih Watak:</h3>
                     <div id="character-selection">
                         <div class="char-select selected" data-char="ESKIMO">
@@ -147,6 +155,12 @@
                     <h3>Enter Debug Code</h3>
                     <input type="password" id="debug-code-input" maxlength="4">
                     <button id="debug-code-submit">Enter</button>
+                </div>
+                <div id="name-input-menu" class="menu" style="display: none;">
+                    <h3>New High Score!</h3>
+                    <p>Enter your name (3-8 chars):</p>
+                    <input type="text" id="name-input-field" maxlength="8">
+                    <button id="name-input-submit">Submit</button>
                 </div>
             </div>
             <div id="on-screen-controls">
@@ -446,6 +460,11 @@
                 debugCodeMenu: document.getElementById('debug-code-menu'),
                 debugCodeInput: document.getElementById('debug-code-input'),
                 debugCodeSubmit: document.getElementById('debug-code-submit'),
+                nameInputMenu: document.getElementById('name-input-menu'),
+                nameInputField: document.getElementById('name-input-field'),
+                nameInputSubmit: document.getElementById('name-input-submit'),
+                startHighscoreDisplay: document.getElementById('start-highscore-display'),
+                refreshHighscoreBtn: document.getElementById('refresh-highscore-btn'),
                 score: 0,
                 gameOver: false,
                 stage: 1,
@@ -1792,7 +1811,10 @@
                         onAuthStateChanged(this.auth, user => {
                             if (user) {
                                 Game.State.userId = user.uid;
-                                Game.State.firebaseReady = true;
+                                if(!Game.State.firebaseReady) {
+                                    Game.State.firebaseReady = true;
+                                    this.loadHighScores(); 
+                                }
                             }
                         });
                         signInAnonymously(this.auth);
@@ -1811,18 +1833,13 @@
                         const docSnap = await getDoc(scoreRef);
                         const currentHighScore = docSnap.exists() ? docSnap.data().score : 0;
                         if (S.score > currentHighScore) {
-                            let playerName = localStorage.getItem('iceClimberPlayerName') || 'PLAYER';
-                            const newName = prompt('New High Score! Enter your name (3-8 chars):', playerName);
-                            if (newName && newName.trim().length > 0) {
-                                playerName = newName.trim().substring(0, 8).toUpperCase();
-                                localStorage.setItem('iceClimberPlayerName', playerName);
-                            }
-                            S.playerName = playerName;
-                            await this.saveHighScore(S.score, S.playerName, S.stage);
+                            S.nameInputMenu.style.display = 'flex';
+                            S.nameInputField.value = localStorage.getItem('iceClimberPlayerName') || '';
+                            S.nameInputField.focus();
+                        } else {
+                             await this.loadHighScores();
                         }
-                    } catch(e) { console.error("Error checking high score:", e); }
-                    
-                    await this.loadHighScores();
+                    } catch(e) { console.error("Error checking high score:", e); await this.loadHighScores(); }
                 },
                 saveHighScore: async function(score, name, stage) {
                     const S = Game.State;
@@ -1838,30 +1855,35 @@
                          return;
                     }
                     const highscoreList = document.getElementById('highscore-list');
-                    highscoreList.innerHTML = '<h4>Loading Scores...</h4>';
+                    const startHighscoreDisplay = document.getElementById('start-highscore-display');
+                    highscoreList.innerHTML = '<h4>Loading...</h4>';
+                    startHighscoreDisplay.innerHTML = '<p>Loading...</p>';
                     try {
                         const q = query(collection(this.db, "games", "ice-climber", "highscores"), orderBy("score", "desc"));
                         const querySnapshot = await getDocs(q);
-                        let scoresHTML = '<h4>HIGH SCORES</h4>';
+                        let scoresHTML = '';
                         let count = 0;
-                        const medals = ['🥇', '🥈', '🥉'];
+                        const medals = ['🥇', '🥈', '🥉', '4.', '5.'];
                         querySnapshot.forEach((doc) => {
                             if(count < 5) {
                                 const data = doc.data();
                                 const medal = medals[count] || `${count + 1}.`;
                                 const name = data.name.padEnd(8, ' ');
-                                const stage = `P${data.stage}`.padEnd(5, ' ');
-                                scoresHTML += `<p>${medal} ${name} ${stage} ${data.score}</p>`;
+                                const stageText = `P${data.stage}`.padEnd(5, ' ');
+                                scoresHTML += `<p>${medal} ${name} ${stageText} ${data.score}</p>`;
                                 count++;
                             }
                         });
                          if(count === 0) {
-                             scoresHTML += '<p>No scores yet!</p>';
+                             scoresHTML = '<p>No scores yet!</p>';
                          }
-                        highscoreList.innerHTML = scoresHTML;
+                        highscoreList.innerHTML = '<h4>HIGH SCORES</h4>' + scoresHTML;
+                        startHighscoreDisplay.innerHTML = scoresHTML;
                     } catch (error) {
                         console.error("Error loading high scores:", error);
-                        highscoreList.innerHTML = '<h4>Error loading scores</h4>';
+                        const errorMsg = '<h4>Error loading scores</h4>';
+                        highscoreList.innerHTML = errorMsg;
+                        startHighscoreDisplay.innerHTML = errorMsg;
                     }
                 }
             }
