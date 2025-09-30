@@ -1,12 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Snake Game</title>
+    <title>Permainan Ular Klasik</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        /* Basic styling for the game page */
+        :root {
+            --bg-color: #1a1a1a;
+            --primary-color: #00ff00;
+            --accent-color: #ff00ff;
+            --text-color: #f0f0f0;
+            --grid-size: 20px;
+        }
+
         body {
             background-color: #1a1a1a;
             background-image:
@@ -22,6 +31,8 @@
             margin: 0;
             font-family: 'Press Start 2P', cursive;
             overflow: hidden;
+            padding: 10px;
+            box-sizing: border-box;
         }
 
         /* Main game container */
@@ -33,17 +44,28 @@
             background-color: #2b2b2b;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
             position: relative;
+            width: 100%;
+            max-width: 500px;
         }
 
         h1 {
             font-size: 2rem;
             color: #00ff00;
             text-shadow: 2px 2px #000;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        
+        #game-version {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: -15px;
+            margin-bottom: 15px;
         }
 
         /* Score & Stage display */
         #game-info-container {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin-bottom: 15px;
             display: flex;
             justify-content: space-around;
@@ -74,6 +96,7 @@
             background-image:
                 linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
         
         /* D-pad Controls for Mobile */
@@ -118,134 +141,29 @@
                 display: none;
             }
         }
-
-
-        /* --- Stage Transition Effect --- */
-        #transition-overlay {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: white;
-            opacity: 0;
-            z-index: 200;
-            pointer-events: none;
-            display: none;
-        }
-
-        @keyframes flash-effect {
-            0% { opacity: 0; }
-            50% { opacity: 0.8; }
-            100% { opacity: 0; }
-        }
-
-        .flash {
-            display: block !important;
-            animation: flash-effect 0.5s ease-in-out;
-        }
-
-        /* --- New Snake Visual Styles (DIV-based) --- */
-        .snake-segment {
-            position: absolute;
-            z-index: 2;
-            box-sizing: border-box;
-            transition: box-shadow 0.2s;
-        }
-
-        .snake-head {
-            background-color: #33ff33;
-            border-radius: 20%;
-            position: relative;
-        }
-
-        .snake-head.boosting {
-            box-shadow: 0 0 15px 5px #ffff00;
-        }
-
-        .snake-eye {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            z-index: 3;
-        }
-        .snake-eye::after {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: black;
-            border-radius: 50%;
-            width: 60%;
-            height: 60%;
-        }
-
-        .snake-body {
-            background-color: #00ff00;
-            border: 1px solid #000;
-            border-radius: 15%;
-            background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.2) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.2) 75%),
-                              linear-gradient(-45deg, rgba(255, 255, 255, 0.2) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.2) 75%);
-        }
-
-        .snake-tail {
-            background-color: #00dd00;
-            border: 1px solid #000;
-            border-radius: 15%;
-        }
-
-        /* Food & Maze styling */
-        .game-object {
-            position: absolute;
-            text-align: center;
-            z-index: 1;
-            transition: transform 0.2s;
-        }
         
-        .maze-wall {
-            position: absolute;
-            background-color: #3030ff;
-            box-shadow: inset 0 0 10px #00008b;
-            border-radius: 15%;
-            z-index: 0;
-        }
+        /* Game Objects */
+        .game-object { position: absolute; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 1.1em; }
+        .snake-head { background-color: #33ff33; border-radius: 3px; z-index: 3; }
+        .snake-body { background-color: lime; border: 1px solid #333; z-index: 2;}
+        .snake-tail { background-color: #00dd00; z-index: 2;}
+        .cobra-head { background-color: #ffd700; border-radius: 4px; z-index: 3; }
+        .cobra-body { background-color: #f0e68c; border: 1px solid #a0522d; z-index: 2;}
+        .cobra-tail { background-color: #daa520; z-index: 2;}
+        .food { z-index: 1;}
+        .food.portal { animation: spin 2s linear infinite; }
+        .obstacle { background-color: #808080; box-shadow: inset 0 0 5px #333; z-index: 1;}
+        .maze-wall { background-color: #3030ff; box-shadow: inset 0 0 10px #00008b; border-radius: 2px; z-index: 1;}
+        .maze-exit { animation: spin 2s linear infinite; z-index: 1;}
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        @keyframes spin-pulse {
-            0% { transform: scale(1) rotate(0deg); text-shadow: 0 0 10px #fff, 0 0 20px #800080, 0 0 30px #800080; }
-            50% { transform: scale(1.3) rotate(180deg); text-shadow: 0 0 15px #fff, 0 0 30px #ff00ff, 0 0 40px #ff00ff; }
-            100% { transform: scale(1) rotate(360deg); text-shadow: 0 0 10px #fff, 0 0 20px #800080, 0 0 30px #800080; }
-        }
-        .portal {
-            animation: spin-pulse 2s infinite linear;
-        }
-        
         /* --- General UI --- */
-        .instructions-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
+        .instructions-container { margin-top: 20px; }
         p.instructions { margin: 0; font-size: 0.8rem; color: #aaa; }
-        
-        .debug-button {
-            background-color: #555; color: #ffff00; border: 1px solid #ffff00;
-            padding: 5px 10px; font-family: 'Press Start 2P', cursive;
-            font-size: 0.6rem; border-radius: 5px; cursor: pointer;
-        }
-        
-        #debug-panel {
-            margin-top: 15px; padding: 10px; border: 2px dashed #ffff00;
-            border-radius: 5px; font-size: 0.7rem; text-align: left; width: 380px;
-        }
-        #debug-panel h3 { margin: 0 0 10px 0; color: #ffff00; text-align: center; }
-        #debug-panel p { margin: 5px 0; color: #ccc; }
-        #debug-panel span { color: #00ff00; float: right; }
-
-        .main-menu { display: flex; flex-direction: column; gap: 25px; align-items: center; }
-        #speed-selection { padding: 10px 20px; min-width: 300px; }
-        #speed-selection h2, #highscore-container h3, #game-over-scores h3 { margin-top: 0; margin-bottom: 25px; color: #ffff00; }
-        .speed-control { display: flex; justify-content: center; align-items: center; margin-bottom: 25px; }
+        .main-menu { display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        .menu-section { padding: 10px 20px; min-width: 300px; }
+        .menu-section h2 { margin-top: 0; margin-bottom: 15px; color: #ffff00; font-size: 1.2rem; }
+        .speed-control { display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
         #speed-display { font-size: 2.5rem; color: #00ff00; margin: 0 25px; width: 50px; text-align: center; }
         .speed-adjust-button {
             background: transparent; border: 2px solid #00ff00; color: #00ff00; font-size: 1.5rem;
@@ -253,28 +171,37 @@
             display: flex; justify-content: center; align-items: center;
         }
         .speed-adjust-button:hover { background-color: #00ff00; color: #000; transform: scale(1.1); }
+        #snake-selection select {
+            background-color: transparent; color: #00ff00; border: 2px solid #00ff00; padding: 8px;
+            font-family: 'Press Start 2P', cursive; font-size: 0.8rem; border-radius: 5px; cursor: pointer;
+        }
+        #snake-selection select:focus { outline: none; }
         #start-game-button {
             background-color: #00ff00; color: #000; border: none; padding: 10px 20px;
             font-family: 'Press Start 2P', cursive; font-size: 1rem; border-radius: 5px;
-            cursor: pointer; transition: all 0.2s; width: 200px;
+            cursor: pointer; transition: all 0.2s; width: 200px; margin-top: 15px;
         }
         #start-game-button:hover { background-color: #ffff00; transform: scale(1.05); }
 
         #highscore-container { text-align: center; width: 100%; font-size: 0.7rem; }
+        #highscore-container h3 { margin-top: 0; margin-bottom: 15px; color: #ffff00; display: inline-block; margin-right: 10px;}
+        #refresh-scores-button { background: none; border: none; font-size: 1rem; cursor: pointer; }
+        .highscore-list { display: flex; justify-content: center; }
+        .highscore-list ol { list-style-type: none; padding-left: 0; margin: 0; min-width: 250px; text-align: left; }
         .highscore-columns-shared { display: flex; justify-content: center; gap: 40px; text-align: left; }
         .highscore-columns-shared ol { list-style-type: none; padding-left: 0; margin: 0; min-width: 170px; }
-        .highscore-columns-shared li { margin-bottom: 8px; color: #f0f0f0; }
-        .highscore-columns-shared li span { color: #ffff00; float: right; }
+        .highscore-list li, .highscore-columns-shared li { margin-bottom: 8px; color: #f0f0f0; }
+        .highscore-list li span, .highscore-columns-shared li span { color: #ffff00; float: right; }
 
         .modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); display: flex; justify-content: center;
+            background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center;
             align-items: center; z-index: 100; border-radius: 10px;
         }
         .modal-content {
             color: #f0f0f0; background-color: #1a1a1a; padding: 30px; border-radius: 15px;
             border: 4px solid #555; text-align: center; box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-            max-width: 450px;
+            max-width: 90%;
         }
         .modal-content h2 { margin-top: 0; font-size: 1.8rem; }
         #new-highscore-entry { margin: 20px 0; }
@@ -288,42 +215,75 @@
             cursor: pointer; margin-top: 15px; transition: all 0.2s;
         }
         .modal-content button:hover { background-color: #ffff00; transform: scale(1.05); }
+
+        /* Debug Panel */
+        #debug-panel {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid var(--primary-color);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            color: white;
+            z-index: 200;
+            display: none; /* Initially hidden */
+        }
+        #debug-panel.visible { display: block; }
+        #debug-panel-toggle { position: fixed; bottom: 10px; left: 10px; z-index: 201; opacity: 0.5; }
+        #debug-panel h4 { margin: 0 0 10px 0; color: var(--primary-color); }
+        #debug-panel p { margin: 4px 0; }
+        #debug-panel select { background: #333; color: white; border: 1px solid #555; font-size: 0.7rem;}
+
+        @media (max-width: 480px) {
+            .game-container { padding: 15px; }
+            #game-board { width: 100%; height: auto; aspect-ratio: 1 / 1; }
+            h1 { font-size: 1.5rem; }
+            .modal-content { padding: 20px;}
+        }
+
     </style>
 </head>
 <body>
     <div class="game-container">
-        <h1>SNAKE</h1>
+        <h1>ULAR</h1>
+        <p id="game-version"></p>
         <!-- Main Menu Screen -->
         <div class="main-menu" id="main-menu">
-            <div id="speed-selection">
-                <h2>SELECT SPEED</h2>
+            <div id="speed-selection" class="menu-section">
+                <h2>PILIH KELAJUAN</h2>
                 <div class="speed-control">
                     <button id="speed-down-button" class="speed-adjust-button">-</button>
                     <span id="speed-display">3</span>
                     <button id="speed-up-button" class="speed-adjust-button">+</button>
                 </div>
-                <button id="start-game-button">Start Game</button>
             </div>
+            <div id="snake-selection" class="menu-section">
+                <h2>PILIH ULAR</h2>
+                <select id="snake-type">
+                    <option value="classic">Ular Klasik</option>
+                    <option value="cobra">Ular Kobra</option>
+                </select>
+            </div>
+            <button id="start-game-button">Mula Permainan</button>
             <div id="highscore-container">
-                <h3>HIGH SCORES</h3>
-                <div id="highscore-columns-shared">
-                    <ol id="highscore-list-1"></ol>
-                    <ol id="highscore-list-2"></ol>
+                <h3>MARKAH TERTINGGI</h3><button id="refresh-scores-button">🔄</button>
+                <div class="highscore-list">
+                    <ol id="highscore-list"></ol>
                 </div>
             </div>
         </div>
 
         <!-- Game Area (hidden initially) -->
         <div id="game-area" style="display: none;">
-            <div id="bonus-stage-title" style="display: none;">BONUS STAGE</div>
+            <div id="bonus-stage-title" style="display: none;">PERINGKAT BONUS</div>
             <div id="game-info-container">
-                <div class="info-box">Score: <span id="score-value">0</span></div>
-                <div class="info-box">Stage: <span id="stage-value">1</span></div>
+                <div class="info-box">Markah: <span id="score-value">0</span></div>
+                <div class="info-box">Peringkat: <span id="stage-value">1</span></div>
             </div>
-            <div id="game-board">
-                <div id="transition-overlay"></div>
-            </div>
-             <!-- D-pad Controls -->
+            <div id="game-board"></div>
+              <!-- D-pad Controls -->
             <div id="dpad-controls">
                 <div id="dpad-up" class="dpad-button"><svg viewBox="0 0 24 24"><path d="M12 8l-6 6h12z"/></svg></div>
                 <div id="dpad-left" class="dpad-button"><svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg></div>
@@ -331,667 +291,719 @@
                 <div id="dpad-right" class="dpad-button"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></div>
                 <div id="dpad-down" class="dpad-button"><svg viewBox="0 0 24 24"><path d="M12 16l6-6H6z"/></svg></div>
             </div>
-
             <div class="instructions-container">
-                <p class="instructions">Use Arrow Keys to Move, Spacebar to Pause</p>
-                <button id="debug-toggle-button" class="debug-button">Toggle Debug</button>
-                <button id="reset-maze-button" class="debug-button" style="display: none;">Reset Maze</button>
-            </div>
-            <div id="debug-panel" style="display: none;">
-                <h3>DEBUG INFO</h3>
-                <div id="debug-normal-mode">
-                    <p>Game Mode: <span id="debug-game-mode">N/A</span></p>
-                    <p>Snake Length: <span id="debug-snake-length">N/A</span></p>
-                    <p>Head (X,Y): <span id="debug-head-coords">N/A</span></p>
-                </div>
-                 <div id="debug-bonus-mode" style="display: none;">
-                    <p>Game Mode: <span id="debug-game-mode-bonus">N/A</span></p>
-                    <p>Walls: <span id="debug-walls">N/A</span></p>
-                    <p>Foods: <span id="debug-foods">N/A</span></p>
-                    <p>Start: <span id="debug-start">N/A</span></p>
-                    <p>Exit: <span id="debug-exit">N/A</span></p>
-                </div>
+                <p class="instructions">Guna Kekunci Anak Panah untuk Bergerak</p>
             </div>
         </div>
         
         <!-- Game Over Modal -->
-        <div id="game-over-modal" class="modal-overlay" style="display: none;">
+        <div id="game-over-modal" class="modal-overlay">
             <div class="modal-content">
-                <h2 style="color: #ff4136;">GAME OVER</h2>
-                <p>Your Score: <span id="final-score">0</span></p>
+                <h2 style="color: #ff4136;">TAMAT PERMAINAN</h2>
+                <p>Markah Anda: <span id="final-score">0</span></p>
                 <div id="new-highscore-entry" style="display: none;">
-                    <p>New High Score!</p>
-                    <input type="text" id="player-name" maxlength="12" placeholder="ENTER NAME">
-                    <button id="save-score-button">Save</button>
+                    <p>Markah Tinggi Baharu!</p>
+                    <input type="text" id="player-name" maxlength="10" placeholder="MASUKKAN NAMA">
+                    <button id="save-score-button">Simpan</button>
                 </div>
                 <div id="game-over-scores" style="display: none;">
-                    <h3>HIGH SCORES</h3>
-                    <div id="highscore-columns-gameover" class="highscore-columns-shared" style="font-size: 0.7rem;">
+                    <h3>MARKAH TERTINGGI</h3>
+                    <div class="highscore-columns-shared" id="highscore-columns-gameover">
                         <ol id="gos-list-1"></ol> <ol id="gos-list-2"></ol>
                     </div>
-                    <p style="margin-top: 20px; font-size: 0.9rem; color: #aaa;">TRY AGAIN!</p>
                 </div>
-                <button id="restart-button" style="display: none;">Play Again</button>
+                <button id="restart-button">Main Semula</button>
             </div>
         </div>
     </div>
+    
+    <!-- Debug Panel -->
+    <input type="checkbox" id="debug-panel-toggle" title="Toggle Debug Panel">
+    <div id="debug-panel">
+        <h4>PANEL DEBUG</h4>
+        <p>Posisi Ular: <span id="debug-snake-pos">-</span></p>
+        <p>Markah Semasa: <span id="debug-stage-score">-</span></p>
+        <p>Jumlah Markah: <span id="debug-total-score">-</span></p>
+        <div>
+            <label for="debug-stage-select">Pilih Peringkat:</label>
+            <select id="debug-stage-select"></select>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, getDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        window.firebase = {
+            initializeApp, getAuth, signInAnonymously, getFirestore, collection, doc, setDoc, getDocs, getDoc, query, orderBy, limit
+        };
+    </script>
 
     <script>
-    // Version: v0.5.0
+    document.addEventListener('DOMContentLoaded', () => {
 
-    /**
-     * Manages all drawing operations on the game board.
-     */
-    class Board {
-        constructor(boardElement, transitionElement) {
-            this.boardElement = boardElement;
-            this.transitionOverlay = transitionElement;
-            this.dimension = 400; // Board pixel dimension
-        }
+        // =================================================================
+        // PEMBOLEH UBAH & TETAPAN UTAMA
+        // =================================================================
+        const GAME_VERSION = "1.0.0";
+        const PORTAL_REQUIREMENT_MULTIPLIER = 5;
+        const OBSTACLE_REQUIREMENT = 20;
 
-        clear() {
-            this.boardElement.innerHTML = '';
-        }
+        const firebaseConfig = {
+            apiKey: "AIzaSyBDuQgpyrVT-hOYucH51AATLxDRLaKWgpQ",
+            authDomain: "retro-game-6d9c7.firebaseapp.com",
+            projectId: "retro-game-6d9c7",
+            storageBucket: "retro-game-6d9c7.firebasestorage.app",
+            messagingSenderId: "258289584699",
+            appId: "1:258289584699:web:d9228a2a2e3cbc0b41aa1e",
+            measurementId: "G-G16BRQJB7D"
+        };
 
-        draw(state) {
-            this.clear();
-            const isBonus = state.gameMode === 'bonus';
-            const gridSize = isBonus ? 20 : state.currentStageConfig.gridSize;
-            const cellSize = this.dimension / gridSize;
 
-            if (isBonus) {
-                this._drawMaze(state.mazeObjects, cellSize);
-            } else {
-                this._drawFood(state.food, cellSize);
-            }
+        // =================================================================
+        // KELAS-KELAS & LOGIK UTAMA
+        // =================================================================
 
-            if (state.playerSnake) {
-                state.playerSnake.draw(this.boardElement, cellSize, state.isBoosting, state.direction);
-            }
+        const mazeGenerator = {
+            generate() {
+                const width = 20, height = 20;
+                const grid = Array.from({ length: height }, () => Array(width).fill('W'));
+                const stack = [{ x: 1, y: 1 }];
+                grid[1][1] = 'P';
+                
+                while (stack.length > 0) {
+                    const current = stack[stack.length - 1];
+                    const neighbors = [];
+                    const directions = [{ x: 0, y: -2 }, { x: 0, y: 2 }, { x: -2, y: 0 }, { x: 2, y: 0 }];
+                    directions.sort(() => Math.random() - 0.5);
 
-            this.boardElement.appendChild(this.transitionOverlay);
-        }
+                    for (const dir of directions) {
+                        const nx = current.x + dir.x, ny = current.y + dir.y;
+                        if (nx > 0 && nx < width - 1 && ny > 0 && ny < height - 1 && grid[ny][nx] === 'W') {
+                            neighbors.push({ x: nx, y: ny });
+                        }
+                    }
 
-        _drawMaze(mazeObjects, cellSize) {
-            mazeObjects.walls.forEach(wall => {
-                const el = this._createGenericElement('div', 'maze-wall', wall, cellSize);
-                this.boardElement.appendChild(el);
-            });
-            mazeObjects.foods.forEach(food => {
-                const el = this._createGenericElement('div', 'game-object', food, cellSize);
-                el.innerHTML = food.emoji;
-                el.style.fontSize = `${cellSize * 0.9}px`;
-                el.style.lineHeight = `${cellSize}px`;
-                this.boardElement.appendChild(el);
-            });
-            const exitEl = this._createGenericElement('div', 'game-object portal', mazeObjects.exit, cellSize);
-            exitEl.innerHTML = mazeObjects.exit.emoji;
-            exitEl.style.fontSize = `${cellSize * 0.9}px`;
-            exitEl.style.lineHeight = `${cellSize}px`;
-            this.boardElement.appendChild(exitEl);
-        }
-
-        _drawFood(food, cellSize) {
-            const el = this._createGenericElement('div', 'game-object', food, cellSize);
-            if (food.isPortal) el.classList.add('portal');
-            el.innerHTML = food.emoji;
-            el.style.fontSize = `${cellSize * 0.9}px`;
-            el.style.lineHeight = `${cellSize}px`;
-            this.boardElement.appendChild(el);
-        }
-
-        _createGenericElement(tag, className, pos, cellSize) {
-            const el = document.createElement(tag);
-            el.className = className;
-            el.style.left = `${pos.x * cellSize}px`;
-            el.style.top = `${pos.y * cellSize}px`;
-            el.style.width = `${cellSize}px`;
-            el.style.height = `${cellSize}px`;
-            return el;
-        }
-
-        flash() {
-            this.transitionOverlay.classList.add('flash');
-            setTimeout(() => {
-                this.transitionOverlay.classList.remove('flash');
-            }, 500);
-        }
-    }
-    
-    /**
-     * Represents the snake in the game.
-     */
-    class Snake {
-        constructor(x, y, length = 1) {
-            this.body = Array.from({ length }, (_, i) => ({ x: x - i, y }));
-        }
-
-        getHead() { return this.body[0]; }
-        move(nextHead) { this.body.unshift(nextHead); this.body.pop(); }
-        grow(nextHead) { this.body.unshift(nextHead); }
-        checkSelfCollision() {
-            const head = this.getHead();
-            return this.body.slice(1).some(segment => segment.x === head.x && segment.y === head.y);
-        }
-        
-        draw(boardElement, cellSize, isBoosting, direction) {
-            this.body.forEach((segment, index) => {
-                const el = this._createSegmentElement(segment, cellSize);
-                if (index === 0) this._drawHead(el, cellSize, isBoosting, direction);
-                else if (index === this.body.length - 1 && this.body.length > 1) this._drawTail(el);
-                else this._drawBody(el, cellSize);
-                boardElement.appendChild(el);
-            });
-        }
-        
-        _createSegmentElement(segment, cellSize) {
-            const el = document.createElement('div');
-            el.className = 'snake-segment';
-            el.style.left = `${segment.x * cellSize}px`;
-            el.style.top = `${segment.y * cellSize}px`;
-            el.style.width = `${cellSize}px`;
-            el.style.height = `${cellSize}px`;
-            return el;
-        }
-
-        _drawHead(element, cellSize, isBoosting, direction) {
-            element.classList.add('snake-head');
-            if (isBoosting) element.classList.add('boosting');
-            const eye1 = document.createElement('div');
-            eye1.className = 'snake-eye';
-            const eye2 = document.createElement('div');
-            eye2.className = 'snake-eye';
-            eye1.style.width = eye1.style.height = eye2.style.width = eye2.style.height = `${Math.max(1, cellSize * 0.25)}px`;
-            eye1.style.top = `${cellSize * 0.15}px`; eye1.style.right = `${cellSize * 0.2}px`;
-            eye2.style.bottom = `${cellSize * 0.15}px`; eye2.style.right = `${cellSize * 0.2}px`;
-            element.append(eye1, eye2);
-            let headRotation = 0;
-            if (direction) {
-                switch (direction) {
-                    case 'up':    headRotation = -90; break;
-                    case 'down':  headRotation = 90; break;
-                    case 'left':  headRotation = 180; break;
-                    case 'right': headRotation = 0; break;
-                }
-                element.style.transform = `rotate(${headRotation}deg)`;
-            }
-        }
-
-        _drawBody(element, cellSize) {
-            element.classList.add('snake-body');
-            element.style.backgroundSize = `${cellSize * 0.4}px ${cellSize * 0.4}px`;
-        }
-
-        _drawTail(element) { element.classList.add('snake-tail'); }
-    }
-
-    const mazeGenerator = {
-        generate() {
-            const width = 20, height = 20;
-            const grid = Array.from({ length: height }, () => Array(width).fill('W'));
-            const stack = [{ x: 0, y: 0 }];
-            grid[0][0] = 'P';
-            while (stack.length > 0) {
-                const current = stack[stack.length - 1];
-                const neighbors = [];
-                const directions = [{ x: 0, y: -2 }, { x: 0, y: 2 }, { x: -2, y: 0 }, { x: 2, y: 0 }];
-                directions.sort(() => Math.random() - 0.5);
-                for (const dir of directions) {
-                    const nx = current.x + dir.x, ny = current.y + dir.y;
-                    if (nx >= 0 && nx < width && ny >= 0 && ny < height && grid[ny][nx] === 'W') {
-                        neighbors.push({ x: nx, y: ny });
+                    if (neighbors.length > 0) {
+                        const next = neighbors[0];
+                        grid[current.y + (next.y - current.y) / 2][current.x + (next.x - current.x) / 2] = 'P';
+                        grid[next.y][next.x] = 'P';
+                        stack.push(next);
+                    } else {
+                        stack.pop();
                     }
                 }
-                if (neighbors.length > 0) {
-                    const next = neighbors[0];
-                    grid[current.y + (next.y - current.y) / 2][current.x + (next.x - current.x) / 2] = 'P';
-                    grid[next.y][next.x] = 'P';
-                    stack.push(next);
-                } else {
-                    stack.pop();
+
+                const mazeObjects = { walls: [], foods: [], start: { x: 1, y: 1 }, exit: { x: 18, y: 18 }};
+                const paths = [];
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        if (grid[y][x] === 'W') mazeObjects.walls.push({ x, y });
+                        else paths.push({ x, y });
+                    }
                 }
-            }
-            const mazeObjects = { walls: [], foods: [], start: { x: 0, y: 0 }, exit: { x: 18, y: 18, emoji: '🌀', isPortal: true }};
-            const paths = [];
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    if (grid[y][x] === 'W') mazeObjects.walls.push({ x, y });
-                    else paths.push({ x, y });
+                
+                const foodPaths = paths.filter(p => !(p.x === 1 && p.y === 1) && !(p.x === 18 && p.y === 18));
+                for (let i = 0; i < 15 && foodPaths.length > 0; i++) {
+                    const randIndex = Math.floor(Math.random() * foodPaths.length);
+                    mazeObjects.foods.push({ ...foodPaths.splice(randIndex, 1)[0] });
                 }
+                return mazeObjects;
             }
-            const foodPaths = paths.filter(p => !(p.x === 0 && p.y === 0) && !(p.x === 18 && p.y === 18));
-            for (let i = 0; i < 25 && foodPaths.length > 0; i++) {
-                const randIndex = Math.floor(Math.random() * foodPaths.length);
-                mazeObjects.foods.push({ ...foodPaths.splice(randIndex, 1)[0], emoji: '🍎' });
+        };
+
+        class ScoreManager {
+            constructor() {
+                this.scores = [];
             }
-            return mazeObjects;
-        }
-    };
-
-    /**
-     * Main game controller class.
-     */
-    class Game {
-        constructor() {
-            this.config = {
-                SPEED_MAP: { 1: 220, 2: 185, 3: 150, 4: 125, 5: 100, 6: 85, 7: 70, 8: 60, 9: 50 },
-                STAGE_CONFIG: {
-                    1: { gridSize: 10, targetCoverage: 0.05 }, 2: { gridSize: 16, targetCoverage: 0.05 },
-                    3: { gridSize: 20, targetCoverage: 0.05 }, 4: { gridSize: 25, targetCoverage: 0.05 },
-                    5: { gridSize: 40, targetCoverage: 0.05 },
-                },
-                BOOST_SPEED_MULTIPLIER: 2, BOOST_DURATION: 500, DOUBLE_TAP_THRESHOLD: 300,
-            };
-
-            this.state = {};
-            this.ui = {};
-            this.board = null;
-
-            this._cacheDOMElements();
-            this._bindEventListeners();
-
-            this.board = new Board(this.ui.gameBoard, this.ui.transitionOverlay);
+            getScores() { return this.scores; }
             
-            this.loadHighScores();
-            this.displayHighScores(this.ui.highscoreList1, this.ui.highscoreList2);
-            this.ui.speedDisplay.textContent = 3; // Default speed
-        }
-
-        _cacheDOMElements() {
-            this.ui = {
-                gameBoard: document.getElementById('game-board'), transitionOverlay: document.getElementById('transition-overlay'),
-                scoreValue: document.getElementById('score-value'), stageValue: document.getElementById('stage-value'),
-                gameOverModal: document.getElementById('game-over-modal'), finalScore: document.getElementById('final-score'),
-                restartButton: document.getElementById('restart-button'), mainMenu: document.getElementById('main-menu'),
-                gameArea: document.getElementById('game-area'), speedDisplay: document.getElementById('speed-display'),
-                startGameButton: document.getElementById('start-game-button'), newHighscoreEntry: document.getElementById('new-highscore-entry'),
-                playerNameInput: document.getElementById('player-name'), saveScoreButton: document.getElementById('save-score-button'),
-                speedUpButton: document.getElementById('speed-up-button'), speedDownButton: document.getElementById('speed-down-button'),
-                highscoreList1: document.getElementById('highscore-list-1'), highscoreList2: document.getElementById('highscore-list-2'),
-                gameOverScores: document.getElementById('game-over-scores'), gosList1: document.getElementById('gos-list-1'),
-                gosList2: document.getElementById('gos-list-2'), pauseScreen: document.getElementById('pause-screen'),
-                debugPanel: document.getElementById('debug-panel'), debugToggleButton: document.getElementById('debug-toggle-button'),
-                resetMazeButton: document.getElementById('reset-maze-button'), debugNormalMode: document.getElementById('debug-normal-mode'),
-                debugBonusMode: document.getElementById('debug-bonus-mode'), debugGameMode: document.getElementById('debug-game-mode'),
-                debugSnakeLength: document.getElementById('debug-snake-length'), debugHeadCoords: document.getElementById('debug-head-coords'),
-                debugGameModeBonus: document.getElementById('debug-game-mode-bonus'), debugWalls: document.getElementById('debug-walls'),
-                debugFoods: document.getElementById('debug-foods'), debugStart: document.getElementById('debug-start'),
-                debugExit: document.getElementById('debug-exit'), bonusStageTitle: document.getElementById('bonus-stage-title'),
-                gameInfoContainer: document.getElementById('game-info-container'),
-                dpadUp: document.getElementById('dpad-up'), dpadDown: document.getElementById('dpad-down'),
-                dpadLeft: document.getElementById('dpad-left'), dpadRight: document.getElementById('dpad-right'),
-            };
-        }
-
-        _bindEventListeners() {
-            document.addEventListener('keydown', this.handleKeyDown.bind(this));
-            this.ui.restartButton.addEventListener('click', this.returnToMainMenu.bind(this));
-            this.ui.saveScoreButton.addEventListener('click', this.saveHighScore.bind(this));
-            this.ui.playerNameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); this.saveHighScore(); } });
-            this.ui.startGameButton.addEventListener('click', this.startGame.bind(this));
-            this.ui.speedUpButton.addEventListener('click', () => this.changeSpeed(1));
-            this.ui.speedDownButton.addEventListener('click', () => this.changeSpeed(-1));
-            this.ui.debugToggleButton.addEventListener('click', () => {
-                this.ui.debugPanel.style.display = this.ui.debugPanel.style.display === 'none' ? 'block' : 'none';
-                this.updateDebugPanel();
-            });
-            this.ui.resetMazeButton.addEventListener('click', this.resetMaze.bind(this));
-            // D-pad listeners
-            this.ui.dpadUp.addEventListener('click', () => this._processInput('up'));
-            this.ui.dpadDown.addEventListener('click', () => this._processInput('down'));
-            this.ui.dpadLeft.addEventListener('click', () => this._processInput('left'));
-            this.ui.dpadRight.addEventListener('click', () => this._processInput('right'));
-        }
-
-        startGame() {
-            this.ui.mainMenu.style.display = 'none';
-            this.ui.gameArea.style.display = 'block';
-            this.ui.gameOverModal.style.display = 'none';
-
-            if (this.state.gameInterval) clearInterval(this.state.gameInterval);
-
-            this.state = {
-                ...this.state, // Keep highscores and currentSpeed
-                playerSnake: null, food: {}, direction: null, score: 0, gameOver: false,
-                gameInterval: null, gameStarted: false, isPaused: false,
-                inputQueue: [], currentStage: 1, currentStageConfig: {},
-                gameMode: 'normal', mazeObjects: { walls: [], foods: [], exit: {} },
-                bonusStageScore: 0, isBoosting: false, boostTimeout: null, lastKeyPressTime: 0,
-                stage5FruitCount: 0, bonusStageEntries: 0,
-            };
-            this.state.gameSpeed = this.config.SPEED_MAP[this.state.currentSpeed];
-
-            this.ui.scoreValue.textContent = this.state.score;
-            this.ui.bonusStageTitle.style.display = 'none';
-            this.ui.gameInfoContainer.style.display = 'flex';
-
-            this.setupStage();
-            this.generateFood();
-            this.board.draw(this.state);
-        }
-
-        setupStage() {
-            const stage = this.state.currentStage;
-            const stageConfig = this.config.STAGE_CONFIG[stage];
-            this.state.currentStageConfig = { ...stageConfig, targetLength: Math.floor(stageConfig.gridSize ** 2 * stageConfig.targetCoverage) };
-            this.ui.stageValue.textContent = stage;
-            const center = Math.floor(stageConfig.gridSize / 2);
-            this.state.playerSnake = new Snake(center, center);
-        }
-
-        resetMaze() {
-            if (this.state.gameMode !== 'bonus') return;
-            this.state.mazeObjects = mazeGenerator.generate();
-            this.state.playerSnake = new Snake(this.state.mazeObjects.start.x, this.state.mazeObjects.start.y);
-            this.state.direction = null;
-            this.state.bonusStageScore = 0;
-            this.board.draw(this.state);
-        }
-
-        enterBonusStage() {
-            if (this.state.boostTimeout) clearTimeout(this.state.boostTimeout);
-            this.state.isBoosting = false;
-            clearInterval(this.state.gameInterval);
-            this.state.gameStarted = false;
-
-            const setup = () => {
-                this.state.gameMode = 'bonus';
-                this.state.bonusStageScore = 0;
-                this.resetMaze();
-                this.state.currentStageConfig = { gridSize: 20 };
-                this.ui.bonusStageTitle.style.display = 'block';
-                this.ui.gameInfoContainer.style.display = 'none';
-                this.state.inputQueue = [];
-                this.state.direction = null;
-            };
-
-            this.board.flash();
-            setTimeout(setup, 250);
-        }
-
-        exitBonusStage(isSuccess) {
-            this.board.flash();
-            setTimeout(() => {
-                if (isSuccess) this.state.score += this.state.bonusStageScore * 10;
-                else this.state.score += this.state.bonusStageScore;
-                this.ui.scoreValue.textContent = this.state.score;
-
-                if (this.state.currentStage < 5) this.state.currentStage++;
-                else {
-                    this.state.stage5FruitCount = 0;
-                    this.state.bonusStageEntries++;
-                }
-
-                this.state.gameMode = 'normal';
-                this.ui.bonusStageTitle.style.display = 'none';
-                this.ui.gameInfoContainer.style.display = 'flex';
-                this.setupStage();
-                this.generateFood();
-                this.board.draw(this.state);
-
-                this.state.gameStarted = false;
-                this.state.direction = null;
-            }, 500);
-        }
-        
-        returnToMainMenu() {
-            if (this.state.gameInterval) clearInterval(this.state.gameInterval);
-            this.ui.gameOverModal.style.display = 'none';
-            this.ui.gameArea.style.display = 'none';
-            this.ui.mainMenu.style.display = 'flex';
-            this.ui.speedDisplay.textContent = this.state.currentSpeed;
-            this.loadHighScores();
-            this.displayHighScores(this.ui.highscoreList1, this.ui.highscoreList2);
-        }
-
-        mainLoop() {
-            if (this.state.gameOver) {
-                clearInterval(this.state.gameInterval);
-                this.showGameOverScreen();
-                return;
-            }
-            this.updateGameState();
-            this.board.draw(this.state);
-        }
-
-        updateGameState() {
-            while (this.state.inputQueue.length > 0) {
-                const nextDirection = this.state.inputQueue.shift();
-                if (!this.state.direction || (
-                    (nextDirection === 'up' && this.state.direction !== 'down') ||
-                    (nextDirection === 'down' && this.state.direction !== 'up') ||
-                    (nextDirection === 'left' && this.state.direction !== 'right') ||
-                    (nextDirection === 'right' && this.state.direction !== 'left')
-                )) {
-                    this.state.direction = nextDirection;
-                    break;
-                }
-            }
-
-            if (!this.state.direction) return;
-
-            const head = { ...this.state.playerSnake.getHead() };
-            switch (this.state.direction) {
-                case 'up': head.y--; break;
-                case 'down': head.y++; break;
-                case 'left': head.x--; break;
-                case 'right': head.x++; break;
-            }
-
-            if (this.state.gameMode === 'bonus') this.updateBonusMode(head);
-            else this.updateNormalMode(head);
-        }
-        
-        updateNormalMode(head) {
-            if (this.hasHitWall(head) || this.state.playerSnake.checkSelfCollision(head)) {
-                this.state.gameOver = true;
-                return;
-            }
-            if (head.x === this.state.food.x && head.y === this.state.food.y) {
-                this.state.playerSnake.grow(head);
-                if (this.state.food.isPortal) {
-                    if (this.state.currentStage < 5 || this.state.food.isSpecialBonus) {
-                        this.enterBonusStage();
+            async saveUserScore(db, userId, name, score) {
+                if (!db || !userId) return;
+                try {
+                    const scoreRef = window.firebase.doc(db, 'games/snake/highscores', userId);
+                    const docSnap = await window.firebase.getDoc(scoreRef);
+                    if (docSnap.exists() && docSnap.data().score >= score) {
+                        console.log("Markah sedia ada lebih tinggi, tidak disimpan.");
                         return;
                     }
-                }
-                this.state.score += this.state.currentSpeed;
-                this.ui.scoreValue.textContent = this.state.score;
-                if (this.state.currentStage === 5) this.state.stage5FruitCount++;
-                this.generateFood();
-            } else {
-                this.state.playerSnake.move(head);
-            }
-        }
-
-        updateBonusMode(head) {
-            const gridSize = 20;
-            const hitBoundary = head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize;
-            const hitMazeWall = this.state.mazeObjects.walls.some(w => w.x === head.x && w.y === head.y);
-
-            if (hitBoundary || hitMazeWall || this.state.playerSnake.checkSelfCollision(head)) {
-                this.exitBonusStage(false);
-                return;
-            }
-            const ateFoodIndex = this.state.mazeObjects.foods.findIndex(f => f.x === head.x && f.y === head.y);
-            if (ateFoodIndex > -1) {
-                this.state.mazeObjects.foods.splice(ateFoodIndex, 1);
-                this.state.bonusStageScore += 10;
-                this.state.playerSnake.grow(head);
-            } else if (head.x === this.state.mazeObjects.exit.x && head.y === this.state.mazeObjects.exit.y) {
-                this.exitBonusStage(true);
-                return;
-            } else {
-                this.state.playerSnake.move(head);
-            }
-        }
-        
-        handleKeyDown(event) {
-            const keyMap = { 'ArrowUp': 'up', 'ArrowDown': 'down', 'ArrowLeft': 'left', 'ArrowRight': 'right' };
-            const newDirection = keyMap[event.key];
-
-            if (event.key === ' ' || event.key === 'Spacebar') {
-                event.preventDefault();
-                this.togglePause();
-                return;
-            }
-            if (newDirection) {
-                event.preventDefault();
-                this._processInput(newDirection);
-            }
-        }
-        
-        _processInput(newDirection) {
-            if (this.state.isPaused || this.state.gameOver) return;
-            const now = Date.now();
-            if (this.state.gameMode === 'normal' && newDirection === this.state.direction && now - this.state.lastKeyPressTime < this.config.DOUBLE_TAP_THRESHOLD) {
-                this.triggerBoost();
-            }
-            this.state.lastKeyPressTime = now;
-            if (!this.state.gameStarted) {
-                this.state.gameStarted = true;
-                this.state.direction = newDirection;
-                this.state.gameInterval = setInterval(() => this.mainLoop(), this.state.gameSpeed);
-            } else if (this.state.inputQueue.length < 2) {
-                this.state.inputQueue.push(newDirection);
-            }
-        }
-
-        triggerBoost() {
-            if (this.state.isBoosting) return;
-            this.state.isBoosting = true;
-            clearInterval(this.state.gameInterval);
-            this.state.gameInterval = setInterval(() => this.mainLoop(), this.state.gameSpeed / this.config.BOOST_SPEED_MULTIPLIER);
-            if (this.state.boostTimeout) clearTimeout(this.state.boostTimeout);
-            this.state.boostTimeout = setTimeout(() => {
-                this.state.isBoosting = false;
-                if (!this.state.gameOver && !this.state.isPaused) {
-                    clearInterval(this.state.gameInterval);
-                    this.state.gameInterval = setInterval(() => this.mainLoop(), this.state.gameSpeed);
-                }
-            }, this.config.BOOST_DURATION);
-        }
-
-        generateFood() {
-            const { gridSize } = this.state.currentStageConfig;
-            let foodPos;
-            const targetLength = this.state.currentStageConfig.targetLength || Infinity;
-            let isPortal = this.state.playerSnake.body.length >= targetLength - 1;
-            let isSpecialBonus = false;
-            if (this.state.currentStage === 5) {
-                const nextBonusThreshold = 10 + this.state.bonusStageEntries * 10;
-                if (this.state.stage5FruitCount >= nextBonusThreshold - 1) {
-                    isPortal = true;
-                    isSpecialBonus = true;
+                    await window.firebase.setDoc(scoreRef, { name, score });
+                    console.log("Markah berjaya disimpan ke Firebase!");
+                } catch (error) {
+                    console.error("Ralat menyimpan markah:", error);
                 }
             }
-            do {
-                foodPos = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
-            } while (this.state.playerSnake.body.some(s => s.x === foodPos.x && s.y === foodPos.y));
-            this.state.food = { ...foodPos, emoji: isPortal ? '🌀' : '🍎', isPortal, isSpecialBonus };
-        }
 
-        togglePause() {
-            if (!this.state.gameStarted || this.state.gameOver) return;
-            this.state.isPaused = !this.state.isPaused;
-            if (this.state.isPaused) {
-                clearTimeout(this.state.boostTimeout);
-                this.state.isBoosting = false;
-                clearInterval(this.state.gameInterval);
-                this.ui.pauseScreen.style.display = 'flex';
-            } else {
-                this.state.gameInterval = setInterval(() => this.mainLoop(), this.state.gameSpeed);
-                this.ui.pauseScreen.style.display = 'none';
+            async loadGlobalScores(db) {
+                if (!db) return;
+                try {
+                    const q = window.firebase.query(window.firebase.collection(db, "games/snake/highscores"), window.firebase.orderBy("score", "desc"), window.firebase.limit(10));
+                    const querySnapshot = await window.firebase.getDocs(q);
+                    const firebaseScores = [];
+                    querySnapshot.forEach((doc) => {
+                        firebaseScores.push(doc.data());
+                    });
+                    this.scores = firebaseScores;
+                } catch (error) {
+                    console.error("Ralat memuatkan markah:", error);
+                    // Fallback to local storage if firebase fails
+                    this.scores = JSON.parse(localStorage.getItem('snakeHighScoresV4')) || [];
+                }
+            }
+            isHighScore(score) {
+                if (score <= 0) return false;
+                if (this.scores.length < 10) return true;
+                return score > this.scores[this.scores.length - 1].score;
             }
         }
-        
-        updateDebugPanel() {
-            const isBonus = this.state.gameMode === 'bonus';
-            this.ui.debugNormalMode.style.display = isBonus ? 'none' : 'block';
-            this.ui.debugBonusMode.style.display = isBonus ? 'block' : 'none';
-            this.ui.resetMazeButton.style.display = 'none';
 
-            if (isBonus && this.ui.debugPanel.style.display === 'block') {
-                this.ui.resetMazeButton.style.display = 'inline-block';
+        class UIManager {
+            constructor() {
+                this.boardElement = document.getElementById('game-board');
+                this.gridSize = 20;
+                this.mainMenu = document.getElementById('main-menu');
+                this.gameArea = document.getElementById('game-area');
+                this.gameOverModal = document.getElementById('game-over-modal');
+                this.newHighscoreEntry = document.getElementById('new-highscore-entry');
+                this.gameOverScores = document.getElementById('game-over-scores');
+                this.scoreValue = document.getElementById('score-value');
+                this.stageValue = document.getElementById('stage-value');
+                this.bonusTitle = document.getElementById('bonus-stage-title');
+                this.finalScore = document.getElementById('final-score');
+                this.highscoreList = document.getElementById('highscore-list');
+                this.gosList1 = document.getElementById('gos-list-1');
+                this.gosList2 = document.getElementById('gos-list-2');
+                this.playerNameInput = document.getElementById('player-name');
+                this.debugPanel = document.getElementById('debug-panel');
+                this.debugToggle = document.getElementById('debug-panel-toggle');
+                this.debugSnakePos = document.getElementById('debug-snake-pos');
+                this.debugStageScore = document.getElementById('debug-stage-score');
+                this.debugTotalScore = document.getElementById('debug-total-score');
+                this.gameVersionDisplay = document.getElementById('game-version');
+
+                this.gameVersionDisplay.textContent = `v${GAME_VERSION}`;
+                this.debugToggle.addEventListener('change', () => {
+                    this.debugPanel.classList.toggle('visible');
+                });
             }
-            if (isBonus) {
-                this.ui.debugGameModeBonus.textContent = this.state.gameMode;
-                this.ui.debugWalls.textContent = this.state.mazeObjects.walls.length;
-                this.ui.debugFoods.textContent = this.state.mazeObjects.foods.length;
-                if (this.state.mazeObjects.start) this.ui.debugStart.textContent = `(${this.state.mazeObjects.start.x}, ${this.state.mazeObjects.start.y})`;
-                if (this.state.mazeObjects.exit) this.ui.debugExit.textContent = `(${this.state.mazeObjects.exit.x}, ${this.state.mazeObjects.exit.y})`;
-            } else if (this.state.playerSnake) {
-                this.ui.debugGameMode.textContent = this.state.gameMode;
-                this.ui.debugSnakeLength.textContent = this.state.playerSnake.body.length;
-                const head = this.state.playerSnake.getHead();
-                this.ui.debugHeadCoords.textContent = `${head.x}, ${head.y}`;
-            }
-        }
-        
-        hasHitWall(head) {
-            const { gridSize } = this.state.currentStageConfig;
-            return head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize;
-        }
 
-        changeSpeed(delta) {
-            const currentSpeed = this.state.currentSpeed || 3;
-            this.state.currentSpeed = Math.max(1, Math.min(9, currentSpeed + delta));
-            this.ui.speedDisplay.textContent = this.state.currentSpeed;
-            this.state.gameSpeed = this.config.SPEED_MAP[this.state.currentSpeed];
-        }
+            clearBoard() { this.boardElement.innerHTML = ''; }
 
-        loadHighScores() {
-            const scores = localStorage.getItem('snakeHighScores');
-            this.state.highScores = scores ? JSON.parse(scores) : [];
-        }
+            draw(gameState) {
+                this.clearBoard();
+                const cellSize = this.boardElement.clientWidth / this.gridSize;
+                const { snake, food } = gameState;
+                const currentStage = gameState.stages[gameState.currentStageIndex];
 
-        displayHighScores(list1, list2) {
-            list1.innerHTML = this.state.highScores.slice(0, 5).map((s, i) => `<li>${i + 1}. ${s.name} <span>${s.score}</span></li>`).join('');
-            list2.innerHTML = this.state.highScores.slice(5, 10).map((s, i) => `<li>${i + 6}. ${s.name} <span>${s.score}</span></li>`).join('');
-        }
+                if (!currentStage || !snake) return;
 
-        saveHighScore() {
-            const playerName = this.ui.playerNameInput.value.trim().toUpperCase() || 'AAA';
-            this.ui.playerNameInput.blur();
-            this.state.highScores.push({ name: playerName, score: this.state.score });
-            this.state.highScores.sort((a, b) => b.score - a.score);
-            this.state.highScores = this.state.highScores.slice(0, 10);
-            localStorage.setItem('snakeHighScores', JSON.stringify(this.state.highScores));
-            this.ui.newHighscoreEntry.style.display = 'none';
-            this.displayHighScores(this.ui.gosList1, this.ui.gosList2);
-            this.ui.gameOverScores.style.display = 'block';
-            this.ui.restartButton.style.display = 'block';
-        }
-
-        showGameOverScreen() {
-            this.ui.finalScore.textContent = this.state.score;
-            const { highScores, score } = this.state;
-            const lowestHighScore = highScores.length < 10 ? 0 : highScores[highScores.length - 1].score;
-            const isNewHighScore = score > 0 && (highScores.length < 10 || score >= lowestHighScore);
-
-            if (isNewHighScore) {
-                this.ui.newHighscoreEntry.style.display = 'block';
-                this.ui.gameOverScores.style.display = 'none';
-                setTimeout(() => this.ui.playerNameInput.focus(), 100);
-                this.ui.restartButton.style.display = 'none';
-            } else {
-                this.ui.newHighscoreEntry.style.display = 'none';
-                this.ui.restartButton.style.display = 'block';
-                if (highScores.length > 0) {
-                    this.ui.gameOverScores.style.display = 'block';
-                    this.displayHighScores(this.ui.gosList1, this.ui.gosList2);
+                if (currentStage instanceof BonusStage) {
+                    currentStage.maze.walls.forEach(w => this.boardElement.appendChild(this._createEl(w.x, w.y, cellSize, 'maze-wall')));
+                    currentStage.maze.foods.forEach(f => this.boardElement.appendChild(this._createEl(f.x, f.y, cellSize, 'food', '🍎')));
+                    const exitEl = this._createEl(currentStage.maze.exit.x, currentStage.maze.exit.y, cellSize, 'maze-exit', '🌀');
+                    this.boardElement.appendChild(exitEl);
                 } else {
-                    this.ui.gameOverScores.style.display = 'none';
+                    currentStage.obstacles.forEach(obs => this.boardElement.appendChild(this._createEl(obs.x, obs.y, cellSize, 'obstacle')));
+                    const foodEl = this._createEl(food.x, food.y, cellSize, 'food', food.emoji);
+                    if (food.type === 'portal') foodEl.classList.add('portal');
+                    this.boardElement.appendChild(foodEl);
+                }
+                
+                snake.draw(this.boardElement, cellSize);
+            }
+            
+            _createEl(gridX, gridY, cellSize, className, emoji = '') {
+                const el = document.createElement('div');
+                el.className = `game-object ${className}`;
+                el.style.left = `${gridX * cellSize}px`;
+                el.style.top = `${gridY * cellSize}px`;
+                el.style.width = `${cellSize}px`;
+                el.style.height = `${cellSize}px`;
+                el.textContent = emoji;
+                return el;
+            }
+
+            showMenu() { this.mainMenu.style.display = 'flex'; this.gameArea.style.display = 'none'; this.gameOverModal.style.display = 'none'; }
+            showGame() { this.mainMenu.style.display = 'none'; this.gameArea.style.display = 'block'; this.gameOverModal.style.display = 'none'; }
+            showGameOver(score, scores) {
+                this.finalScore.textContent = score;
+                this.displayHighScores(scores, { list1: this.gosList1, list2: this.gosList2, limit: 10 });
+                this.gameOverModal.style.display = 'flex';
+            }
+            showNameInputForm() {
+                this.newHighscoreEntry.style.display = 'block';
+                this.gameOverScores.style.display = 'none';
+                setTimeout(() => this.playerNameInput.focus(), 100);
+            }
+            hideNameInputForm() {
+                this.newHighscoreEntry.style.display = 'none';
+                this.gameOverScores.style.display = 'block';
+            }
+            updateGameUI(score, currentStage) {
+                this.scoreValue.textContent = score;
+                if (currentStage instanceof BonusStage) {
+                    this.stageValue.textContent = 'BONUS';
+                    this.bonusTitle.style.display = 'block';
+                } else {
+                    this.stageValue.textContent = currentStage.level;
+                    this.bonusTitle.style.display = 'none';
                 }
             }
-            this.ui.gameOverModal.style.display = 'flex';
+            displayHighScores(scores, { list1, list2 = null, limit = 3, showMedals = false }) {
+                const medals = ['🥇', '🥈', '🥉'];
+                if (list2) { // Logic for two columns (game over)
+                    list1.innerHTML = scores.slice(0, 5).map((s, i) => `<li>${i + 1}. ${s.name} <span>${s.score}</span></li>`).join('');
+                    list2.innerHTML = scores.slice(5, 10).map((s, i) => `<li>${i + 6}. ${s.name} <span>${s.score}</span></li>`).join('');
+                } else { // Logic for single list (main menu)
+                    list1.innerHTML = scores.slice(0, limit).map((s, i) => {
+                        const medal = showMedals ? medals[i] || '' : '';
+                        return `<li>${medal} ${s.name} <span>${s.score}</span></li>`;
+                    }).join('');
+                }
+            }
+            updateDebugInfo(gameState) {
+                if (!gameState.snake) return;
+                const head = gameState.snake.body[0];
+                this.debugSnakePos.textContent = `X:${head.x}, Y:${head.y}`;
+                this.debugStageScore.textContent = gameState.score;
+                this.debugTotalScore.textContent = gameState.totalScore;
+            }
         }
-    }
+        
+        class BaseSnake {
+            constructor(gridSize, styles, startPosOverride = null) {
+                this.gridSize = gridSize;
+                this.styles = styles;
+                this.initialPos = startPosOverride || { x: Math.floor(gridSize / 2), y: Math.floor(gridSize / 2) };
+                this.reset();
+            }
+            move() {
+                const head = { x: this.body[0].x + this.dx, y: this.body[0].y + this.dy };
+                this.body.unshift(head);
+                if (this.isGrowing) this.isGrowing = false;
+                else this.body.pop();
+            }
+            grow() { this.isGrowing = true; }
+            changeDirection(newDx, newDy) {
+                this.dx = newDx; this.dy = newDy;
+            }
+            checkCollision(obstacles) {
+                const head = this.body[0];
+                if (head.x < 0 || head.x >= this.gridSize || head.y < 0 || head.y >= this.gridSize) return true;
+                for (let i = 1; i < this.body.length; i++) if (head.x === this.body[i].x && head.y === this.body[i].y) return true;
+                for (const obs of obstacles) if (head.x === obs.x && head.y === obs.y) return true;
+                return false;
+            }
+            draw(boardElement, cellSize) {
+                this.body.forEach((segment, index) => {
+                    let className = (index === 0) ? this.styles.head : (index === this.body.length - 1 && this.body.length > 1) ? this.styles.tail : this.styles.body;
+                    boardElement.appendChild(this._createSegmentElement(segment, cellSize, className));
+                });
+            }
+            _createSegmentElement(segment, cellSize, className) {
+                const el = document.createElement('div');
+                el.className = `game-object ${className}`;
+                el.style.left = `${segment.x * cellSize}px`;
+                el.style.top = `${segment.y * cellSize}px`;
+                el.style.width = `${cellSize}px`;
+                el.style.height = `${cellSize}px`;
+                return el;
+            }
+            reset() {
+                this.body = [{ x: this.initialPos.x, y: this.initialPos.y }];
+                this.dx = 1; this.dy = 0; this.isGrowing = false;
+            }
+        }
 
-    // Initialize the game once the DOM is fully loaded
-    window.onload = () => {
+        class ClassicSnake extends BaseSnake {
+            constructor(gridSize, startPosOverride) { super(gridSize, { head: 'snake-head', body: 'snake-body', tail: 'snake-tail' }, startPosOverride); }
+        }
+
+        class CobraSnake extends BaseSnake {
+            constructor(gridSize, startPosOverride) { super(gridSize, { head: 'cobra-head', body: 'cobra-body', tail: 'cobra-tail' }, startPosOverride); }
+        }
+        
+        class Food {
+            constructor(gridSize) {
+                this.gridSize = gridSize;
+                this.x = 0; this.y = 0;
+                this.type = 'normal';
+                this.emoji = '🍎';
+                this.timer = 0;
+                this.maxTime = 0;
+                this.FRUITS = ['🍎', '🍌', '🍇', '🍊', '🍓'];
+            }
+            
+            spawn(snakeBody, obstacles = [], stageLevel = 1, isPortal = false) {
+                let valid;
+                do {
+                    valid = true;
+                    this.x = Math.floor(Math.random() * this.gridSize);
+                    this.y = Math.floor(Math.random() * this.gridSize);
+                    if (snakeBody.some(s => s.x === this.x && s.y === this.y)) valid = false;
+                    if (obstacles.some(o => o.x === this.x && o.y === this.y)) valid = false;
+                } while (!valid);
+                
+                if (isPortal) {
+                    this.transformToPortal();
+                } else {
+                    this.type = 'normal';
+                    this.emoji = this.FRUITS[Math.floor(Math.random() * this.FRUITS.length)];
+                    this.maxTime = (8 - Math.min(stageLevel, 7)) * 1000;
+                    this.timer = this.maxTime;
+                }
+            }
+            
+            transformToPortal() {
+                this.type = 'portal';
+                this.emoji = '🌀';
+                this.timer = Infinity;
+            }
+        }
+        
+        class BaseStage {
+            constructor() {}
+        }
+
+        class NormalStage extends BaseStage {
+            constructor(level) {
+                super();
+                this.level = level;
+                this.obstacles = [];
+            }
+        }
+
+        class BonusStage extends BaseStage {
+            constructor() {
+                super();
+                this.maze = mazeGenerator.generate();
+            }
+        }
+
+        class Game {
+            constructor() {
+                this.gridSize = 20;
+                this.gameState = 'menu';
+                this.speedMap = { 1: 220, 2: 185, 3: 150, 4: 125, 5: 100, 6: 85, 7: 70, 8: 60, 9: 50 };
+                this.currentSpeedLevel = 3;
+                
+                this.scoreManager = new ScoreManager();
+                this.uiManager = new UIManager();
+                this.food = new Food(this.gridSize);
+                
+                this.stages = this.defineStages();
+                
+                this.db = null;
+                this.auth = null;
+                this.userId = null;
+                
+                this.initGameState();
+                this.setupEventListeners();
+                this.initializeFirebase();
+            }
+
+            async initializeFirebase() {
+                try {
+                    const app = window.firebase.initializeApp(firebaseConfig);
+                    this.db = window.firebase.getFirestore(app);
+                    this.auth = window.firebase.getAuth(app);
+                    await window.firebase.signInAnonymously(this.auth);
+                    this.userId = this.auth.currentUser.uid;
+                    console.log("Firebase Berjaya Dimulakan. UID:", this.userId);
+                    await this.refreshHighScores();
+                } catch (error) {
+                    console.error("Gagal memulakan Firebase:", error);
+                    this.init(); // Teruskan dengan data tempatan jika gagal
+                }
+            }
+
+            initGameState() {
+                this.score = 0;
+                this.totalScore = 0;
+                this.currentStageIndex = 0;
+                this.snake = null;
+                this.isMoving = false;
+                this.foodsEatenInStage = 0;
+                this.foodsEatenForObstacle = 0;
+                this.inputBuffer = [];
+            }
+
+            init() {
+                this.uiManager.displayHighScores(this.scoreManager.getScores(), { list1: this.uiManager.highscoreList, limit: 3, showMedals: true });
+                this.uiManager.showMenu();
+                document.getElementById('speed-display').textContent = this.currentSpeedLevel;
+            }
+            
+            defineStages() {
+                const stages = [];
+                stages.push(new NormalStage(1));
+                stages.push(new BonusStage());
+                stages.push(new NormalStage(2));
+                stages.push(new BonusStage());
+                stages.push(new NormalStage(3));
+                stages.push(new BonusStage());
+                stages.push(new NormalStage(4));
+                stages.push(new BonusStage());
+                stages.push(new NormalStage(5));
+                return stages;
+            }
+
+            setupEventListeners() {
+                document.getElementById('start-game-button').addEventListener('click', () => this.startGame());
+                document.getElementById('restart-button').addEventListener('click', () => { this.initGameState(); this.init(); });
+                
+                document.getElementById('save-score-button').addEventListener('click', async () => {
+                    const name = this.uiManager.playerNameInput.value.trim().toUpperCase() || 'PEMAIN';
+                    await this.scoreManager.saveUserScore(this.db, this.userId, name, this.totalScore);
+                    this.uiManager.hideNameInputForm();
+                    await this.refreshHighScores(true); // Refresh and show game over scores
+                });
+
+                document.getElementById('refresh-scores-button').addEventListener('click', () => this.refreshHighScores());
+
+                document.getElementById('speed-up-button').addEventListener('click', () => this.changeSpeed(1));
+                document.getElementById('speed-down-button').addEventListener('click', () => this.changeSpeed(-1));
+                document.addEventListener('keydown', e => this.handleKeyPress(e.key));
+                // D-pad listeners
+                document.getElementById('dpad-up').addEventListener('click', () => this.handleKeyPress('ArrowUp'));
+                document.getElementById('dpad-down').addEventListener('click', () => this.handleKeyPress('ArrowDown'));
+                document.getElementById('dpad-left').addEventListener('click', () => this.handleKeyPress('ArrowLeft'));
+                document.getElementById('dpad-right').addEventListener('click', () => this.handleKeyPress('ArrowRight'));
+
+                // Debug Panel Listeners
+                const stageSelect = document.getElementById('debug-stage-select');
+                this.stages.forEach((stage, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = (stage instanceof BonusStage) ? `Bonus ${Math.floor(index/2)+1}` : `Peringkat ${stage.level}`;
+                    stageSelect.appendChild(option);
+                });
+                stageSelect.addEventListener('change', (e) => {
+                    this.jumpToStage(parseInt(e.target.value));
+                });
+            }
+
+            async refreshHighScores(isGameOver = false) {
+                await this.scoreManager.loadGlobalScores(this.db);
+                if (isGameOver) {
+                    this.uiManager.displayHighScores(this.scoreManager.getScores(), { list1: this.uiManager.gosList1, list2: this.uiManager.gosList2, limit: 10 });
+                } else {
+                    this.uiManager.displayHighScores(this.scoreManager.getScores(), { list1: this.uiManager.highscoreList, limit: 3, showMedals: true });
+                }
+            }
+            
+            changeSpeed(delta) {
+                this.currentSpeedLevel = Math.max(1, Math.min(9, this.currentSpeedLevel + delta));
+                document.getElementById('speed-display').textContent = this.currentSpeedLevel;
+            }
+
+            handleKeyPress(key) {
+                if (this.gameState !== 'playing') return;
+
+                const keyMap = {
+                    'ArrowUp': { dx: 0, dy: -1 }, 'w': { dx: 0, dy: -1 },
+                    'ArrowDown': { dx: 0, dy: 1 }, 's': { dx: 0, dy: 1 },
+                    'ArrowLeft': { dx: -1, dy: 0 }, 'a': { dx: -1, dy: 0 },
+                    'ArrowRight': { dx: 1, dy: 0 }, 'd': { dx: 1, dy: 0 }
+                };
+
+                if (keyMap[key]) {
+                    if (!this.isMoving) {
+                        this.isMoving = true;
+                    }
+                    if(this.inputBuffer.length < 2) {
+                        this.inputBuffer.push(keyMap[key]);
+                    }
+                }
+            }
+            
+            startGame() {
+                this.initGameState();
+                this.loadStage();
+                this.gameState = 'playing';
+                this.uiManager.showGame();
+                this.gameLoop();
+            }
+
+            loadStage() {
+                const currentStage = this.stages[this.currentStageIndex];
+                const snakeType = document.getElementById('snake-type').value;
+                this.isMoving = false; 
+                this.inputBuffer = [];
+
+                let startPos = null;
+                if (currentStage instanceof BonusStage) {
+                    startPos = currentStage.maze.start;
+                }
+                
+                if (this.snake) {
+                    this.snake.initialPos = startPos || { x: Math.floor(this.gridSize / 2), y: Math.floor(this.gridSize / 2) };
+                    this.snake.reset();
+                } else {
+                     this.snake = (snakeType === 'cobra') ? new CobraSnake(this.gridSize, startPos) : new ClassicSnake(this.gridSize, startPos);
+                }
+                
+                if (currentStage instanceof NormalStage) {
+                    this.food.spawn(this.snake.body, currentStage.obstacles, currentStage.level);
+                }
+                this.uiManager.updateGameUI(this.totalScore, currentStage);
+            }
+
+            gameLoop() {
+                if (this.gameState !== 'playing') return;
+                
+                const loopTime = this.speedMap[this.currentSpeedLevel];
+                if(this.isMoving) this.food.timer -= loopTime;
+                
+                this.update();
+                this.draw();
+
+                setTimeout(() => this.gameLoop(), loopTime);
+            }
+
+            processInput() {
+                if (this.inputBuffer.length > 0) {
+                    const nextMove = this.inputBuffer[0]; 
+                    const isOpposite = (this.snake.dx === -nextMove.dx && nextMove.dx !== 0) || (this.snake.dy === -nextMove.dy && nextMove.dy !== 0);
+                    if(!isOpposite) {
+                        this.snake.changeDirection(nextMove.dx, nextMove.dy);
+                        this.inputBuffer.shift(); 
+                    } else {
+                        // Jika input adalah bertentangan, buang sahaja untuk elak tersekat
+                        this.inputBuffer.shift();
+                    }
+                }
+            }
+
+            update() {
+                const currentStage = this.stages[this.currentStageIndex];
+
+                if (currentStage instanceof NormalStage && this.food.timer <= 0) {
+                    this.food.spawn(this.snake.body, currentStage.obstacles, currentStage.level, false);
+                }
+
+                if (!this.isMoving) {
+                    this.processInput(); 
+                    if (this.uiManager.debugPanel.classList.contains('visible')) {
+                        this.uiManager.updateDebugInfo(this);
+                    }
+                    return;
+                }
+                
+                this.processInput();
+                this.snake.move();
+                const head = this.snake.body[0];
+                const scoreToAdd = this.currentSpeedLevel;
+                
+                if (currentStage instanceof BonusStage) {
+                    if (this.snake.checkCollision(currentStage.maze.walls)) { this.nextStage(false); return; }
+                    
+                    const foodIndex = currentStage.maze.foods.findIndex(f => f.x === head.x && f.y === head.y);
+                    if (foodIndex > -1) {
+                        this.score += scoreToAdd;
+                        this.totalScore += scoreToAdd;
+                        this.snake.grow();
+                        currentStage.maze.foods.splice(foodIndex, 1);
+                    }
+                    if (head.x === currentStage.maze.exit.x && head.y === currentStage.maze.exit.y) {
+                        this.nextStage(true);
+                    }
+                } else { // NormalStage
+                    if (this.snake.checkCollision(currentStage.obstacles)) { this.gameOver(); return; }
+                    
+                    if (head.x === this.food.x && head.y === this.food.y) {
+                        if (this.food.type === 'portal') {
+                            this.nextStage(true);
+                            return;
+                        }
+
+                        this.score += scoreToAdd;
+                        this.totalScore += scoreToAdd;
+                        this.snake.grow();
+                        this.foodsEatenInStage++;
+
+                        if (currentStage.level >= 5) {
+                            this.foodsEatenForObstacle++;
+                            if (this.foodsEatenForObstacle >= OBSTACLE_REQUIREMENT) {
+                                this.foodsEatenForObstacle = 0;
+                                const newObstacle = {};
+                                this.food.spawn.call(newObstacle, this.snake.body, currentStage.obstacles); // Trick to reuse spawn logic
+                                currentStage.obstacles.push(newObstacle);
+                            }
+                        }
+
+                        const shouldSpawnPortal = this.foodsEatenInStage >= PORTAL_REQUIREMENT_MULTIPLIER * currentStage.level;
+                        this.food.spawn(this.snake.body, currentStage.obstacles, currentStage.level, shouldSpawnPortal);
+                        if(shouldSpawnPortal) this.foodsEatenInStage = 0;
+                    }
+                }
+                
+                this.uiManager.updateGameUI(this.totalScore, currentStage);
+                if (this.uiManager.debugPanel.classList.contains('visible')) {
+                    this.uiManager.updateDebugInfo(this);
+                }
+            }
+            
+            nextStage(isSuccess = true) {
+                const previousStage = this.stages[this.currentStageIndex];
+                if (previousStage instanceof BonusStage && isSuccess) {
+                    const nextStageIndex = this.currentStageIndex + 1;
+                    if(nextStageIndex < this.stages.length) {
+                         const nextStage = this.stages[nextStageIndex];
+                         const bonusPoints = this.score * 10 * nextStage.level;
+                         this.totalScore += bonusPoints;
+                    }
+                }
+                
+                if (this.currentStageIndex < this.stages.length - 1) {
+                    this.currentStageIndex++;
+                    this.score = 0; 
+                    this.foodsEatenInStage = 0;
+                    this.foodsEatenForObstacle = 0;
+                    this.loadStage();
+                } else {
+                    alert("Tahniah! Anda telah menamatkan semua peringkat!");
+                    this.gameOver();
+                }
+            }
+
+            jumpToStage(stageIndex) {
+                if (this.gameState !== 'playing') {
+                    this.startGame();
+                    setTimeout(() => this.performJump(stageIndex), 50);
+                } else {
+                    this.performJump(stageIndex);
+                }
+            }
+            
+            performJump(stageIndex) {
+                this.currentStageIndex = stageIndex;
+                this.score = 0;
+                this.totalScore = 0;
+                this.foodsEatenInStage = 0;
+                this.foodsEatenForObstacle = 0;
+                this.loadStage();
+            }
+
+            draw() { this.uiManager.draw(this); }
+
+            async gameOver() {
+                this.gameState = 'gameover';
+                const isNewHighScore = this.scoreManager.isHighScore(this.totalScore);
+
+                if (isNewHighScore) {
+                    this.uiManager.showGameOver(this.totalScore, this.scoreManager.getScores());
+                    this.uiManager.showNameInputForm();
+                } else {
+                    await this.refreshHighScores(true);
+                    this.uiManager.showGameOver(this.totalScore, this.scoreManager.getScores());
+                    this.uiManager.hideNameInputForm();
+                }
+            }
+        }
         new Game();
-    };
+    });
     </script>
 </body>
 </html>
