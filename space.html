@@ -49,7 +49,6 @@
         .main-menu { text-align: center; }
         h1, h2 { color: #00ff00; font-family: 'Press Start 2P', cursive; }
 
-        /* --- PENAMBAHBAIKAN: Stail Imej Pemilihan Kapal --- */
         #ship-selection {
             display: flex;
             gap: 20px;
@@ -88,7 +87,6 @@
         #start-game-button { background-color: #00ff00; color: #000; font-size: 1rem; padding: 15px 30px; margin-top: 15px; border: none; border-radius: 4px;}
         #ui-layer { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; font-size: 1rem; z-index: 10; pointer-events: none; text-shadow: 2px 2px #000; }
         
-        /* --- PENAMBAHBAIKAN: Stail Latar Belakang Bos --- */
         #game-board-wrapper.boss-active-bg #game-canvas {
             animation-duration: 5s; /* Laju */
         }
@@ -151,7 +149,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 30px;
+            /* PEMBETULAN: Kedudukan dianjak ke tengah */
+            padding: 0 50px;
             box-sizing: border-box;
             z-index: 20;
             pointer-events: none;
@@ -244,20 +243,23 @@
     </div>
     
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        // PEMBETULAN: Firebase dimatikan buat sementara
+        /* import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDocs, getDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         
         window.firebase = {
             initializeApp, getAuth, signInAnonymously, getFirestore, collection, doc, setDoc, getDocs, getDoc, query, orderBy, limit
         };
+        */
+       // Sediakan objek window.firebase palsu untuk elak ralat
+       window.firebase = {};
     </script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const GAME_VERSION = "1.0.4";
+    const GAME_VERSION = "1.0.5";
     
-    // --- KONFIGURASI ASET DARI PEREKA ---
     const interceptorConfig = { "id": "interceptor", "name": "Interceptor", "type": "Pemain", "drawOrder": [ "engineFlame", "body", "cockpit", "wings" ], "parts": { "body": { "shape": "polygon", "color": "#c0c0c0", "x": 0, "y": 0, "rotation": 0, "points": [ 0, -25, -15, 20, 0, 10, 15, 20 ], "scaleX": 100, "scaleY": 100 }, "cockpit": { "shape": "polygon", "color": "#4d94ff", "x": 0, "y": -5, "rotation": 0, "points": [ 0, -15, -8, 5, 8, 5 ], "scaleX": 67, "scaleY": 100 }, "wings": { "shape": "polygon", "color": "#a0a0a0", "x": 0, "y": 13, "rotation": 0, "points": [ -25, 0, 25, 0, 0, -10 ], "scaleX": 126, "scaleY": 118 }, "engineFlame": { "shape": "polygon", "color": "#ffcc00", "x": 0, "y": 16, "rotation": 0, "points": [ -7, 0, 7, 0, 0, 15 ], "scaleX": 100, "scaleY": 100, "animation": { "property": "opacity", "speed": 10, "amplitude": 0.5 } } } };
     const assaultConfig = { "id": "assault", "name": "Assault", "type": "Pemain", "drawOrder": [ "body", "wings", "cockpit", "cannons" ], "parts": { "body": { "shape": "rect", "color": "#808080", "x": 0, "y": 0, "rotation": 0, "width": 49, "height": 49 }, "wings": { "shape": "rect", "color": "#a0a0a0", "x": 0, "y": 0, "rotation": 45, "width": 50, "height": 47 }, "cockpit": { "shape": "rect", "color": "#ff6600", "x": 0, "y": 19, "rotation": 0, "width": 24, "height": 22 }, "cannons": { "shape": "rect", "color": "#666666", "x": 0, "y": -2, "rotation": 89, "width": 53, "height": 5 } } };
     const bomberConfig = { "id": "bomber", "name": "Bomber", "type": "Pemain", "drawOrder": [ "body", "wings", "pods" ], "parts": { "body": { "shape": "rect", "color": "#003300", "x": 0, "y": -1, "rotation": 0, "width": 19, "height": 49 }, "wings": { "shape": "polygon", "color": "#006400", "x": 0, "y": 19, "rotation": 180, "points": [ -40, 0, 40, 0, 20, 10, -20, 10 ], "scaleX": 126, "scaleY": 101 }, "pods": { "shape": "polygon", "color": "#556b2f", "x": 0, "y": -26, "rotation": 0, "points": [ -10, 10, 10, 10, 0, -10 ], "scaleX": 83, "scaleY": 200 } } };
@@ -268,20 +270,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const kamikazeConfig = { "id": "kamikaze", "name": "Kamikaze", "type": "Musuh", "hp": 1, "drawOrder": [ "body", "stripes" ], "parts": { "body": { "shape": "polygon", "color": "#444444", "x": 0, "y": 0, "rotation": 0, "points": [ 0, -25, -10, 25, 10, 25 ], "scaleX": 200, "scaleY": 130 }, "stripes": { "shape": "rect", "color": "#ffff00", "x": 0, "y": 17, "rotation": 0, "width": 14, "height": 22 } } };
     const bossTitanConfig = { "id": "boss-titan", "name": "Boss Titan", "type": "Boss", "hp": 50, "drawOrder": [ "base", "armor", "bridge", "mainCannon", "sideCannons" ], "parts": { "base": { "shape": "rect", "color": "#696969", "x": 0, "y": 0, "rotation": 0, "width": 80, "height": 80 }, "armor": { "shape": "rect", "color": "#808080", "x": 0, "y": 0, "rotation": 0, "width": 100, "height": 36 }, "bridge": { "shape": "rect", "color": "#dcdcdc", "x": 0, "y": 16, "rotation": 0, "width": 51, "height": 21 }, "mainCannon": { "shape": "circle", "color": "#ff4500", "x": 0, "y": -9, "rotation": 0, "r": 12, "animation": { "property": "opacity", "speed": 1, "amplitude": 0.5 } }, "sideCannons": { "shape": "rect", "color": "#a9a9a9", "x": 0, "y": 2, "rotation": 0, "width": 27, "height": 32 } } };
     
-    const firebaseConfig = { apiKey: "AIzaSyBDuQgpyrVT-hOYucH51AATLxDRLaKWgpQ", authDomain: "retro-game-6d9c7.firebaseapp.com", projectId: "retro-game-6d9c7", storageBucket: "retro-game-6d9c7.firebasestorage.app", messagingSenderId: "258289584699", appId: "1:258289584699:web:d9228a2a2e3cbc0b41aa1e", measurementId: "G-G16BRQJB7D" };
-
     const playerConfigs = { interceptor: interceptorConfig, assault: assaultConfig, bomber: bomberConfig };
     const enemyTypes = { drone: droneConfig, fighter: fighterConfig, cruiser: cruiserConfig, scout: scoutConfig, kamikaze: kamikazeConfig };
     
-    // --- PENAMBAHBAIKAN: URL Imej untuk Pemilihan Kapal ---
     const shipImageUrls = {
         interceptor: "https://raw.githubusercontent.com/fazli-bit/snakeGame/refs/heads/png/interceptor.png",
         assault: "https://raw.githubusercontent.com/fazli-bit/snakeGame/refs/heads/png/assault.png",
         bomber: "https://raw.githubusercontent.com/fazli-bit/snakeGame/refs/heads/png/bomber.png"
     };
 
-    // --- KELAS-KELAS PERMAINAN ---
-    
     class GameObject {
         constructor(config, x, y, size) { this.config = config; this.x = x; this.y = y; this.size = size; this.isAlive = true; }
         draw(ctx, time) {
@@ -436,8 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- PENGURUS PERMAINAN ---
-
     class WaveManager {
         constructor(game) {
             this.game = game;
@@ -525,6 +520,8 @@ document.addEventListener('DOMContentLoaded', () => {
         constructor() { this.scores = []; }
         getScores() { return this.scores; }
         async saveUserScore(db, userId, name, score) {
+            // PEMBETULAN: Firebase dimatikan
+            if (true) return;
             if (!db || !userId) return;
             try {
                 const scoreRef = window.firebase.doc(db, 'games/galaga/highscores', userId);
@@ -534,6 +531,11 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) { console.error("Ralat menyimpan markah:", error); }
         }
         async loadGlobalScores(db) {
+            // PEMBETULAN: Firebase dimatikan
+            if (true) {
+                this.scores = [];
+                return;
+            };
             if (!db) {
                 this.scores = [];
                 return;
@@ -616,6 +618,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         async initializeFirebase() {
+            // PEMBETULAN: Firebase dimatikan
+            if (true) {
+                this.refreshHighScores();
+                return;
+            };
             try {
                 const app = window.firebase.initializeApp(firebaseConfig);
                 this.db = window.firebase.getFirestore(app);
@@ -652,12 +659,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const joystickHandle = document.getElementById('joystick-handle');
             const fireButton = document.getElementById('fire-button');
             let joystickTouchId = null;
-            let joystickCenter = { x: joystickArea.offsetWidth / 2, y: joystickArea.offsetHeight / 2 };
+            let joystickCenter = { x: 0, y: 0 };
 
             joystickArea.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 if (joystickTouchId === null) {
                     joystickTouchId = e.changedTouches[0].identifier;
+                    // PEMBETULAN: Kira kedudukan tengah joystick semasa sentuhan bermula
+                    joystickCenter = { x: joystickArea.offsetWidth / 2, y: joystickArea.offsetHeight / 2 };
                 }
             }, { passive: false });
 
