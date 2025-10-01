@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pereka Objek (Berpandukan OOP)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #00ff00;
+            --background-color: #111;
+            --panel-bg-color: #1a1a1a;
+            --panel-border-color: #333;
+            --text-color: #fff;
+            --highlight-color: #ffff00;
+            --font-family: 'Press Start 2P', cursive;
+        }
+
+        body {
+            font-family: var(--font-family);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .app-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            background-color: var(--panel-bg-color);
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 255, 0, 0.25);
+        }
+
+        /* --- Columns --- */
+        #sidebar, #designer, #editor-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 15px;
+            border: 1px solid var(--panel-border-color);
+            border-radius: 8px;
+            background-color: #222;
+        }
+
+        #sidebar { flex: 1; min-width: 280px; }
+        #designer { flex: 1.5; min-width: 330px; align-items: center; }
+        #editor-panel { flex: 1; min-width: 280px; }
+
+        /* --- Headings --- */
+        h2, h3 {
+            margin: 0 0 10px 0;
+            border-bottom: 1px solid var(--primary-color);
+            padding-bottom: 8px;
+            color: var(--primary-color);
+            font-size: 1rem;
+            text-align: center;
+        }
+        h2 { font-size: 1.2rem; }
+
+        /* --- Canvas --- */
+        #mainCanvas, #previewCanvas {
+            border: 2px solid var(--primary-color);
+            background-color: #000;
+            image-rendering: pixelated; /* Kekalkan rupa piksel */
+            max-width: 100%;
+        }
+
+        /* --- Controls --- */
+        button {
+            width: 100%; padding: 10px; border: 1px solid var(--panel-border-color); border-radius: 4px;
+            background-color: #444; color: white; cursor: pointer; transition: all 0.2s;
+            font-family: var(--font-family); font-size: 0.7rem;
+        }
+        button:hover { background-color: #555; border-color: var(--primary-color); }
+        button.active { background-color: var(--primary-color); color: var(--background-color); border-color: var(--text-color); }
+        button:disabled { background-color: #333; color: #777; cursor: not-allowed; }
+
+        .component-item { display: flex; gap: 5px; align-items: center; margin-bottom: 5px; }
+        .component-item button { width: auto; font-size: 0.6rem; padding: 5px; }
+        .component-name-btn { flex-grow: 1; }
+        
+        .point-controls h4 {
+            font-size: 0.7rem;
+            color: var(--highlight-color);
+            margin: 10px 0 5px 0;
+            padding-bottom: 3px;
+            border-bottom: 1px solid var(--panel-border-color);
+        }
+        
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .control-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; }
+        .control-group label { font-size: 0.65rem; color: #ccc; flex-shrink: 0; margin-right: 10px; }
+        .control-group input[type="range"] { width: 120px; }
+        .control-group .value-display { font-size: 0.65rem; color: var(--highlight-color); min-width: 30px; text-align: right; }
+        .control-group input, .control-group select, .control-group textarea {
+            background: #333; color: #fff; border: 1px solid #555; padding: 4px; font-size: 0.7rem;
+            font-family: var(--font-family); border-radius: 3px;
+        }
+        .control-group input[type="text"] { width: 120px; }
+        .control-group input[type="number"] { width: 60px; }
+        .control-group input[type="color"] { width: 40px; height: 25px; padding: 2px; border: none; background: none; }
+        .control-group textarea { width: 100%; height: 60px; margin-top: 5px; background: var(--background-color); color: var(--primary-color); font-family: monospace; }
+        
+        #component-list, #editor-settings { max-height: 450px; overflow-y: auto; padding-right: 5px; }
+
+        #config-output {
+            width: 100%; box-sizing: border-box; height: 150px; background-color: var(--background-color); color: var(--primary-color);
+            border: 1px solid var(--panel-border-color); font-family: monospace; font-size: 0.7rem; resize: vertical; margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar: Tetapan Global & Senarai Komponen -->
+        <div id="sidebar">
+            <div class="info-box">
+                <h3>Info Objek</h3>
+                <div class="control-group">
+                    <label for="classNameInput">Nama Class</label>
+                    <input type="text" id="classNameInput" value="MyObject">
+                </div>
+                <div class="control-group">
+                    <label for="objectSizeInput">Saiz Sebenar (px)</label>
+                    <input type="number" id="objectSizeInput" value="40" min="10" max="100">
+                </div>
+            </div>
+            <div class="components-box">
+                <h3>Komponen</h3>
+                <div id="component-list"></div>
+                <button id="add-component-btn">Tambah Komponen (+)</button>
+            </div>
+             <div id="export-section">
+                <h3>Eksport Class</h3>
+                <button id="generate-code-btn">Jana Kod</button>
+                <textarea id="config-output" readonly placeholder="Kod Class JavaScript akan muncul di sini..."></textarea>
+                <button id="copy-code-btn">Salin Kod</button>
+            </div>
+        </div>
+        
+        <!-- Paparan Utama untuk Rekaan -->
+        <div id="designer">
+            <h2>Pereka Objek</h2>
+            <canvas id="mainCanvas" width="300" height="300"></canvas>
+            <h3>Rupa Sebenar</h3>
+            <canvas id="previewCanvas" width="40" height="40"></canvas>
+        </div>
+
+        <!-- Panel Editor untuk Komponen yang Dipilih -->
+        <div id="editor-panel">
+            <h3>Editor Komponen</h3>
+            <div id="editor-settings">
+                <p style="text-align: center; color: #777; font-size: 0.8rem;">Pilih atau tambah satu komponen untuk mula mengubah suai.</p>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- CLASSES (OOP APPROACH) ---
+
+    /**
+     * Mewakili satu komponen atau bahagian dalam GameObject.
+     * Menguruskan sifat dan logik lukisan untuk bahagian tersebut.
+     */
+    class ObjectComponent {
+        constructor(name) {
+            this.name = name;
+            this.shape = 'rect';
+            this.color = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;
+            this.x = 0;
+            this.y = 0;
+            this.rotation = 0;
+            this.width = 20;
+            this.height = 20;
+            this.radius = 15;
+            this.points = [{x: -15, y: 15}, {x: 15, y: 15}, {x: 0, y: -15}];
+            this.scaleX = 100;
+            this.scaleY = 100;
+            this.animation = null; // e.g., { type: 'opacity', speed: 5, amplitude: 0.5 }
+        }
+
+        draw(ctx, cx, cy, scale, time) {
+            ctx.save();
+            ctx.fillStyle = this.color;
+            ctx.strokeStyle = this.color; // Untuk kegunaan masa depan
+
+            let animX = 0, animY = 0, animRot = 0;
+            if (this.animation) {
+                const animValue = Math.sin(time * this.animation.speed) * this.animation.amplitude;
+                switch (this.animation.type) {
+                    case 'y': animY = animValue; break;
+                    case 'x': animX = animValue; break;
+                    case 'rotation': animRot = animValue; break;
+                    case 'opacity': ctx.globalAlpha = 0.5 + (animValue + this.animation.amplitude) / (this.animation.amplitude * 2); break;
+                }
+            }
+
+            const partX = cx + (this.x + animX) * scale;
+            const partY = cy + (this.y + animY) * scale;
+
+            ctx.translate(partX, partY);
+            ctx.rotate((this.rotation + animRot) * Math.PI / 180);
+
+            switch (this.shape) {
+                case 'rect':
+                    ctx.fillRect(-(this.width / 2) * scale, -(this.height / 2) * scale, this.width * scale, this.height * scale);
+                    break;
+                case 'circle':
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                case 'polygon':
+                    ctx.beginPath();
+                    const scaledPoints = this.points.map(p => ({
+                        x: (p.x * this.scaleX / 100) * scale,
+                        y: (p.y * this.scaleY / 100) * scale
+                    }));
+                    if (scaledPoints.length > 0) {
+                        ctx.moveTo(scaledPoints[0].x, scaledPoints[0].y);
+                        for (let i = 1; i < scaledPoints.length; i++) {
+                            ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
+                        }
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    break;
+            }
+
+            ctx.restore();
+        }
+    }
+
+    /**
+     * Objek utama yang direka. Terdiri daripada beberapa ObjectComponent.
+     * Menguruskan senarai komponen, urutan lukisan, dan lukisan keseluruhan.
+     */
+    class GameObject {
+        constructor(name, size) {
+            this.name = name;
+            this.size = size;
+            this.components = {}; // Dictionary/map untuk akses pantas by name
+            this.drawOrder = []; // Array untuk mengekalkan urutan lukisan
+        }
+
+        addComponent(name) {
+            if (this.drawOrder.length >= 6) {
+                alert("Anda hanya boleh menambah sehingga 6 komponen.");
+                return null;
+            }
+            if (this.components[name]) {
+                alert("Nama komponen sudah wujud.");
+                return null;
+            }
+            const newComponent = new ObjectComponent(name);
+            this.components[name] = newComponent;
+            this.drawOrder.push(name);
+            return newComponent;
+        }
+
+        removeComponent(name) {
+            delete this.components[name];
+            this.drawOrder = this.drawOrder.filter(item => item !== name);
+        }
+        
+        renameComponent(oldName, newName) {
+            if (this.components[newName] && oldName !== newName) {
+                 alert("Nama komponen baharu sudah wujud.");
+                 return false;
+            }
+            if (!this.components[oldName]) return false;
+
+            const componentData = this.components[oldName];
+            componentData.name = newName;
+
+            delete this.components[oldName];
+            this.components[newName] = componentData;
+
+            this.drawOrder = this.drawOrder.map(name => name === oldName ? newName : name);
+            return true;
+        }
+
+        moveComponent(name, direction) {
+            const index = this.drawOrder.indexOf(name);
+            if (index === -1) return;
+
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= this.drawOrder.length) return;
+
+            // Tukar tempat dalam array
+            [this.drawOrder[index], this.drawOrder[newIndex]] = [this.drawOrder[newIndex], this.drawOrder[index]];
+        }
+
+        draw(ctx, canvasSize, characterSize, time) {
+            ctx.clearRect(0, 0, canvasSize, canvasSize);
+            const centerX = canvasSize / 2;
+            const centerY = canvasSize / 2;
+            const scale = characterSize / 100; // Skala rekaan adalah berdasarkan 100 unit maya
+
+            this.drawOrder.forEach(componentName => {
+                const component = this.components[componentName];
+                if (component) {
+                    component.draw(ctx, centerX, centerY, scale, time);
+                }
+            });
+        }
+    }
+
+
+    // --- STATE & DOM ELEMENTS ---
+    let gameObject = new GameObject('MyObject', 40);
+    let selectedComponentName = null;
+    
+    // DOM Elements
+    const mainCanvas = document.getElementById('mainCanvas');
+    const mainCtx = mainCanvas.getContext('2d');
+    const previewCanvas = document.getElementById('previewCanvas');
+    const previewCtx = previewCanvas.getContext('2d');
+    const classNameInput = document.getElementById('classNameInput');
+    const objectSizeInput = document.getElementById('objectSizeInput');
+    const componentListDiv = document.getElementById('component-list');
+    const addComponentBtn = document.getElementById('add-component-btn');
+    const editorSettingsDiv = document.getElementById('editor-settings');
+    const generateCodeBtn = document.getElementById('generate-code-btn');
+    const copyCodeBtn = document.getElementById('copy-code-btn');
+    const configOutput = document.getElementById('config-output');
+    
+    const DESIGN_SCALE = 250; // Saiz maya yang digunakan pada canvas utama
+
+    // --- UI RENDER FUNCTIONS ---
+    
+    function renderComponentList() {
+        componentListDiv.innerHTML = '';
+        gameObject.drawOrder.forEach(name => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'component-item';
+
+            const nameBtn = document.createElement('button');
+            nameBtn.textContent = name;
+            nameBtn.className = 'component-name-btn';
+            nameBtn.classList.toggle('active', name === selectedComponentName);
+            nameBtn.onclick = () => {
+                selectedComponentName = name;
+                updateUI();
+            };
+
+            const upBtn = document.createElement('button');
+            upBtn.textContent = '▲';
+            upBtn.onclick = () => {
+                gameObject.moveComponent(name, -1);
+                updateUI();
+            };
+
+            const downBtn = document.createElement('button');
+            downBtn.textContent = '▼';
+            downBtn.onclick = () => {
+                gameObject.moveComponent(name, 1);
+                updateUI();
+            };
+
+            const delBtn = document.createElement('button');
+            delBtn.textContent = '✖';
+            delBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (confirm(`Anda pasti mahu memadam komponen "${name}"?`)) {
+                    gameObject.removeComponent(name);
+                    if (selectedComponentName === name) {
+                        selectedComponentName = null;
+                    }
+                    updateUI();
+                }
+            };
+            
+            itemDiv.appendChild(upBtn);
+            itemDiv.appendChild(downBtn);
+            itemDiv.appendChild(nameBtn);
+            itemDiv.appendChild(delBtn);
+            componentListDiv.appendChild(itemDiv);
+        });
+
+        addComponentBtn.disabled = gameObject.drawOrder.length >= 6;
+    }
+
+    function renderEditor() {
+        if (!selectedComponentName || !gameObject.components[selectedComponentName]) {
+            editorSettingsDiv.innerHTML = `<p style="text-align: center; color: #777; font-size: 0.8rem;">Pilih atau tambah satu komponen.</p>`;
+            return;
+        }
+        
+        const component = gameObject.components[selectedComponentName];
+        let html = '';
+
+        // Helper function to create sliders
+        const createSlider = (prop, min, max, step) => {
+            const value = prop.split('.').reduce((o, i) => o[i], component); // Handle nested props like animation.speed
+            return `
+                <div class="control-group">
+                    <label>${prop.toUpperCase()}</label>
+                    <input type="range" data-prop="${prop}" value="${value}" min="${min}" max="${max}" step="${step}">
+                    <span class="value-display">${value}</span>
+                </div>`;
+        };
+        
+        // General Settings
+        html += `
+            <div class="control-group">
+                <label>Nama</label>
+                <input type="text" id="componentNameInput" value="${component.name}">
+            </div>
+            <div class="control-group">
+                <label>Bentuk</label>
+                <select data-prop="shape" id="shapeSelector">
+                    <option value="rect" ${component.shape === 'rect' ? 'selected' : ''}>Segi Empat</option>
+                    <option value="circle" ${component.shape === 'circle' ? 'selected' : ''}>Bulatan</option>
+                    <option value="polygon" ${component.shape === 'polygon' ? 'selected' : ''}>Poligon</option>
+                </select>
+            </div>
+             <div class="control-group">
+                <label>Warna</label>
+                <input type="color" data-prop="color" value="${component.color}">
+            </div>`;
+
+        // Shape-specific parameters
+        html += '<h3>Transformasi</h3>';
+        html += createSlider('x', -50, 50, 1);
+        html += createSlider('y', -50, 50, 1);
+        html += createSlider('rotation', 0, 360, 1);
+
+        html += '<h3>Sifat Bentuk</h3>';
+        if (component.shape === 'rect') {
+            html += createSlider('width', 1, 100, 1);
+            html += createSlider('height', 1, 100, 1);
+        } else if (component.shape === 'circle') {
+            html += createSlider('radius', 1, 50, 1);
+        } else if (component.shape === 'polygon') {
+            html += createSlider('scaleX', 10, 200, 1);
+            html += createSlider('scaleY', 10, 200, 1);
+            html += `<div class="preset-buttons">
+                        <button id="set-triangle-btn">Jadikan Segi Tiga</button>
+                        <button id="set-pentagon-btn">Jadikan Pentagon</button>
+                     </div>`;
+            html += '<div class="point-controls">';
+            component.points.forEach((point, index) => {
+                html += `<h4>Titik ${index + 1}</h4>`;
+                html += `
+                <div class="control-group">
+                    <label>POINT ${index + 1} X</label>
+                    <input type="range" data-prop="points[${index}].x" value="${point.x}" min="-50" max="50" step="1">
+                    <span class="value-display">${point.x}</span>
+                </div>`;
+                html += `
+                <div class="control-group">
+                    <label>POINT ${index + 1} Y</label>
+                    <input type="range" data-prop="points[${index}].y" value="${point.y}" min="-50" max="50" step="1">
+                    <span class="value-display">${point.y}</span>
+                </div>`;
+            });
+            html += '</div>';
+        }
+
+        // Animation
+        html += '<h3>Animasi</h3>';
+        html += `<div class="control-group">
+                    <label>Jenis Animasi</label>
+                    <select id="animationTypeSelector">
+                        <option value="null" ${!component.animation ? 'selected' : ''}>Tiada</option>
+                        <option value="opacity" ${component.animation?.type === 'opacity' ? 'selected' : ''}>Kelip</option>
+                        <option value="y" ${component.animation?.type === 'y' ? 'selected' : ''}>Denyut (Y)</option>
+                        <option value="x" ${component.animation?.type === 'x' ? 'selected' : ''}>Denyut (X)</option>
+                        <option value="rotation" ${component.animation?.type === 'rotation' ? 'selected' : ''}>Putar</option>
+                    </select>
+                 </div>`;
+        
+        if (component.animation) {
+            html += createSlider('animation.speed', 0, 20, 0.5);
+            html += createSlider('animation.amplitude', 0, 50, 0.5);
+        }
+
+        editorSettingsDiv.innerHTML = html;
+        attachEditorListeners();
+    }
+
+    function updateUI() {
+        renderComponentList();
+        renderEditor();
+    }
+
+    // --- EVENT LISTENERS ---
+
+    function attachEditorListeners() {
+        const component = gameObject.components[selectedComponentName];
+        if (!component) return;
+
+        editorSettingsDiv.querySelectorAll('[data-prop]').forEach(el => {
+            const prop = el.dataset.prop;
+            const isRange = el.type === 'range';
+            const eventType = (isRange || el.type === 'color') ? 'input' : 'change';
+
+            el.addEventListener(eventType, (e) => {
+                let value = e.target.value;
+                
+                // Handle special cases for points
+                if (prop.startsWith('points[')) {
+                    const match = prop.match(/points\[(\d+)\]\.(\w+)/);
+                    if (match) {
+                        const index = parseInt(match[1], 10);
+                        const key = match[2]; // 'x' or 'y'
+                        component.points[index][key] = parseFloat(value);
+                    }
+                } else {
+                     // Update object state (original logic)
+                    const props = prop.split('.');
+                    let target = component;
+                    for (let i = 0; i < props.length - 1; i++) {
+                        target = target[props[i]];
+                    }
+                    target[props[props.length-1]] = (prop === 'shape' || prop === 'color') ? value : parseFloat(value);
+                }
+
+                // Update UI display for slider
+                if (isRange) {
+                    e.target.nextElementSibling.textContent = value;
+                }
+            });
+        });
+        
+        document.getElementById('shapeSelector').addEventListener('change', (e) => {
+            component.shape = e.target.value;
+            renderEditor(); // Re-render to show correct properties
+        });
+        
+        document.getElementById('animationTypeSelector').addEventListener('change', (e) => {
+            if (e.target.value === 'null') {
+                component.animation = null;
+            } else {
+                component.animation = component.animation || {};
+                component.animation.type = e.target.value;
+                component.animation.speed = component.animation.speed || 5;
+                component.animation.amplitude = component.animation.amplitude || 5;
+            }
+            renderEditor(); // Re-render to show/hide animation sliders
+        });
+
+        const setTriangleBtn = document.getElementById('set-triangle-btn');
+        if (setTriangleBtn) {
+            setTriangleBtn.onclick = () => {
+                component.points = [{x: 0, y: -25}, {x: -22, y: 15}, {x: 22, y: 15}];
+                renderEditor();
+            };
+        }
+
+        const setPentagonBtn = document.getElementById('set-pentagon-btn');
+        if (setPentagonBtn) {
+            setPentagonBtn.onclick = () => {
+                component.points = [ {x: 0, y: -25}, {x: 24, y: -8}, {x: 15, y: 20}, {x: -15, y: 20}, {x: -24, y: -8}];
+                renderEditor();
+            };
+        }
+        
+        document.getElementById('componentNameInput').addEventListener('change', (e) => {
+            const newName = e.target.value.trim();
+            if (gameObject.renameComponent(selectedComponentName, newName)) {
+                 selectedComponentName = newName;
+                 updateUI();
+            } else {
+                // Revert if rename fails
+                e.target.value = selectedComponentName;
+            }
+        });
+    }
+
+    classNameInput.addEventListener('change', () => {
+        gameObject.name = classNameInput.value.trim().replace(/\s/g, '') || 'MyObject';
+        classNameInput.value = gameObject.name;
+    });
+
+    objectSizeInput.addEventListener('change', () => {
+        const size = Math.max(10, Math.min(100, parseInt(objectSizeInput.value, 10)));
+        gameObject.size = size;
+        objectSizeInput.value = size;
+        previewCanvas.width = size;
+        previewCanvas.height = size;
+    });
+
+    addComponentBtn.addEventListener('click', () => {
+        const componentName = `Komponen${gameObject.drawOrder.length + 1}`;
+        const newComponent = gameObject.addComponent(componentName);
+        if (newComponent) {
+            selectedComponentName = newComponent.name;
+            updateUI();
+        }
+    });
+    
+    generateCodeBtn.addEventListener('click', () => {
+        const className = gameObject.name;
+        const config = {
+            name: className,
+            size: gameObject.size,
+            drawOrder: gameObject.drawOrder,
+            components: gameObject.components
+        };
+        
+        // Remove empty animation properties for cleaner export
+        Object.values(config.components).forEach(comp => {
+            if (comp.animation && !comp.animation.type) {
+                delete comp.animation;
+            }
+        });
+
+        const configString = JSON.stringify(config, null, 4);
+
+        configOutput.value = `
+// Dihasilkan oleh Pereka Objek
+const ${className}Config = ${configString};
+
+class ${className} {
+    constructor() {
+        this.config = ${className}Config;
+        this.components = JSON.parse(JSON.stringify(this.config.components));
+    }
+
+    draw(ctx, canvasSize, time) {
+        const centerX = canvasSize / 2;
+        const centerY = canvasSize / 2;
+        const scale = this.config.size / 100;
+        
+        ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+        this.config.drawOrder.forEach(componentName => {
+            const part = this.components[componentName];
+            if (!part) return;
+            
+            ctx.save();
+            ctx.fillStyle = part.color;
+
+            let animX = 0, animY = 0, animRot = 0;
+            if (part.animation) {
+                const animValue = Math.sin(time * part.animation.speed) * part.animation.amplitude;
+                switch (part.animation.type) {
+                    case 'y': animY = animValue; break;
+                    case 'x': animX = animValue; break;
+                    case 'rotation': animRot = animValue; break;
+                    case 'opacity': ctx.globalAlpha = 0.5 + (animValue + part.animation.amplitude) / (part.animation.amplitude * 2); break;
+                }
+            }
+
+            const partX = centerX + (part.x + animX) * scale;
+            const partY = centerY + (part.y + animY) * scale;
+            ctx.translate(partX, partY);
+            ctx.rotate((part.rotation + animRot) * Math.PI / 180);
+
+            switch (part.shape) {
+                case 'rect':
+                    ctx.fillRect(-(part.width / 2) * scale, -(part.height / 2) * scale, part.width * scale, part.height * scale);
+                    break;
+                case 'circle':
+                    ctx.beginPath();
+                    ctx.arc(0, 0, part.radius * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                case 'polygon':
+                    ctx.beginPath();
+                    const scaledPoints = part.points.map(p => ({ x: (p.x * part.scaleX / 100) * scale, y: (p.y * part.scaleY / 100) * scale }));
+                    if (scaledPoints.length > 0) {
+                        ctx.moveTo(scaledPoints[0].x, scaledPoints[0].y);
+                        for (let i = 1; i < scaledPoints.length; i++) ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    break;
+            }
+            ctx.restore();
+        });
+    }
+}
+        `;
+    });
+
+    copyCodeBtn.addEventListener('click', () => {
+        configOutput.select();
+        document.execCommand('copy');
+        copyCodeBtn.textContent = "Disalin!";
+        setTimeout(() => { copyCodeBtn.textContent = "Salin Kod"; }, 1500);
+    });
+
+    // --- ANIMATION LOOP ---
+    let lastTime = 0;
+    function animate(timestamp) {
+        const time = timestamp / 200;
+        gameObject.draw(mainCtx, mainCanvas.width, DESIGN_SCALE, time);
+        gameObject.draw(previewCtx, previewCanvas.width, gameObject.size, time);
+        requestAnimationFrame(animate);
+    }
+
+    // --- INITIALIZATION ---
+    function init() {
+        // Tambah komponen permulaan
+        const body = gameObject.addComponent('Badan');
+        selectedComponentName = body.name;
+
+        // Set saiz awal canvas pratonton
+        previewCanvas.width = gameObject.size;
+        previewCanvas.height = gameObject.size;
+        
+        updateUI();
+        animate(0);
+    }
+
+    init();
+});
+</script>
+
+</body>
+</html>
+
+
