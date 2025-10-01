@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Permainan Tembakan Angkasa</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
@@ -16,6 +16,7 @@
             color: #fff;
             margin: 0;
             overflow: hidden;
+            touch-action: none; /* Disable double-tap to zoom */
         }
         .game-container {
             display: flex;
@@ -29,6 +30,7 @@
         }
         #game-board-wrapper {
             position: relative;
+            overflow: hidden; /* Keep boss effects contained */
         }
         #game-canvas {
             width: 450px;
@@ -46,16 +48,68 @@
         }
         .main-menu { text-align: center; }
         h1, h2 { color: #00ff00; font-family: 'Press Start 2P', cursive; }
-        button {
-            padding: 10px 20px; margin: 5px; border: 1px solid #555; border-radius: 4px;
-            background-color: #444; color: white; cursor: pointer;
-            font-family: 'Press Start 2P', cursive; font-size: 0.8rem;
+
+        /* --- PENAMBAHBAIKAN: Stail Imej Pemilihan Kapal --- */
+        #ship-selection {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
         }
-        button:hover { background-color: #555; }
-        button.active { background-color: #00ff00; color: #000; }
-        #start-game-button { background-color: #00ff00; color: #000; font-size: 1rem; padding: 15px 30px; }
+        #ship-selection button {
+            background: none;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        #ship-selection img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        #ship-selection p {
+            margin: 0;
+            font-size: 0.7rem;
+            color: #ccc;
+        }
+        #ship-selection button.active {
+            border-color: #00ff00;
+            background-color: rgba(0, 255, 0, 0.1);
+        }
+        #ship-selection button.active p {
+            color: #00ff00;
+        }
+
+        #start-game-button { background-color: #00ff00; color: #000; font-size: 1rem; padding: 15px 30px; margin-top: 15px; border: none; border-radius: 4px;}
         #ui-layer { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; font-size: 1rem; z-index: 10; pointer-events: none; text-shadow: 2px 2px #000; }
         
+        /* --- PENAMBAHBAIKAN: Stail Latar Belakang Bos --- */
+        #game-board-wrapper.boss-active-bg #game-canvas {
+            animation-duration: 5s; /* Laju */
+        }
+        #game-board-wrapper.boss-active-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(255,0,0,0.4) 0%,rgba(255,0,0,0) 70%);
+            z-index: 5;
+            pointer-events: none;
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.6); 
@@ -69,6 +123,71 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
         .modal-content h2 { margin-top: 0; font-size: 1.8rem; color: #ff4136;}
+        .modal-content button {
+            padding: 10px 20px; margin: 5px; border: 1px solid #555; border-radius: 4px;
+            background-color: #444; color: white; cursor: pointer;
+            font-family: 'Press Start 2P', cursive; font-size: 0.8rem;
+        }
+        .modal-content input {
+            background-color: #333; border: 2px solid #00ff00; color: #f0f0f0; padding: 8px;
+            font-family: 'Press Start 2P', cursive; text-align: center; width: 200px; text-transform: uppercase;
+        }
+
+        #highscore-container { text-align: center; width: 100%; font-size: 0.7rem; margin-top: 20px;}
+        #highscore-container h3 { margin-top: 0; margin-bottom: 15px; color: #ffff00; display: inline-block; margin-right: 10px;}
+        #refresh-scores-button { background: none; border: none; font-size: 1rem; cursor: pointer; color: #fff; }
+        .highscore-list { display: flex; justify-content: center; }
+        .highscore-list ol { list-style-type: none; padding-left: 0; margin: 0; min-width: 250px; text-align: left; }
+        .highscore-columns-shared { display: flex; justify-content: center; gap: 40px; text-align: left; }
+        .highscore-columns-shared ol { list-style-type: none; padding-left: 0; margin: 0; min-width: 170px; }
+        .highscore-list li, .highscore-columns-shared li { margin-bottom: 8px; color: #f0f0f0; }
+        .highscore-list li span, .highscore-columns-shared li span { color: #ffff00; float: right; }
+
+        #mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            box-sizing: border-box;
+            z-index: 20;
+            pointer-events: none;
+        }
+        #joystick-area {
+            width: 150px;
+            height: 150px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            position: relative;
+            pointer-events: auto;
+        }
+        #joystick-handle {
+            width: 70px;
+            height: 70px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            position: absolute;
+            top: 40px;
+            left: 40px;
+        }
+        #fire-button {
+            width: 100px;
+            height: 100px;
+            background-color: rgba(255, 0, 0, 0.3);
+            border: 2px solid rgba(255, 0, 0, 0.6);
+            border-radius: 50%;
+            color: white;
+            font-size: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+        }
+
     </style>
 </head>
 <body>
@@ -80,6 +199,12 @@
             <h2>PILIH KAPAL</h2>
             <div id="ship-selection"></div>
             <button id="start-game-button">MULA</button>
+            <div id="highscore-container">
+                <h3>MARKAH TERTINGGI</h3><button id="refresh-scores-button">🔄</button>
+                <div class="highscore-list">
+                    <ol id="highscore-list"></ol>
+                </div>
+            </div>
         </div>
         
         <div id="game-area" style="display: none;">
@@ -89,21 +214,48 @@
                      <span id="score">SKOR: 0</span>
                      <span id="stage">PERINGKAT: 1</span>
                  </div>
+                 <div id="mobile-controls">
+                    <div id="joystick-area">
+                        <div id="joystick-handle"></div>
+                    </div>
+                    <button id="fire-button">🔥</button>
+                 </div>
             </div>
         </div>
 
         <div id="game-over-modal" class="modal-overlay">
             <div class="modal-content">
                 <h2>PERMAINAN TAMAT</h2>
-                <button id="continue-button">SAMBUNG</button>
+                <div id="new-highscore-entry" style="display: none;">
+                    <p>MARKAH TINGGI BAHARU!</p>
+                    <input type="text" id="player-name" maxlength="10" placeholder="MASUKKAN NAMA">
+                    <button id="save-score-button">SIMPAN</button>
+                </div>
+                 <div id="game-over-scores" style="display: none;">
+                    <h3>10 MARKAH TERTINGGI</h3>
+                    <div class="highscore-columns-shared" id="highscore-columns-gameover">
+                        <ol id="gos-list-1"></ol> <ol id="gos-list-2"></ol>
+                    </div>
+                </div>
+                <button id="continue-button">MAIN SEMULA</button>
                 <button id="main-menu-button">MENU UTAMA</button>
             </div>
         </div>
     </div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, getDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
+        window.firebase = {
+            initializeApp, getAuth, signInAnonymously, getFirestore, collection, doc, setDoc, getDocs, getDoc, query, orderBy, limit
+        };
+    </script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const GAME_VERSION = "0.1.5";
+    const GAME_VERSION = "1.0.4";
     
     // --- KONFIGURASI ASET DARI PEREKA ---
     const interceptorConfig = { "id": "interceptor", "name": "Interceptor", "type": "Pemain", "drawOrder": [ "engineFlame", "body", "cockpit", "wings" ], "parts": { "body": { "shape": "polygon", "color": "#c0c0c0", "x": 0, "y": 0, "rotation": 0, "points": [ 0, -25, -15, 20, 0, 10, 15, 20 ], "scaleX": 100, "scaleY": 100 }, "cockpit": { "shape": "polygon", "color": "#4d94ff", "x": 0, "y": -5, "rotation": 0, "points": [ 0, -15, -8, 5, 8, 5 ], "scaleX": 67, "scaleY": 100 }, "wings": { "shape": "polygon", "color": "#a0a0a0", "x": 0, "y": 13, "rotation": 0, "points": [ -25, 0, 25, 0, 0, -10 ], "scaleX": 126, "scaleY": 118 }, "engineFlame": { "shape": "polygon", "color": "#ffcc00", "x": 0, "y": 16, "rotation": 0, "points": [ -7, 0, 7, 0, 0, 15 ], "scaleX": 100, "scaleY": 100, "animation": { "property": "opacity", "speed": 10, "amplitude": 0.5 } } } };
@@ -116,16 +268,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const kamikazeConfig = { "id": "kamikaze", "name": "Kamikaze", "type": "Musuh", "hp": 1, "drawOrder": [ "body", "stripes" ], "parts": { "body": { "shape": "polygon", "color": "#444444", "x": 0, "y": 0, "rotation": 0, "points": [ 0, -25, -10, 25, 10, 25 ], "scaleX": 200, "scaleY": 130 }, "stripes": { "shape": "rect", "color": "#ffff00", "x": 0, "y": 17, "rotation": 0, "width": 14, "height": 22 } } };
     const bossTitanConfig = { "id": "boss-titan", "name": "Boss Titan", "type": "Boss", "hp": 50, "drawOrder": [ "base", "armor", "bridge", "mainCannon", "sideCannons" ], "parts": { "base": { "shape": "rect", "color": "#696969", "x": 0, "y": 0, "rotation": 0, "width": 80, "height": 80 }, "armor": { "shape": "rect", "color": "#808080", "x": 0, "y": 0, "rotation": 0, "width": 100, "height": 36 }, "bridge": { "shape": "rect", "color": "#dcdcdc", "x": 0, "y": 16, "rotation": 0, "width": 51, "height": 21 }, "mainCannon": { "shape": "circle", "color": "#ff4500", "x": 0, "y": -9, "rotation": 0, "r": 12, "animation": { "property": "opacity", "speed": 1, "amplitude": 0.5 } }, "sideCannons": { "shape": "rect", "color": "#a9a9a9", "x": 0, "y": 2, "rotation": 0, "width": 27, "height": 32 } } };
     
+    const firebaseConfig = { apiKey: "AIzaSyBDuQgpyrVT-hOYucH51AATLxDRLaKWgpQ", authDomain: "retro-game-6d9c7.firebaseapp.com", projectId: "retro-game-6d9c7", storageBucket: "retro-game-6d9c7.firebasestorage.app", messagingSenderId: "258289584699", appId: "1:258289584699:web:d9228a2a2e3cbc0b41aa1e", measurementId: "G-G16BRQJB7D" };
+
     const playerConfigs = { interceptor: interceptorConfig, assault: assaultConfig, bomber: bomberConfig };
     const enemyTypes = { drone: droneConfig, fighter: fighterConfig, cruiser: cruiserConfig, scout: scoutConfig, kamikaze: kamikazeConfig };
     
+    // --- PENAMBAHBAIKAN: URL Imej untuk Pemilihan Kapal ---
+    const shipImageUrls = {
+        interceptor: "https://raw.githubusercontent.com/fazli-bit/snakeGame/refs/heads/png/interceptor.png",
+        assault: "https://raw.githubusercontent.com/fazli-bit/snakeGame/refs/heads/png/assault.png",
+        bomber: "https://raw.githubusercontent.com/fazli-bit/snakeGame/refs/heads/png/bomber.png"
+    };
+
     // --- KELAS-KELAS PERMAINAN ---
     
     class GameObject {
-        constructor(config, x, y, size) {
-            this.config = config; this.x = x; this.y = y; this.size = size; this.isAlive = true;
-        }
-
+        constructor(config, x, y, size) { this.config = config; this.x = x; this.y = y; this.size = size; this.isAlive = true; }
         draw(ctx, time) {
             const scale = this.size / 100;
             ctx.save();
@@ -136,7 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             ctx.restore();
         }
-
         drawPart(ctx, part, s, time) {
             ctx.save();
             ctx.fillStyle = part.color;
@@ -166,17 +323,22 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.restore();
         }
     }
-
     class Player extends GameObject {
         constructor(config, boardWidth, boardHeight) {
-            super(config, boardWidth / 2, boardHeight - 50, 40);
+            super(config, boardWidth / 2, boardHeight - 50, 55);
             this.boardWidth = boardWidth; this.boardHeight = boardHeight;
             this.speed = 5; this.canShoot = true; this.shootCooldown = 200;
         }
-        update(keys) {
+        update(keys, touchDx, touchDy) {
             let dx = 0, dy = 0;
             if (keys['ArrowLeft'] || keys['a']) dx = -1; if (keys['ArrowRight'] || keys['d']) dx = 1;
             if (keys['ArrowUp'] || keys['w']) dy = -1; if (keys['ArrowDown'] || keys['s']) dy = 1;
+            
+            if (touchDx !== 0 || touchDy !== 0) {
+                dx = touchDx;
+                dy = touchDy;
+            }
+
             this.x += dx * this.speed; this.y += dy * this.speed;
             if (this.x < this.size / 2) this.x = this.size / 2;
             if (this.x > this.boardWidth - this.size / 2) this.x = this.boardWidth - this.size / 2;
@@ -192,10 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return null;
         }
     }
-    
     class Enemy extends GameObject {
         constructor(config, x, y) {
-            super(config, x, y, 35);
+            super(config, x, y, 50);
             this.hp = config.hp || 1;
             this.pattern = null; 
             this.initialX = x; this.initialY = y; this.age = 0;
@@ -216,12 +377,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return new Projectile(this.x, this.y + this.size / 2, 'enemy');
         }
     }
-
     class Boss extends Enemy {
         constructor(config, x, y) {
             super(config, x, y);
-            this.size = 120;
-            this.shootCooldown = 800; // Tembak lebih laju
+            this.size = 150;
+            this.shootCooldown = 800;
             this.attackPatternCounter = 0;
         }
         update(player, game) {
@@ -231,21 +391,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.shoot(game);
             }
         }
-
         shoot(game) {
             this.canShoot = false;
             setTimeout(() => { this.canShoot = true; }, this.shootCooldown);
             this.attackPatternCounter++;
-            if (this.attackPatternCounter % 4 === 0) { // Serangan serak
+            if (this.attackPatternCounter % 4 === 0) {
                 game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', -2, 4));
                 game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', 0, 5));
                 game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', 2, 4));
-            } else { // Serangan lurus
+            } else {
                 game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', 0, 6));
             }
         }
     }
-
     class Projectile {
         constructor(x, y, owner, dx = 0, dy = (owner === 'player' ? -8 : 5)) {
             this.x = x; this.y = y; this.owner = owner;
@@ -258,7 +416,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fillRect(this.x - this.width/2, this.y, this.width, this.height);
         }
     }
-
     class Particle {
         constructor(x, y) {
             this.x = x; this.y = y;
@@ -268,9 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.lifespan = 100;
             this.color = `hsl(${Math.random() * 60 + 20}, 100%, 50%)`;
         }
-        update() {
-            this.x += this.speedX; this.y += this.speedY; this.lifespan--;
-        }
+        update() { this.x += this.speedX; this.y += this.speedY; this.lifespan--; }
         draw(ctx) {
             ctx.fillStyle = this.color;
             ctx.globalAlpha = this.lifespan / 100;
@@ -297,15 +452,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.waveTimer <= 0) {
                 const pattern = this.patterns[Math.floor(Math.random() * this.patterns.length)];
                 pattern.call(this, this.game);
-                this.waveTimer = this.waveCooldown;
+                this.waveTimer = Math.max(1000, this.waveCooldown - (this.game.stage * 200));
             }
         }
 
         spawnLine(game) {
             const enemyType = Math.random() < 0.7 ? 'drone' : 'fighter';
-            for (let i = 0; i < 5; i++) {
-                const enemy = new Enemy(enemyTypes[enemyType], 50 + i * 80, -50);
-                enemy.pattern = (e) => { e.y += 2 * (1 + game.stage * 0.1); };
+            const count = 5 + Math.floor(game.stage / 2);
+            for (let i = 0; i < count; i++) {
+                const enemy = new Enemy(enemyTypes[enemyType], 50 + i * (350 / (count-1)), -50);
+                enemy.pattern = (e) => { e.y += 2 * (1 + game.stage * 0.15); };
                 game.enemies.push(enemy);
             }
         }
@@ -314,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const enemyType = 'fighter';
             for (let i = -2; i <= 2; i++) {
                 const enemy = new Enemy(enemyTypes[enemyType], game.canvas.width / 2 + i * 40, -50 - Math.abs(i) * 30);
-                enemy.pattern = (e) => { e.y += 2.5 * (1 + game.stage * 0.1); };
+                enemy.pattern = (e) => { e.y += 2.5 * (1 + game.stage * 0.15); };
                 game.enemies.push(enemy);
             }
         }
@@ -322,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
         spawnSides(game) {
             const enemyType = 'scout';
             const startX = Math.random() < 0.5 ? -30 : game.canvas.width + 30;
-            const speedX = (startX < 0 ? 3 : -3) * (1 + game.stage * 0.1);
+            const speedX = (startX < 0 ? 3 : -3) * (1 + game.stage * 0.15);
             for (let i = 0; i < 3; i++) {
                 const enemy = new Enemy(enemyTypes[enemyType], startX, 100 + i * 50);
                 enemy.pattern = (e) => { e.x += speedX; e.y += 0.5; };
@@ -339,64 +495,228 @@ document.addEventListener('DOMContentLoaded', () => {
             this.score = document.getElementById('score');
             this.stage = document.getElementById('stage');
             this.shipSelection = document.getElementById('ship-selection');
+            this.highscoreList = document.getElementById('highscore-list');
+            this.gosList1 = document.getElementById('gos-list-1');
+            this.gosList2 = document.getElementById('gos-list-2');
+            this.newHighscoreEntry = document.getElementById('new-highscore-entry');
+            this.gameOverScores = document.getElementById('game-over-scores');
         }
         showMenu() {
+            document.getElementById('game-board-wrapper').classList.remove('boss-active-bg');
             this.gameArea.style.display = 'none';
             this.gameOverModal.style.display = 'none';
             this.mainMenu.style.display = 'block';
         }
+        displayHighScores(scores, { list1, list2 = null, limit = 3, showMedals = false }) {
+            const medals = ['🥇', '🥈', '🥉'];
+            if (list2) {
+                list1.innerHTML = scores.slice(0, 5).map((s, i) => `<li>${i + 1}. ${s.name} <span>${s.score}</span></li>`).join('');
+                list2.innerHTML = scores.slice(5, 10).map((s, i) => `<li>${i + 6}. ${s.name} <span>${s.score}</span></li>`).join('');
+            } else {
+                list1.innerHTML = scores.slice(0, limit).map((s, i) => {
+                    const medal = showMedals ? medals[i] || '' : '';
+                    return `<li>${medal} ${s.name} <span>${s.score}</span></li>`;
+                }).join('');
+            }
+        }
     }
     
+    class ScoreManager {
+        constructor() { this.scores = []; }
+        getScores() { return this.scores; }
+        async saveUserScore(db, userId, name, score) {
+            if (!db || !userId) return;
+            try {
+                const scoreRef = window.firebase.doc(db, 'games/galaga/highscores', userId);
+                const docSnap = await window.firebase.getDoc(scoreRef);
+                if (docSnap.exists() && docSnap.data().score >= score) return;
+                await window.firebase.setDoc(scoreRef, { name, score, timestamp: new Date() });
+            } catch (error) { console.error("Ralat menyimpan markah:", error); }
+        }
+        async loadGlobalScores(db) {
+            if (!db) {
+                this.scores = [];
+                return;
+            }
+            try {
+                const q = window.firebase.query(window.firebase.collection(db, "games/galaga/highscores"), window.firebase.orderBy("score", "desc"), window.firebase.limit(10));
+                const querySnapshot = await window.firebase.getDocs(q);
+                const firebaseScores = [];
+                querySnapshot.forEach((doc) => firebaseScores.push(doc.data()));
+                this.scores = firebaseScores;
+            } catch (error) { 
+                console.error("Ralat memuatkan markah:", error); 
+                this.scores = [];
+            }
+        }
+        isHighScore(score) {
+            if (score <= 0) return false;
+            if (this.scores.length < 10) return true;
+            return score > this.scores[this.scores.length - 1].score;
+        }
+    }
+
     class Game {
         constructor() {
             this.canvas = document.getElementById('game-canvas');
             this.ctx = this.canvas.getContext('2d');
             this.uiManager = new UIManager();
+            this.scoreManager = new ScoreManager();
             document.getElementById('game-version').textContent = `v${GAME_VERSION}`;
             
             this.gameState = 'menu'; 
             this.keys = {}; 
-            this.player = null;
-            this.enemies = []; 
-            this.projectiles = []; 
-            this.particles = [];
-            this.stage = 1; 
-            this.score = 0;
-            this.scoreAtStageStart = 0;
-            
+            this.player = null; this.enemies = []; this.projectiles = []; this.particles = [];
+            this.stage = 1; this.score = 0; this.scoreAtStageStart = 0;
             this.waveManager = new WaveManager(this);
-            this.stageTimer = 45000;
-            this.isBossActive = false;
-            this.lastTime = 0;
-            this.gameLoopAnimation = null;
+            this.stageTimer = 45000; this.isBossActive = false;
+            this.lastTime = 0; this.gameLoopAnimation = null;
+            this.db = null; this.auth = null; this.userId = null;
+            
+            this.touchDx = 0; this.touchDy = 0; this.isTouchFiring = false;
+            this.screenShakeIntensity = 0;
 
             this.setupShipSelection(); 
             this.setupEventListeners();
+            this.initializeFirebase();
         }
         
         setupShipSelection() {
-            Object.values(playerConfigs).forEach((config, index) => {
-                const btn = document.createElement('button');
-                btn.textContent = config.name;
-                btn.dataset.configId = config.id;
-                if (index === 0) btn.classList.add('active');
-                btn.onclick = () => {
-                    this.uiManager.shipSelection.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                };
-                this.uiManager.shipSelection.appendChild(btn);
-            });
+            const container = this.uiManager.shipSelection;
+            container.innerHTML = '';
+            let isFirst = true;
+
+            for (const configId in playerConfigs) {
+                const config = playerConfigs[configId];
+                const button = document.createElement('button');
+                button.dataset.configId = configId;
+
+                const img = document.createElement('img');
+                img.src = shipImageUrls[configId];
+                img.alt = config.name;
+
+                const nameLabel = document.createElement('p');
+                nameLabel.textContent = config.name;
+                
+                button.appendChild(img);
+                button.appendChild(nameLabel);
+
+                if (isFirst) {
+                    button.classList.add('active');
+                    isFirst = false;
+                }
+
+                button.addEventListener('click', () => {
+                    container.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                });
+
+                container.appendChild(button);
+            }
+        }
+        
+        async initializeFirebase() {
+            try {
+                const app = window.firebase.initializeApp(firebaseConfig);
+                this.db = window.firebase.getFirestore(app);
+                this.auth = window.firebase.getAuth(app);
+                await window.firebase.signInAnonymously(this.auth);
+                this.userId = this.auth.currentUser.uid;
+                this.refreshHighScores();
+            } catch (error) {
+                console.error("Gagal memulakan Firebase:", error);
+                this.uiManager.displayHighScores([], { list1: this.uiManager.highscoreList, limit: 3, showMedals: true });
+            }
         }
         
         setupEventListeners() {
+            window.addEventListener('keydown', (e) => this.keys[e.key] = true);
+            window.addEventListener('keyup', (e) => this.keys[e.key] = false);
+
             document.getElementById('start-game-button').addEventListener('click', () => this.start());
             document.getElementById('main-menu-button').addEventListener('click', () => { 
                 this.gameState = 'menu';
                 this.uiManager.showMenu();
             });
             document.getElementById('continue-button').addEventListener('click', () => this.continueGame());
-            window.addEventListener('keydown', (e) => this.keys[e.key] = true);
-            window.addEventListener('keyup', (e) => this.keys[e.key] = false);
+            document.getElementById('save-score-button').addEventListener('click', async () => {
+                const name = document.getElementById('player-name').value.trim().toUpperCase() || 'PLAYER';
+                await this.scoreManager.saveUserScore(this.db, this.userId, name, this.score);
+                this.uiManager.newHighscoreEntry.style.display = 'none';
+                this.uiManager.gameOverScores.style.display = 'block';
+                await this.refreshHighScores(true); 
+            });
+            document.getElementById('refresh-scores-button').addEventListener('click', () => this.refreshHighScores());
+            
+            const joystickArea = document.getElementById('joystick-area');
+            const joystickHandle = document.getElementById('joystick-handle');
+            const fireButton = document.getElementById('fire-button');
+            let joystickTouchId = null;
+            let joystickCenter = { x: joystickArea.offsetWidth / 2, y: joystickArea.offsetHeight / 2 };
+
+            joystickArea.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (joystickTouchId === null) {
+                    joystickTouchId = e.changedTouches[0].identifier;
+                }
+            }, { passive: false });
+
+            joystickArea.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === joystickTouchId) {
+                        const touch = e.changedTouches[i];
+                        const rect = joystickArea.getBoundingClientRect();
+                        let x = touch.clientX - rect.left;
+                        let y = touch.clientY - rect.top;
+
+                        let dx = x - joystickCenter.x;
+                        let dy = y - joystickCenter.y;
+                        
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        const maxDistance = joystickArea.offsetWidth / 2;
+
+                        if (distance > maxDistance) {
+                            dx = (dx / distance) * maxDistance;
+                            dy = (dy / distance) * maxDistance;
+                        }
+                        
+                        joystickHandle.style.transform = `translate(${dx}px, ${dy}px)`;
+
+                        this.touchDx = dx / maxDistance;
+                        this.touchDy = dy / maxDistance;
+                    }
+                }
+            }, { passive: false });
+
+            const resetJoystick = () => {
+                joystickTouchId = null;
+                joystickHandle.style.transform = `translate(0px, 0px)`;
+                this.touchDx = 0;
+                this.touchDy = 0;
+            };
+
+            joystickArea.addEventListener('touchend', resetJoystick);
+            joystickArea.addEventListener('touchcancel', resetJoystick);
+
+            fireButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.isTouchFiring = true;
+            }, { passive: false });
+            fireButton.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                this.isTouchFiring = false;
+            }, { passive: false });
+        }
+
+        async refreshHighScores(isGameOver = false) {
+            await this.scoreManager.loadGlobalScores(this.db);
+            const scores = this.scoreManager.getScores();
+            if (isGameOver) {
+                this.uiManager.displayHighScores(scores, { list1: this.uiManager.gosList1, list2: this.uiManager.gosList2, limit: 10 });
+            } else {
+                this.uiManager.displayHighScores(scores, { list1: this.uiManager.highscoreList, limit: 3, showMedals: true });
+            }
         }
 
         start(isContinuing = false) {
@@ -409,15 +729,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.stage = 1;
                 this.score = 0;
             } else {
-                this.score = this.scoreAtStageStart; // Restore score to start of stage
+                this.score = 0;
             }
             
             const selectedConfigId = this.uiManager.shipSelection.querySelector('button.active').dataset.configId;
             this.player = new Player(playerConfigs[selectedConfigId], this.canvas.width, this.canvas.height);
-            this.enemies = []; 
-            this.projectiles = []; 
-            this.particles = []; 
+            this.enemies = []; this.projectiles = []; this.particles = []; 
             
+            this.scoreAtStageStart = this.score;
             this.isBossActive = false;
             this.stageTimer = 45000;
             this.lastTime = performance.now();
@@ -431,17 +750,29 @@ document.addEventListener('DOMContentLoaded', () => {
             this.start(true);
         }
 
-        gameOver() {
+        async gameOver() {
             this.gameState = 'gameover';
+            this.screenShakeIntensity = 0;
+            document.getElementById('game-board-wrapper').classList.remove('boss-active-bg');
+            await this.refreshHighScores(true);
+
             setTimeout(() => {
-                 if (this.gameState === 'gameover') {
+                if (this.gameState === 'gameover') {
                     this.uiManager.gameOverModal.style.display = 'flex';
-                 }
+                    if(this.scoreManager.isHighScore(this.score)) {
+                        this.uiManager.newHighscoreEntry.style.display = 'block';
+                        this.uiManager.gameOverScores.style.display = 'none';
+                    } else {
+                        this.uiManager.newHighscoreEntry.style.display = 'none';
+                        this.uiManager.gameOverScores.style.display = 'block';
+                    }
+                }
             }, 1500);
         }
         
         gameLoop(timestamp) {
             if (this.gameState === 'menu') {
+                cancelAnimationFrame(this.gameLoopAnimation);
                 this.gameLoopAnimation = null;
                 return;
             };
@@ -470,18 +801,20 @@ document.addEventListener('DOMContentLoaded', () => {
                                 e.isAlive = false;
                                 this.score += (e instanceof Boss) ? 1000 : 100;
                                 this.createExplosion(e.x, e.y, 15);
+                                if (e instanceof Boss) {
+                                    setTimeout(() => this.nextStage(), 2000);
+                                }
                             } else {
                                 this.createExplosion(p.x, p.y, 5);
                             }
                         }
                     });
-                } else { // Peluru musuh
+                } else {
                     if (this.player.isAlive) {
                         const dist = Math.hypot(p.x - this.player.x, p.y - this.player.y);
                         if (dist < this.player.size / 3) {
                             p.isAlive = false;
                             this.player.isAlive = false;
-                            this.createExplosion(this.player.x, this.player.y, 30);
                         }
                     }
                 }
@@ -493,7 +826,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (dist < (this.player.size / 3 + e.size / 3)) {
                     this.player.isAlive = false;
                     e.isAlive = false;
-                    this.createExplosion(this.player.x, this.player.y, 30);
                     this.createExplosion(e.x, e.y, 15);
                 }
             });
@@ -507,8 +839,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         update(deltaTime, timestamp) {
             if (this.gameState === 'playing') {
-                this.player.update(this.keys);
-                if (this.keys[' ']) {
+                this.player.update(this.keys, this.touchDx, this.touchDy);
+                if (this.keys[' '] || this.isTouchFiring) {
                     const p = this.player.shoot();
                     if (p) this.projectiles.push(p);
                 }
@@ -529,46 +861,67 @@ document.addEventListener('DOMContentLoaded', () => {
             this.enemies.forEach(e => e.update(this.player, this));
             
             if(this.player.isAlive) this.checkCollisions();
-            else if (this.gameState !== 'gameover') this.gameOver();
+            
+            if (!this.player.isAlive && this.gameState !== 'gameover') {
+                 this.createExplosion(this.player.x, this.player.y, 30);
+                 this.gameOver();
+            }
 
-            this.enemies = this.enemies.filter(e => e.isAlive && e.y < this.canvas.height + e.size);
+            this.enemies = this.enemies.filter(e => e.isAlive && e.y < this.canvas.height + e.size && e.x > -e.size && e.x < this.canvas.width + e.size);
             this.projectiles = this.projectiles.filter(p => p.isAlive && p.y > -p.height && p.y < this.canvas.height);
             this.particles = this.particles.filter(p => p.lifespan > 0);
             
-            if (this.isBossActive && this.enemies.length > 0 && this.enemies.every(e => !e.isAlive || !(e instanceof Boss))) {
-                this.nextStage();
-            }
-
             this.uiManager.score.textContent = `SKOR: ${this.score}`;
             this.uiManager.stage.textContent = `PERINGKAT: ${this.stage}`;
         }
 
         draw(timestamp) {
+            this.ctx.save();
+            if (this.screenShakeIntensity > 0) {
+                const dx = Math.random() * this.screenShakeIntensity - this.screenShakeIntensity / 2;
+                const dy = Math.random() * this.screenShakeIntensity - this.screenShakeIntensity / 2;
+                this.ctx.translate(dx, dy);
+            }
+
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             if(this.player.isAlive) this.player.draw(this.ctx, timestamp / 100);
             this.projectiles.forEach(p => p.draw(this.ctx));
             this.enemies.forEach(e => e.draw(this.ctx, timestamp / 100));
             this.particles.forEach(p => p.draw(this.ctx));
+
+            this.ctx.restore();
         }
 
         spawnBoss() {
             this.isBossActive = true;
+            document.getElementById('game-board-wrapper').classList.add('boss-active-bg');
+            this.screenShakeIntensity = 3;
+            this.enemies = this.enemies.filter(e => !e.isAlive);
             const boss = new Boss(bossTitanConfig, this.canvas.width / 2, -100);
+            
+            boss.entryCompleteTime = null; 
             boss.pattern = (e, player) => { 
                 if (e.y < 100) {
                     e.y += 1; 
                 } else {
-                    e.x = e.initialX + Math.sin(e.age / 80) * (this.canvas.width / 2 - e.size / 2 - 20);
+                    if (e.entryCompleteTime === null) {
+                        e.entryCompleteTime = e.age;
+                    }
+                    const timeSinceEntry = e.age - e.entryCompleteTime;
+                    e.x = e.initialX + Math.sin(timeSinceEntry / 80) * (this.canvas.width / 2 - e.size / 2 - 20);
                 }
             };
             this.enemies.push(boss);
         }
 
         nextStage() {
+            if (!this.isBossActive) return;
             this.stage++;
             this.score += 1000;
             this.scoreAtStageStart = this.score;
             this.isBossActive = false;
+            this.screenShakeIntensity = 0;
+            document.getElementById('game-board-wrapper').classList.remove('boss-active-bg');
             this.stageTimer = 45000;
             this.waveManager.waveTimer = 3000;
         }
