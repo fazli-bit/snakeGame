@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koleksi Permainan Retro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* CSS untuk tema retro */
+        :root {
+            --retro-bg: #0a041a;
+            --retro-text: #e0e0e0;
+            --retro-glow: #00ffcc;
+            --retro-primary: #ff00ff;
+            --retro-secondary: #ffff00;
+        }
+
+        body {
+            background-color: var(--retro-bg);
+            color: var(--retro-text);
+            font-family: 'Press Start 2P', cursive;
+            text-align: center;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden; /* Elak 'horizontal scroll' */
+            position: relative;
+        }
+
+        /* Kesan 'scanlines' pada skrin */
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(
+                rgba(255, 255, 255, 0.05) 50%, 
+                transparent 50%
+            );
+            background-size: 100% 4px;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 90%;
+            background: rgba(10, 10, 10, 0.5);
+            border: 4px solid var(--retro-primary);
+            box-shadow: 0 0 15px var(--retro-primary), 0 0 25px var(--retro-primary) inset;
+            padding: 2rem;
+            border-radius: 8px;
+            z-index: 2;
+        }
+
+        h1 {
+            color: var(--retro-secondary);
+            text-shadow: 0 0 5px var(--retro-secondary), 0 0 10px #ff6600;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            letter-spacing: 2px;
+            word-wrap: break-word; /* Pastikan teks tidak melimpah */
+        }
+
+        h2 {
+            color: var(--retro-glow);
+            font-size: 1.5rem;
+            margin-bottom: 2.5rem;
+            animation: blink 1.5s linear infinite;
+        }
+
+        /* Animasi berkelip */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        #game-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .game-link {
+            background-color: #333;
+            color: var(--retro-text);
+            padding: 15px 20px;
+            text-decoration: none;
+            font-size: 1rem;
+            border: 3px solid #555;
+            border-radius: 5px;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 5px 0 #222;
+            position: relative;
+            text-transform: uppercase;
+        }
+
+        .game-link:hover {
+            background-color: var(--retro-primary);
+            color: #000;
+            border-color: var(--retro-secondary);
+            text-shadow: 0 0 5px #fff;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 0 #222;
+        }
+
+        .game-link:active {
+            transform: translateY(2px);
+            box-shadow: 0 3px 0 #222;
+        }
+
+        footer {
+            margin-top: 3rem;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        /* ---------------------------------------------- */
+        /* Penyesuaian untuk peranti mudah alih (Responsive Design) */
+        /* ---------------------------------------------- */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem; /* Kurangkan padding pada body */
+            }
+
+            .container {
+                padding: 1.5rem; /* Kurangkan padding dalam container */
+            }
+
+            h1 {
+                font-size: 1.8rem; /* Kecilkan saiz tajuk utama */
+            }
+
+            h2 {
+                font-size: 1.2rem; /* Kecilkan saiz sub-tajuk */
+                margin-bottom: 2rem;
+            }
+
+            #game-menu {
+                gap: 1rem; /* Kurangkan jarak antara butang */
+            }
+
+            .game-link {
+                font-size: 0.9rem; /* Kecilkan sedikit fon butang */
+                padding: 12px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>KOLEKSI PERMAINAN RETRO</h1>
+        <h2>> PILIH PERMAINAN <</h2>
+        
+        <!-- Menu permainan akan dijana oleh JavaScript di sini -->
+        <div id="game-menu"></div>
+
+        <footer>
+            &copy; 2025 Arkad Maya.
+        </footer>
+    </div>
+
+    <script>
+        /**
+         * Kelas RetroMenu (Pendekatan OOP)
+         * Bertanggungjawab untuk mencipta dan memaparkan menu permainan secara dinamik.
+         */
+        class RetroMenu {
+            /**
+             * @param {string} containerId - ID elemen HTML di mana menu akan dipaparkan.
+             * @param {Array<Object>} games - Senarai permainan dalam bentuk objek.
+             */
+            constructor(containerId, games) {
+                this.container = document.getElementById(containerId);
+                this.games = games;
+            }
+
+            /**
+             * Cipta dan paparkan butang pautan untuk setiap permainan.
+             */
+            render() {
+                if (!this.container) {
+                    console.error(`Elemen dengan ID "${this.containerId}" tidak ditemui.`);
+                    return;
+                }
+
+                // Kosongkan container sebelum menjana pautan baru
+                this.container.innerHTML = '';
+
+                // Loop melalui setiap permainan dan cipta elemen 'a'
+                this.games.forEach(game => {
+                    const linkElement = document.createElement('a');
+                    linkElement.href = game.url;
+                    linkElement.textContent = game.name;
+                    linkElement.className = 'game-link';
+                    linkElement.target = '_blank'; // Buka dalam tab baru
+                    
+                    this.container.appendChild(linkElement);
+                });
+            }
+        }
+
+        // Tunggu sehingga semua kandungan halaman dimuatkan
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Senarai permainan yang akan dipaparkan
+            const gameList = [
+                { name: 'Penembak Angkasa', url: 'https://fazli-bit.github.io/snakeGame/space.html' },
+                { name: 'Ular Klasik', url: 'https://fazli-bit.github.io/snakeGame/snake.html' },
+                { name: 'Ice Climber v3', url: 'https://fazli-bit.github.io/snakeGame/iceclimberv3.html' },
+                { name: 'Ice Climber Klasik', url: 'https://fazli-bit.github.io/snakeGame/iceclimber.html' },
+                { name: 'Reka Bentuk Watak', url: 'https://fazli-bit.github.io/snakeGame/design.html' }
+            ];
+
+            // Cipta 'instance' baru dari kelas RetroMenu
+            const menu = new RetroMenu('game-menu', gameList);
+            
+            // Panggil method untuk memaparkan menu
+            menu.render();
+
+        });
+    </script>
+
+</body>
+</html>
