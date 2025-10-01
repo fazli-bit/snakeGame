@@ -8,34 +8,64 @@
     <style>
         body {
             font-family: 'Press Start 2P', cursive;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             background-color: #000;
             color: #fff;
             margin: 0;
             overflow: hidden;
-            touch-action: none; /* Disable double-tap to zoom */
+            touch-action: none;
         }
+        /* Stail untuk menu utama */
         .game-container {
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
+            width: 100%;
+            height: 100vh;
+        }
+        .main-menu-wrapper {
             padding: 20px;
             background-color: #1a1a1a;
             border: 2px solid #00ff00;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 255, 0, 0.2);
+            text-align: center;
         }
+
+        /* Reka letak untuk paparan permainan aktif */
+        .game-container.game-active-layout {
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: stretch;
+            padding: 0;
+        }
+        #game-area {
+            flex: 2.5; /* Nisbah untuk paparan permainan */
+            position: relative;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #gamepad-area {
+            flex: 1; /* Nisbah untuk gamepad */
+            background-color: #111;
+            border-top: 4px solid #00ff00;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 30px;
+            box-sizing: border-box;
+        }
+        
         #game-board-wrapper {
             position: relative;
-            overflow: hidden; /* Keep boss effects contained */
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
         }
         #game-canvas {
-            width: 450px;
-            height: 600px;
-            border: 2px solid #00ff00;
+            width: 100%;
+            height: 100%;
             background-color: #000;
             background-image: radial-gradient(white 0.5px, transparent 0.5px), radial-gradient(white 0.5px, transparent 0.5px);
             background-size: 20px 20px;
@@ -44,147 +74,65 @@
         }
         @keyframes scroll-background {
             from { background-position-y: 0px; }
-            to { background-position-y: 600px; }
+            to { background-position-y: 100%; }
         }
-        .main-menu { text-align: center; }
+        
         h1, h2 { color: #00ff00; font-family: 'Press Start 2P', cursive; }
 
-        #ship-selection {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            align-items: center;
-        }
-        #ship-selection button {
-            background: none;
-            border: 2px solid transparent;
-            border-radius: 8px;
-            padding: 10px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-        #ship-selection img {
-            width: 80px;
-            height: 80px;
-            object-fit: contain;
-        }
-        #ship-selection p {
-            margin: 0;
-            font-size: 0.7rem;
-            color: #ccc;
-        }
-        #ship-selection button.active {
-            border-color: #00ff00;
-            background-color: rgba(0, 255, 0, 0.1);
-        }
-        #ship-selection button.active p {
-            color: #00ff00;
-        }
-
+        #ship-selection { display: flex; gap: 20px; justify-content: center; align-items: center; }
+        #ship-selection button { background: none; border: 2px solid transparent; border-radius: 8px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        #ship-selection img { width: 80px; height: 80px; object-fit: contain; }
+        #ship-selection p { margin: 0; font-size: 0.7rem; color: #ccc; }
+        #ship-selection button.active { border-color: #00ff00; background-color: rgba(0, 255, 0, 0.1); }
+        #ship-selection button.active p { color: #00ff00; }
         #start-game-button { background-color: #00ff00; color: #000; font-size: 1rem; padding: 15px 30px; margin-top: 15px; border: none; border-radius: 4px;}
         #ui-layer { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; font-size: 1rem; z-index: 10; pointer-events: none; text-shadow: 2px 2px #000; }
         
-        #game-board-wrapper.boss-active-bg #game-canvas {
-            animation-duration: 5s; /* Laju */
-        }
-        #game-board-wrapper.boss-active-bg::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(ellipse at center, rgba(255,0,0,0.4) 0%,rgba(255,0,0,0) 70%);
-            z-index: 5;
-            pointer-events: none;
-            animation: pulse-red 2s infinite;
-        }
-        @keyframes pulse-red {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
-        }
+        #game-board-wrapper.boss-active-bg #game-canvas { animation-duration: 5s; }
+        #game-board-wrapper.boss-active-bg::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(ellipse at center, rgba(255,0,0,0.4) 0%,rgba(255,0,0,0) 70%); z-index: 5; pointer-events: none; animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.6); 
-            display: none; justify-content: center;
-            align-items: center; z-index: 100;
-        }
-        .modal-content {
-            color: #fff; background-color: rgba(26, 26, 26, 0.9); 
-            padding: 30px; border-radius: 15px;
-            border: 4px solid #555; text-align: center; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { color: #fff; background-color: rgba(26, 26, 26, 0.9); padding: 30px; border-radius: 15px; border: 4px solid #555; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
         .modal-content h2 { margin-top: 0; font-size: 1.8rem; color: #ff4136;}
-        .modal-content button {
-            padding: 10px 20px; margin: 5px; border: 1px solid #555; border-radius: 4px;
-            background-color: #444; color: white; cursor: pointer;
-            font-family: 'Press Start 2P', cursive; font-size: 0.8rem;
-        }
-        .modal-content input {
-            background-color: #333; border: 2px solid #00ff00; color: #f0f0f0; padding: 8px;
-            font-family: 'Press Start 2P', cursive; text-align: center; width: 200px; text-transform: uppercase;
-        }
+        .modal-content button { padding: 10px 20px; margin: 5px; border: 1px solid #555; border-radius: 4px; background-color: #444; color: white; cursor: pointer; font-family: 'Press Start 2P', cursive; font-size: 0.8rem; }
+        .modal-content input { background-color: #333; border: 2px solid #00ff00; color: #f0f0f0; padding: 8px; font-family: 'Press Start 2P', cursive; text-align: center; width: 200px; text-transform: uppercase; }
 
         #highscore-container { text-align: center; width: 100%; font-size: 0.7rem; margin-top: 20px;}
         #highscore-container h3 { margin-top: 0; margin-bottom: 15px; color: #ffff00; display: inline-block; margin-right: 10px;}
         #refresh-scores-button { background: none; border: none; font-size: 1rem; cursor: pointer; color: #fff; }
-        .highscore-list { display: flex; justify-content: center; }
-        .highscore-list ol { list-style-type: none; padding-left: 0; margin: 0; min-width: 250px; text-align: left; }
-        .highscore-columns-shared { display: flex; justify-content: center; gap: 40px; text-align: left; }
-        .highscore-columns-shared ol { list-style-type: none; padding-left: 0; margin: 0; min-width: 170px; }
+        .highscore-list ol, .highscore-columns-shared ol { list-style-type: none; padding-left: 0; margin: 0; text-align: left; }
+        .highscore-list ol { min-width: 250px; }
+        .highscore-columns-shared { display: flex; justify-content: center; gap: 40px; }
+        .highscore-columns-shared ol { min-width: 170px; }
         .highscore-list li, .highscore-columns-shared li { margin-bottom: 8px; color: #f0f0f0; }
         .highscore-list li span, .highscore-columns-shared li span { color: #ffff00; float: right; }
 
-        #mobile-controls {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            /* PEMBETULAN: Kedudukan dianjak ke tengah */
-            padding: 0 50px;
-            box-sizing: border-box;
-            z-index: 20;
-            pointer-events: none;
-        }
+        /* Stail Gamepad */
         #joystick-area {
-            width: 150px;
-            height: 150px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            position: relative;
-            pointer-events: auto;
+            width: 120px; height: 120px; background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%; position: relative;
         }
         #joystick-handle {
-            width: 70px;
-            height: 70px;
-            background-color: rgba(255, 255, 255, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            position: absolute;
-            top: 40px;
-            left: 40px;
+            width: 60px; height: 60px; background-color: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 50%;
+            position: absolute; top: 30px; left: 30px;
+        }
+        #action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .action-button {
+            width: 80px; height: 80px; border-radius: 50%; color: white;
+            font-size: 2rem; display: flex; justify-content: center;
+            align-items: center; border: 2px solid;
         }
         #fire-button {
-            width: 100px;
-            height: 100px;
-            background-color: rgba(255, 0, 0, 0.3);
-            border: 2px solid rgba(255, 0, 0, 0.6);
-            border-radius: 50%;
-            color: white;
-            font-size: 2rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            pointer-events: auto;
+            background-color: rgba(255, 0, 0, 0.3); border-color: rgba(255, 0, 0, 0.6);
+        }
+        #special-attack-button {
+            background-color: rgba(0, 100, 255, 0.3); border-color: rgba(0, 100, 255, 0.6);
         }
 
     </style>
@@ -192,14 +140,14 @@
 <body>
 
     <div class="game-container">
-        <div id="main-menu">
+        <div id="main-menu" class="main-menu-wrapper">
             <h1>TEMBAKAN ANGKASA</h1>
             <p id="game-version"></p>
             <h2>PILIH KAPAL</h2>
             <div id="ship-selection"></div>
             <button id="start-game-button">MULA</button>
             <div id="highscore-container">
-                <h3>MARKAH TERTINGGI</h3><button id="refresh-scores-button">🔄</button>
+                <h3>MARKAH TERTINGGI</h3><button id="refresh-scores-button" disabled>🔄</button>
                 <div class="highscore-list">
                     <ol id="highscore-list"></ol>
                 </div>
@@ -208,18 +156,22 @@
         
         <div id="game-area" style="display: none;">
             <div id="game-board-wrapper">
-                 <canvas id="game-canvas" width="450" height="600"></canvas>
+                 <canvas id="game-canvas"></canvas>
                  <div id="ui-layer">
                      <span id="score">SKOR: 0</span>
                      <span id="stage">PERINGKAT: 1</span>
                  </div>
-                 <div id="mobile-controls">
-                    <div id="joystick-area">
-                        <div id="joystick-handle"></div>
-                    </div>
-                    <button id="fire-button">🔥</button>
-                 </div>
             </div>
+        </div>
+        
+        <div id="gamepad-area" style="display: none;">
+             <div id="joystick-area">
+                 <div id="joystick-handle"></div>
+             </div>
+             <div id="action-buttons">
+                <button id="special-attack-button" class="action-button">✨</button>
+                <button id="fire-button" class="action-button">🔥</button>
+             </div>
         </div>
 
         <div id="game-over-modal" class="modal-overlay">
@@ -243,22 +195,12 @@
     </div>
     
     <script type="module">
-        // PEMBETULAN: Firebase dimatikan buat sementara
-        /* import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, getDocs, getDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        
-        window.firebase = {
-            initializeApp, getAuth, signInAnonymously, getFirestore, collection, doc, setDoc, getDocs, getDoc, query, orderBy, limit
-        };
-        */
-       // Sediakan objek window.firebase palsu untuk elak ralat
        window.firebase = {};
     </script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const GAME_VERSION = "1.0.5";
+    const GAME_VERSION = "1.0.6";
     
     const interceptorConfig = { "id": "interceptor", "name": "Interceptor", "type": "Pemain", "drawOrder": [ "engineFlame", "body", "cockpit", "wings" ], "parts": { "body": { "shape": "polygon", "color": "#c0c0c0", "x": 0, "y": 0, "rotation": 0, "points": [ 0, -25, -15, 20, 0, 10, 15, 20 ], "scaleX": 100, "scaleY": 100 }, "cockpit": { "shape": "polygon", "color": "#4d94ff", "x": 0, "y": -5, "rotation": 0, "points": [ 0, -15, -8, 5, 8, 5 ], "scaleX": 67, "scaleY": 100 }, "wings": { "shape": "polygon", "color": "#a0a0a0", "x": 0, "y": 13, "rotation": 0, "points": [ -25, 0, 25, 0, 0, -10 ], "scaleX": 126, "scaleY": 118 }, "engineFlame": { "shape": "polygon", "color": "#ffcc00", "x": 0, "y": 16, "rotation": 0, "points": [ -7, 0, 7, 0, 0, 15 ], "scaleX": 100, "scaleY": 100, "animation": { "property": "opacity", "speed": 10, "amplitude": 0.5 } } } };
     const assaultConfig = { "id": "assault", "name": "Assault", "type": "Pemain", "drawOrder": [ "body", "wings", "cockpit", "cannons" ], "parts": { "body": { "shape": "rect", "color": "#808080", "x": 0, "y": 0, "rotation": 0, "width": 49, "height": 49 }, "wings": { "shape": "rect", "color": "#a0a0a0", "x": 0, "y": 0, "rotation": 45, "width": 50, "height": 47 }, "cockpit": { "shape": "rect", "color": "#ff6600", "x": 0, "y": 19, "rotation": 0, "width": 24, "height": 22 }, "cannons": { "shape": "rect", "color": "#666666", "x": 0, "y": -2, "rotation": 89, "width": 53, "height": 5 } } };
@@ -455,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const enemyType = Math.random() < 0.7 ? 'drone' : 'fighter';
             const count = 5 + Math.floor(game.stage / 2);
             for (let i = 0; i < count; i++) {
-                const enemy = new Enemy(enemyTypes[enemyType], 50 + i * (350 / (count-1)), -50);
+                const enemy = new Enemy(enemyTypes[enemyType], (game.canvas.width / 10) + i * (game.canvas.width * 0.8 / (count-1)), -50);
                 enemy.pattern = (e) => { e.y += 2 * (1 + game.stage * 0.15); };
                 game.enemies.push(enemy);
             }
@@ -484,8 +426,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     class UIManager {
         constructor() {
+            this.gameContainer = document.querySelector('.game-container');
             this.mainMenu = document.getElementById('main-menu');
             this.gameArea = document.getElementById('game-area');
+            this.gamepadArea = document.getElementById('gamepad-area');
             this.gameOverModal = document.getElementById('game-over-modal');
             this.score = document.getElementById('score');
             this.stage = document.getElementById('stage');
@@ -497,13 +441,27 @@ document.addEventListener('DOMContentLoaded', () => {
             this.gameOverScores = document.getElementById('game-over-scores');
         }
         showMenu() {
+            this.gameContainer.classList.remove('game-active-layout');
             document.getElementById('game-board-wrapper').classList.remove('boss-active-bg');
             this.gameArea.style.display = 'none';
+            this.gamepadArea.style.display = 'none';
             this.gameOverModal.style.display = 'none';
             this.mainMenu.style.display = 'block';
         }
+        showGame() {
+            this.gameContainer.classList.add('game-active-layout');
+            this.mainMenu.style.display = 'none'; 
+            this.gameOverModal.style.display = 'none';
+            this.gameArea.style.display = 'flex';
+            this.gamepadArea.style.display = 'flex';
+        }
         displayHighScores(scores, { list1, list2 = null, limit = 3, showMedals = false }) {
             const medals = ['🥇', '🥈', '🥉'];
+            if(scores.length === 0){
+                list1.innerHTML = '<li>Tiada markah</li>';
+                if(list2) list2.innerHTML = '';
+                return;
+            }
             if (list2) {
                 list1.innerHTML = scores.slice(0, 5).map((s, i) => `<li>${i + 1}. ${s.name} <span>${s.score}</span></li>`).join('');
                 list2.innerHTML = scores.slice(5, 10).map((s, i) => `<li>${i + 6}. ${s.name} <span>${s.score}</span></li>`).join('');
@@ -520,36 +478,13 @@ document.addEventListener('DOMContentLoaded', () => {
         constructor() { this.scores = []; }
         getScores() { return this.scores; }
         async saveUserScore(db, userId, name, score) {
-            // PEMBETULAN: Firebase dimatikan
             if (true) return;
-            if (!db || !userId) return;
-            try {
-                const scoreRef = window.firebase.doc(db, 'games/galaga/highscores', userId);
-                const docSnap = await window.firebase.getDoc(scoreRef);
-                if (docSnap.exists() && docSnap.data().score >= score) return;
-                await window.firebase.setDoc(scoreRef, { name, score, timestamp: new Date() });
-            } catch (error) { console.error("Ralat menyimpan markah:", error); }
         }
         async loadGlobalScores(db) {
-            // PEMBETULAN: Firebase dimatikan
             if (true) {
                 this.scores = [];
                 return;
             };
-            if (!db) {
-                this.scores = [];
-                return;
-            }
-            try {
-                const q = window.firebase.query(window.firebase.collection(db, "games/galaga/highscores"), window.firebase.orderBy("score", "desc"), window.firebase.limit(10));
-                const querySnapshot = await window.firebase.getDocs(q);
-                const firebaseScores = [];
-                querySnapshot.forEach((doc) => firebaseScores.push(doc.data()));
-                this.scores = firebaseScores;
-            } catch (error) { 
-                console.error("Ralat memuatkan markah:", error); 
-                this.scores = [];
-            }
         }
         isHighScore(score) {
             if (score <= 0) return false;
@@ -565,7 +500,6 @@ document.addEventListener('DOMContentLoaded', () => {
             this.uiManager = new UIManager();
             this.scoreManager = new ScoreManager();
             document.getElementById('game-version').textContent = `v${GAME_VERSION}`;
-            
             this.gameState = 'menu'; 
             this.keys = {}; 
             this.player = null; this.enemies = []; this.projectiles = []; this.particles = [];
@@ -573,11 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.waveManager = new WaveManager(this);
             this.stageTimer = 45000; this.isBossActive = false;
             this.lastTime = 0; this.gameLoopAnimation = null;
-            this.db = null; this.auth = null; this.userId = null;
-            
-            this.touchDx = 0; this.touchDy = 0; this.isTouchFiring = false;
-            this.screenShakeIntensity = 0;
-
+            this.touchDx = 0; this.touchDy = 0; this.isTouchFiring = false; this.screenShakeIntensity = 0;
             this.setupShipSelection(); 
             this.setupEventListeners();
             this.initializeFirebase();
@@ -587,59 +517,36 @@ document.addEventListener('DOMContentLoaded', () => {
             const container = this.uiManager.shipSelection;
             container.innerHTML = '';
             let isFirst = true;
-
             for (const configId in playerConfigs) {
                 const config = playerConfigs[configId];
                 const button = document.createElement('button');
                 button.dataset.configId = configId;
-
                 const img = document.createElement('img');
                 img.src = shipImageUrls[configId];
                 img.alt = config.name;
-
                 const nameLabel = document.createElement('p');
                 nameLabel.textContent = config.name;
-                
                 button.appendChild(img);
                 button.appendChild(nameLabel);
-
                 if (isFirst) {
                     button.classList.add('active');
                     isFirst = false;
                 }
-
                 button.addEventListener('click', () => {
                     container.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
                     button.classList.add('active');
                 });
-
                 container.appendChild(button);
             }
         }
         
         async initializeFirebase() {
-            // PEMBETULAN: Firebase dimatikan
-            if (true) {
-                this.refreshHighScores();
-                return;
-            };
-            try {
-                const app = window.firebase.initializeApp(firebaseConfig);
-                this.db = window.firebase.getFirestore(app);
-                this.auth = window.firebase.getAuth(app);
-                await window.firebase.signInAnonymously(this.auth);
-                this.userId = this.auth.currentUser.uid;
-                this.refreshHighScores();
-            } catch (error) {
-                console.error("Gagal memulakan Firebase:", error);
-                this.uiManager.displayHighScores([], { list1: this.uiManager.highscoreList, limit: 3, showMedals: true });
-            }
+            if (true) { this.refreshHighScores(); return; };
         }
         
         setupEventListeners() {
             window.addEventListener('keydown', (e) => this.keys[e.key] = true);
             window.addEventListener('keyup', (e) => this.keys[e.key] = false);
-
             document.getElementById('start-game-button').addEventListener('click', () => this.start());
             document.getElementById('main-menu-button').addEventListener('click', () => { 
                 this.gameState = 'menu';
@@ -658,6 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const joystickArea = document.getElementById('joystick-area');
             const joystickHandle = document.getElementById('joystick-handle');
             const fireButton = document.getElementById('fire-button');
+            const specialAttackButton = document.getElementById('special-attack-button');
             let joystickTouchId = null;
             let joystickCenter = { x: 0, y: 0 };
 
@@ -665,11 +573,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 if (joystickTouchId === null) {
                     joystickTouchId = e.changedTouches[0].identifier;
-                    // PEMBETULAN: Kira kedudukan tengah joystick semasa sentuhan bermula
                     joystickCenter = { x: joystickArea.offsetWidth / 2, y: joystickArea.offsetHeight / 2 };
                 }
             }, { passive: false });
-
             joystickArea.addEventListener('touchmove', (e) => {
                 e.preventDefault();
                 for (let i = 0; i < e.changedTouches.length; i++) {
@@ -678,48 +584,35 @@ document.addEventListener('DOMContentLoaded', () => {
                         const rect = joystickArea.getBoundingClientRect();
                         let x = touch.clientX - rect.left;
                         let y = touch.clientY - rect.top;
-
                         let dx = x - joystickCenter.x;
                         let dy = y - joystickCenter.y;
-                        
                         const distance = Math.sqrt(dx * dx + dy * dy);
                         const maxDistance = joystickArea.offsetWidth / 2;
-
                         if (distance > maxDistance) {
                             dx = (dx / distance) * maxDistance;
                             dy = (dy / distance) * maxDistance;
                         }
-                        
                         joystickHandle.style.transform = `translate(${dx}px, ${dy}px)`;
-
                         this.touchDx = dx / maxDistance;
                         this.touchDy = dy / maxDistance;
                     }
                 }
             }, { passive: false });
-
             const resetJoystick = () => {
                 joystickTouchId = null;
                 joystickHandle.style.transform = `translate(0px, 0px)`;
                 this.touchDx = 0;
                 this.touchDy = 0;
             };
-
             joystickArea.addEventListener('touchend', resetJoystick);
             joystickArea.addEventListener('touchcancel', resetJoystick);
-
-            fireButton.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                this.isTouchFiring = true;
-            }, { passive: false });
-            fireButton.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                this.isTouchFiring = false;
-            }, { passive: false });
+            fireButton.addEventListener('touchstart', (e) => { e.preventDefault(); this.isTouchFiring = true; }, { passive: false });
+            fireButton.addEventListener('touchend', (e) => { e.preventDefault(); this.isTouchFiring = false; }, { passive: false });
+            specialAttackButton.addEventListener('touchstart', (e) => { e.preventDefault(); console.log('Serangan Istimewa!'); }, { passive: false });
         }
 
         async refreshHighScores(isGameOver = false) {
-            await this.scoreManager.loadGlobalScores(this.db);
+            await this.scoreManager.loadGlobalScores();
             const scores = this.scoreManager.getScores();
             if (isGameOver) {
                 this.uiManager.displayHighScores(scores, { list1: this.uiManager.gosList1, list2: this.uiManager.gosList2, limit: 10 });
@@ -730,9 +623,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         start(isContinuing = false) {
             this.gameState = 'playing';
-            this.uiManager.mainMenu.style.display = 'none'; 
-            this.uiManager.gameArea.style.display = 'block';
-            this.uiManager.gameOverModal.style.display = 'none';
+            this.uiManager.showGame();
+            
+            // Melaraskan saiz kanvas
+            this.canvas.width = this.canvas.offsetWidth;
+            this.canvas.height = this.canvas.offsetHeight;
 
             if (!isContinuing) {
                 this.stage = 1;
@@ -740,31 +635,25 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 this.score = 0;
             }
-            
             const selectedConfigId = this.uiManager.shipSelection.querySelector('button.active').dataset.configId;
             this.player = new Player(playerConfigs[selectedConfigId], this.canvas.width, this.canvas.height);
             this.enemies = []; this.projectiles = []; this.particles = []; 
-            
             this.scoreAtStageStart = this.score;
             this.isBossActive = false;
             this.stageTimer = 45000;
             this.lastTime = performance.now();
-            
             if (!this.gameLoopAnimation) {
                  this.gameLoop(this.lastTime);
             }
         }
         
-        continueGame() {
-            this.start(true);
-        }
+        continueGame() { this.start(true); }
 
         async gameOver() {
             this.gameState = 'gameover';
             this.screenShakeIntensity = 0;
             document.getElementById('game-board-wrapper').classList.remove('boss-active-bg');
             await this.refreshHighScores(true);
-
             setTimeout(() => {
                 if (this.gameState === 'gameover') {
                     this.uiManager.gameOverModal.style.display = 'flex';
@@ -780,25 +669,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         gameLoop(timestamp) {
-            if (this.gameState === 'menu') {
+            if (this.gameState !== 'playing') {
                 cancelAnimationFrame(this.gameLoopAnimation);
                 this.gameLoopAnimation = null;
                 return;
             };
-
             const deltaTime = Math.min(timestamp - this.lastTime, 100);
             this.lastTime = timestamp;
-            
             this.update(deltaTime, timestamp);
             this.draw(timestamp);
-            
             this.gameLoopAnimation = requestAnimationFrame((t) => this.gameLoop(t));
         }
 
         checkCollisions() {
             this.projectiles.forEach((p) => {
                 if (!p.isAlive) return;
-
                 if (p.owner === 'player') {
                     this.enemies.forEach((e) => {
                         if (!e.isAlive) return;
@@ -810,25 +695,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                 e.isAlive = false;
                                 this.score += (e instanceof Boss) ? 1000 : 100;
                                 this.createExplosion(e.x, e.y, 15);
-                                if (e instanceof Boss) {
-                                    setTimeout(() => this.nextStage(), 2000);
-                                }
-                            } else {
-                                this.createExplosion(p.x, p.y, 5);
-                            }
+                                if (e instanceof Boss) { setTimeout(() => this.nextStage(), 2000); }
+                            } else { this.createExplosion(p.x, p.y, 5); }
                         }
                     });
                 } else {
                     if (this.player.isAlive) {
                         const dist = Math.hypot(p.x - this.player.x, p.y - this.player.y);
-                        if (dist < this.player.size / 3) {
-                            p.isAlive = false;
-                            this.player.isAlive = false;
-                        }
+                        if (dist < this.player.size / 3) { p.isAlive = false; this.player.isAlive = false; }
                     }
                 }
             });
-
             this.enemies.forEach(e => {
                 if (!e.isAlive || !this.player.isAlive) return;
                 const dist = Math.hypot(this.player.x - e.x, this.player.y - e.y);
@@ -841,9 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         createExplosion(x, y, count) {
-            for (let i = 0; i < count; i++) {
-                this.particles.push(new Particle(x, y));
-            }
+            for (let i = 0; i < count; i++) { this.particles.push(new Particle(x, y)); }
         }
         
         update(deltaTime, timestamp) {
@@ -859,27 +734,18 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (this.gameState === 'playing' && !this.isBossActive && deltaTime > 0) {
                 this.stageTimer -= deltaTime;
-                if (this.stageTimer <= 0) {
-                    this.spawnBoss();
-                }
+                if (this.stageTimer <= 0) { this.spawnBoss(); }
             }
-
-            if (this.gameState === 'playing') {
-                this.waveManager.update(deltaTime || 0);
-            }
+            if (this.gameState === 'playing') { this.waveManager.update(deltaTime || 0); }
             this.enemies.forEach(e => e.update(this.player, this));
-            
             if(this.player.isAlive) this.checkCollisions();
-            
             if (!this.player.isAlive && this.gameState !== 'gameover') {
                  this.createExplosion(this.player.x, this.player.y, 30);
                  this.gameOver();
             }
-
             this.enemies = this.enemies.filter(e => e.isAlive && e.y < this.canvas.height + e.size && e.x > -e.size && e.x < this.canvas.width + e.size);
             this.projectiles = this.projectiles.filter(p => p.isAlive && p.y > -p.height && p.y < this.canvas.height);
             this.particles = this.particles.filter(p => p.lifespan > 0);
-            
             this.uiManager.score.textContent = `SKOR: ${this.score}`;
             this.uiManager.stage.textContent = `PERINGKAT: ${this.stage}`;
         }
@@ -891,13 +757,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const dy = Math.random() * this.screenShakeIntensity - this.screenShakeIntensity / 2;
                 this.ctx.translate(dx, dy);
             }
-
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             if(this.player.isAlive) this.player.draw(this.ctx, timestamp / 100);
             this.projectiles.forEach(p => p.draw(this.ctx));
             this.enemies.forEach(e => e.draw(this.ctx, timestamp / 100));
             this.particles.forEach(p => p.draw(this.ctx));
-
             this.ctx.restore();
         }
 
@@ -907,15 +771,11 @@ document.addEventListener('DOMContentLoaded', () => {
             this.screenShakeIntensity = 3;
             this.enemies = this.enemies.filter(e => !e.isAlive);
             const boss = new Boss(bossTitanConfig, this.canvas.width / 2, -100);
-            
             boss.entryCompleteTime = null; 
             boss.pattern = (e, player) => { 
-                if (e.y < 100) {
-                    e.y += 1; 
-                } else {
-                    if (e.entryCompleteTime === null) {
-                        e.entryCompleteTime = e.age;
-                    }
+                if (e.y < 100) { e.y += 1; } 
+                else {
+                    if (e.entryCompleteTime === null) { e.entryCompleteTime = e.age; }
                     const timeSinceEntry = e.age - e.entryCompleteTime;
                     e.x = e.initialX + Math.sin(timeSinceEntry / 80) * (this.canvas.width / 2 - e.size / 2 - 20);
                 }
