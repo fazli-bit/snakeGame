@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permainan Tembakan Angkasa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            overflow: hidden;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #1a1a1a;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 255, 0, 0.2);
+        }
+        #game-board-wrapper {
+            position: relative;
+        }
+        #game-canvas {
+            width: 450px;
+            height: 600px;
+            border: 2px solid #00ff00;
+            background-color: #000;
+            background-image: radial-gradient(white 0.5px, transparent 0.5px), radial-gradient(white 0.5px, transparent 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            animation: scroll-background 20s linear infinite;
+        }
+        @keyframes scroll-background {
+            from { background-position-y: 0px; }
+            to { background-position-y: 600px; }
+        }
+        .main-menu { text-align: center; }
+        h1, h2 { color: #00ff00; font-family: 'Press Start 2P', cursive; }
+        button {
+            padding: 10px 20px; margin: 5px; border: 1px solid #555; border-radius: 4px;
+            background-color: #444; color: white; cursor: pointer;
+            font-family: 'Press Start 2P', cursive; font-size: 0.8rem;
+        }
+        button:hover { background-color: #555; }
+        button.active { background-color: #00ff00; color: #000; }
+        #start-game-button { background-color: #00ff00; color: #000; font-size: 1rem; padding: 15px 30px; }
+        #ui-layer { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; font-size: 1rem; z-index: 10; pointer-events: none; text-shadow: 2px 2px #000; }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); 
+            display: none; justify-content: center;
+            align-items: center; z-index: 100;
+        }
+        .modal-content {
+            color: #fff; background-color: rgba(26, 26, 26, 0.9); 
+            padding: 30px; border-radius: 15px;
+            border: 4px solid #555; text-align: center; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        .modal-content h2 { margin-top: 0; font-size: 1.8rem; color: #ff4136;}
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div id="main-menu">
+            <h1>TEMBAKAN ANGKASA</h1>
+            <p id="game-version"></p>
+            <h2>PILIH KAPAL</h2>
+            <div id="ship-selection"></div>
+            <button id="start-game-button">MULA</button>
+        </div>
+        
+        <div id="game-area" style="display: none;">
+            <div id="game-board-wrapper">
+                 <canvas id="game-canvas" width="450" height="600"></canvas>
+                 <div id="ui-layer">
+                     <span id="score">SKOR: 0</span>
+                     <span id="stage">PERINGKAT: 1</span>
+                 </div>
+            </div>
+        </div>
+
+        <div id="game-over-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2>PERMAINAN TAMAT</h2>
+                <button id="continue-button">SAMBUNG</button>
+                <button id="main-menu-button">MENU UTAMA</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const GAME_VERSION = "0.1.5";
+    
+    // --- KONFIGURASI ASET DARI PEREKA ---
+    const interceptorConfig = { "id": "interceptor", "name": "Interceptor", "type": "Pemain", "drawOrder": [ "engineFlame", "body", "cockpit", "wings" ], "parts": { "body": { "shape": "polygon", "color": "#c0c0c0", "x": 0, "y": 0, "rotation": 0, "points": [ 0, -25, -15, 20, 0, 10, 15, 20 ], "scaleX": 100, "scaleY": 100 }, "cockpit": { "shape": "polygon", "color": "#4d94ff", "x": 0, "y": -5, "rotation": 0, "points": [ 0, -15, -8, 5, 8, 5 ], "scaleX": 67, "scaleY": 100 }, "wings": { "shape": "polygon", "color": "#a0a0a0", "x": 0, "y": 13, "rotation": 0, "points": [ -25, 0, 25, 0, 0, -10 ], "scaleX": 126, "scaleY": 118 }, "engineFlame": { "shape": "polygon", "color": "#ffcc00", "x": 0, "y": 16, "rotation": 0, "points": [ -7, 0, 7, 0, 0, 15 ], "scaleX": 100, "scaleY": 100, "animation": { "property": "opacity", "speed": 10, "amplitude": 0.5 } } } };
+    const assaultConfig = { "id": "assault", "name": "Assault", "type": "Pemain", "drawOrder": [ "body", "wings", "cockpit", "cannons" ], "parts": { "body": { "shape": "rect", "color": "#808080", "x": 0, "y": 0, "rotation": 0, "width": 49, "height": 49 }, "wings": { "shape": "rect", "color": "#a0a0a0", "x": 0, "y": 0, "rotation": 45, "width": 50, "height": 47 }, "cockpit": { "shape": "rect", "color": "#ff6600", "x": 0, "y": 19, "rotation": 0, "width": 24, "height": 22 }, "cannons": { "shape": "rect", "color": "#666666", "x": 0, "y": -2, "rotation": 89, "width": 53, "height": 5 } } };
+    const bomberConfig = { "id": "bomber", "name": "Bomber", "type": "Pemain", "drawOrder": [ "body", "wings", "pods" ], "parts": { "body": { "shape": "rect", "color": "#003300", "x": 0, "y": -1, "rotation": 0, "width": 19, "height": 49 }, "wings": { "shape": "polygon", "color": "#006400", "x": 0, "y": 19, "rotation": 180, "points": [ -40, 0, 40, 0, 20, 10, -20, 10 ], "scaleX": 126, "scaleY": 101 }, "pods": { "shape": "polygon", "color": "#556b2f", "x": 0, "y": -26, "rotation": 0, "points": [ -10, 10, 10, 10, 0, -10 ], "scaleX": 83, "scaleY": 200 } } };
+    const droneConfig = { "id": "drone", "name": "Drone", "type": "Musuh", "hp": 1, "drawOrder": [ "body", "eye" ], "parts": { "body": { "shape": "circle", "color": "#4b0082", "x": 0, "y": 0, "rotation": 0, "r": 20 }, "eye": { "shape": "circle", "color": "#ff0000", "x": 0, "y": 8, "rotation": 0, "r": 7, "animation": { "property": "opacity", "speed": 2, "amplitude": 0.5 } } } };
+    const fighterConfig = { "id": "fighter", "name": "Fighter", "type": "Musuh", "hp": 2, "drawOrder": [ "body", "cockpit" ], "parts": { "body": { "shape": "polygon", "color": "#8b0000", "x": 0, "y": 0, "rotation": 0, "points": [ 0, -20, -25, 20, 0, 10, 25, 20 ], "scaleX": 140, "scaleY": 115 }, "cockpit": { "shape": "polygon", "color": "#363636", "x": 0, "y": -2, "rotation": 179, "points": [ 0, -10, -5, 5, 5, 5 ], "scaleX": 159, "scaleY": 100 } } };
+    const cruiserConfig = { "id": "cruiser", "name": "Cruiser", "type": "Musuh", "hp": 5, "drawOrder": [ "lowerHull", "upperHull", "bridge" ], "parts": { "lowerHull": { "shape": "rect", "color": "#800000", "x": 0, "y": 0, "rotation": 0, "width": 50, "height": 25 }, "upperHull": { "shape": "rect", "color": "#a52a2a", "x": 0, "y": -2, "rotation": 0, "width": 30, "height": 40 }, "bridge": { "shape": "rect", "color": "#ffc0cb", "x": 0, "y": -12, "rotation": 0, "width": 10, "height": 15 } } };
+    const scoutConfig = { "id": "scout", "name": "Scout", "type": "Musuh", "hp": 1, "drawOrder": [ "wings", "body" ], "parts": { "body": { "shape": "polygon", "color": "#00ff00", "x": 0, "y": 5, "rotation": 0, "points": [ 0, -15, -10, 10, 10, 10 ], "scaleX": 156, "scaleY": 81 }, "wings": { "shape": "polygon", "color": "#adff2f", "x": 0, "y": 0, "rotation": 0, "points": [ -20, 0, 0, -10, 20, 0, 0, 5 ], "scaleX": 140, "scaleY": 165 } } };
+    const kamikazeConfig = { "id": "kamikaze", "name": "Kamikaze", "type": "Musuh", "hp": 1, "drawOrder": [ "body", "stripes" ], "parts": { "body": { "shape": "polygon", "color": "#444444", "x": 0, "y": 0, "rotation": 0, "points": [ 0, -25, -10, 25, 10, 25 ], "scaleX": 200, "scaleY": 130 }, "stripes": { "shape": "rect", "color": "#ffff00", "x": 0, "y": 17, "rotation": 0, "width": 14, "height": 22 } } };
+    const bossTitanConfig = { "id": "boss-titan", "name": "Boss Titan", "type": "Boss", "hp": 50, "drawOrder": [ "base", "armor", "bridge", "mainCannon", "sideCannons" ], "parts": { "base": { "shape": "rect", "color": "#696969", "x": 0, "y": 0, "rotation": 0, "width": 80, "height": 80 }, "armor": { "shape": "rect", "color": "#808080", "x": 0, "y": 0, "rotation": 0, "width": 100, "height": 36 }, "bridge": { "shape": "rect", "color": "#dcdcdc", "x": 0, "y": 16, "rotation": 0, "width": 51, "height": 21 }, "mainCannon": { "shape": "circle", "color": "#ff4500", "x": 0, "y": -9, "rotation": 0, "r": 12, "animation": { "property": "opacity", "speed": 1, "amplitude": 0.5 } }, "sideCannons": { "shape": "rect", "color": "#a9a9a9", "x": 0, "y": 2, "rotation": 0, "width": 27, "height": 32 } } };
+    
+    const playerConfigs = { interceptor: interceptorConfig, assault: assaultConfig, bomber: bomberConfig };
+    const enemyTypes = { drone: droneConfig, fighter: fighterConfig, cruiser: cruiserConfig, scout: scoutConfig, kamikaze: kamikazeConfig };
+    
+    // --- KELAS-KELAS PERMAINAN ---
+    
+    class GameObject {
+        constructor(config, x, y, size) {
+            this.config = config; this.x = x; this.y = y; this.size = size; this.isAlive = true;
+        }
+
+        draw(ctx, time) {
+            const scale = this.size / 100;
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            this.config.drawOrder.forEach(partName => {
+                const part = this.config.parts[partName];
+                if (part) this.drawPart(ctx, part, scale, time);
+            });
+            ctx.restore();
+        }
+
+        drawPart(ctx, part, s, time) {
+            ctx.save();
+            ctx.fillStyle = part.color;
+            let animX = 0, animY = 0;
+            if (part.animation) {
+                const animValue = Math.sin(time * part.animation.speed) * part.animation.amplitude;
+                if (part.animation.property === 'y') animY = animValue;
+                if (part.animation.property === 'x') animX = animValue;
+                if (part.animation.property === 'opacity') ctx.globalAlpha = 0.5 + (animValue + part.animation.amplitude) / (part.animation.amplitude * 2);
+            }
+            ctx.translate(((part.x || 0) + animX) * s, ((part.y || 0) + animY) * s);
+            ctx.rotate((part.rotation || 0) * Math.PI / 180);
+            switch (part.shape) {
+                case 'polygon':
+                    ctx.beginPath();
+                    const scaleX = (part.scaleX || 100) / 100;
+                    const scaleY = (part.scaleY || 100) / 100;
+                    const scaledPoints = part.points.map((p, i) => i % 2 === 0 ? p * scaleX : p * scaleY);
+                    ctx.moveTo(scaledPoints[0] * s, scaledPoints[1] * s);
+                    for (let i = 2; i < scaledPoints.length; i += 2) ctx.lineTo(scaledPoints[i] * s, scaledPoints[i+1] * s);
+                    ctx.closePath();
+                    ctx.fill();
+                    break;
+                case 'rect': ctx.fillRect(-(part.width / 2) * s, -(part.height / 2) * s, part.width * s, part.height * s); break;
+                case 'circle': ctx.beginPath(); ctx.arc(0, 0, part.r * s, 0, Math.PI * 2); ctx.fill(); break;
+            }
+            ctx.restore();
+        }
+    }
+
+    class Player extends GameObject {
+        constructor(config, boardWidth, boardHeight) {
+            super(config, boardWidth / 2, boardHeight - 50, 40);
+            this.boardWidth = boardWidth; this.boardHeight = boardHeight;
+            this.speed = 5; this.canShoot = true; this.shootCooldown = 200;
+        }
+        update(keys) {
+            let dx = 0, dy = 0;
+            if (keys['ArrowLeft'] || keys['a']) dx = -1; if (keys['ArrowRight'] || keys['d']) dx = 1;
+            if (keys['ArrowUp'] || keys['w']) dy = -1; if (keys['ArrowDown'] || keys['s']) dy = 1;
+            this.x += dx * this.speed; this.y += dy * this.speed;
+            if (this.x < this.size / 2) this.x = this.size / 2;
+            if (this.x > this.boardWidth - this.size / 2) this.x = this.boardWidth - this.size / 2;
+            if (this.y < this.size / 2) this.y = this.size / 2;
+            if (this.y > this.boardHeight - this.size / 2) this.y = this.boardHeight - this.size / 2;
+        }
+        shoot() {
+            if (this.canShoot) {
+                this.canShoot = false;
+                setTimeout(() => { this.canShoot = true; }, this.shootCooldown);
+                return new Projectile(this.x, this.y - 20, 'player');
+            }
+            return null;
+        }
+    }
+    
+    class Enemy extends GameObject {
+        constructor(config, x, y) {
+            super(config, x, y, 35);
+            this.hp = config.hp || 1;
+            this.pattern = null; 
+            this.initialX = x; this.initialY = y; this.age = 0;
+            this.canShoot = true;
+            this.shootCooldown = 2000 + Math.random() * 2000;
+        }
+        update(player, game) { 
+            if (this.pattern) this.pattern(this, player);
+            this.age++;
+            if (this.y > 0 && this.canShoot && Math.random() < 0.01) {
+                const p = this.shoot();
+                if (p) game.projectiles.push(p);
+            }
+        }
+        shoot() {
+            this.canShoot = false;
+            setTimeout(() => { this.canShoot = true; }, this.shootCooldown);
+            return new Projectile(this.x, this.y + this.size / 2, 'enemy');
+        }
+    }
+
+    class Boss extends Enemy {
+        constructor(config, x, y) {
+            super(config, x, y);
+            this.size = 120;
+            this.shootCooldown = 800; // Tembak lebih laju
+            this.attackPatternCounter = 0;
+        }
+        update(player, game) {
+             if (this.pattern) this.pattern(this, player);
+            this.age++;
+            if (this.y > 0 && this.canShoot && Math.random() < 0.05) {
+                this.shoot(game);
+            }
+        }
+
+        shoot(game) {
+            this.canShoot = false;
+            setTimeout(() => { this.canShoot = true; }, this.shootCooldown);
+            this.attackPatternCounter++;
+            if (this.attackPatternCounter % 4 === 0) { // Serangan serak
+                game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', -2, 4));
+                game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', 0, 5));
+                game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', 2, 4));
+            } else { // Serangan lurus
+                game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', 0, 6));
+            }
+        }
+    }
+
+    class Projectile {
+        constructor(x, y, owner, dx = 0, dy = (owner === 'player' ? -8 : 5)) {
+            this.x = x; this.y = y; this.owner = owner;
+            this.width = 4; this.height = 10; this.isAlive = true;
+            this.dx = dx; this.dy = dy;
+        }
+        update() { this.x += this.dx; this.y += this.dy; }
+        draw(ctx) {
+            ctx.fillStyle = this.owner === 'player' ? '#00ff00' : '#ff0000';
+            ctx.fillRect(this.x - this.width/2, this.y, this.width, this.height);
+        }
+    }
+
+    class Particle {
+        constructor(x, y) {
+            this.x = x; this.y = y;
+            this.size = Math.random() * 3 + 1;
+            this.speedX = Math.random() * 3 - 1.5;
+            this.speedY = Math.random() * 3 - 1.5;
+            this.lifespan = 100;
+            this.color = `hsl(${Math.random() * 60 + 20}, 100%, 50%)`;
+        }
+        update() {
+            this.x += this.speedX; this.y += this.speedY; this.lifespan--;
+        }
+        draw(ctx) {
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = this.lifespan / 100;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+    }
+    
+    // --- PENGURUS PERMAINAN ---
+
+    class WaveManager {
+        constructor(game) {
+            this.game = game;
+            this.waveTimer = 3000;
+            this.waveCooldown = 5000;
+            this.patterns = [this.spawnLine, this.spawnV, this.spawnSides];
+        }
+
+        update(deltaTime) {
+            if (this.game.isBossActive) return;
+            this.waveTimer -= deltaTime;
+            if (this.waveTimer <= 0) {
+                const pattern = this.patterns[Math.floor(Math.random() * this.patterns.length)];
+                pattern.call(this, this.game);
+                this.waveTimer = this.waveCooldown;
+            }
+        }
+
+        spawnLine(game) {
+            const enemyType = Math.random() < 0.7 ? 'drone' : 'fighter';
+            for (let i = 0; i < 5; i++) {
+                const enemy = new Enemy(enemyTypes[enemyType], 50 + i * 80, -50);
+                enemy.pattern = (e) => { e.y += 2 * (1 + game.stage * 0.1); };
+                game.enemies.push(enemy);
+            }
+        }
+
+        spawnV(game) {
+            const enemyType = 'fighter';
+            for (let i = -2; i <= 2; i++) {
+                const enemy = new Enemy(enemyTypes[enemyType], game.canvas.width / 2 + i * 40, -50 - Math.abs(i) * 30);
+                enemy.pattern = (e) => { e.y += 2.5 * (1 + game.stage * 0.1); };
+                game.enemies.push(enemy);
+            }
+        }
+
+        spawnSides(game) {
+            const enemyType = 'scout';
+            const startX = Math.random() < 0.5 ? -30 : game.canvas.width + 30;
+            const speedX = (startX < 0 ? 3 : -3) * (1 + game.stage * 0.1);
+            for (let i = 0; i < 3; i++) {
+                const enemy = new Enemy(enemyTypes[enemyType], startX, 100 + i * 50);
+                enemy.pattern = (e) => { e.x += speedX; e.y += 0.5; };
+                game.enemies.push(enemy);
+            }
+        }
+    }
+
+    class UIManager {
+        constructor() {
+            this.mainMenu = document.getElementById('main-menu');
+            this.gameArea = document.getElementById('game-area');
+            this.gameOverModal = document.getElementById('game-over-modal');
+            this.score = document.getElementById('score');
+            this.stage = document.getElementById('stage');
+            this.shipSelection = document.getElementById('ship-selection');
+        }
+        showMenu() {
+            this.gameArea.style.display = 'none';
+            this.gameOverModal.style.display = 'none';
+            this.mainMenu.style.display = 'block';
+        }
+    }
+    
+    class Game {
+        constructor() {
+            this.canvas = document.getElementById('game-canvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.uiManager = new UIManager();
+            document.getElementById('game-version').textContent = `v${GAME_VERSION}`;
+            
+            this.gameState = 'menu'; 
+            this.keys = {}; 
+            this.player = null;
+            this.enemies = []; 
+            this.projectiles = []; 
+            this.particles = [];
+            this.stage = 1; 
+            this.score = 0;
+            this.scoreAtStageStart = 0;
+            
+            this.waveManager = new WaveManager(this);
+            this.stageTimer = 45000;
+            this.isBossActive = false;
+            this.lastTime = 0;
+            this.gameLoopAnimation = null;
+
+            this.setupShipSelection(); 
+            this.setupEventListeners();
+        }
+        
+        setupShipSelection() {
+            Object.values(playerConfigs).forEach((config, index) => {
+                const btn = document.createElement('button');
+                btn.textContent = config.name;
+                btn.dataset.configId = config.id;
+                if (index === 0) btn.classList.add('active');
+                btn.onclick = () => {
+                    this.uiManager.shipSelection.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                };
+                this.uiManager.shipSelection.appendChild(btn);
+            });
+        }
+        
+        setupEventListeners() {
+            document.getElementById('start-game-button').addEventListener('click', () => this.start());
+            document.getElementById('main-menu-button').addEventListener('click', () => { 
+                this.gameState = 'menu';
+                this.uiManager.showMenu();
+            });
+            document.getElementById('continue-button').addEventListener('click', () => this.continueGame());
+            window.addEventListener('keydown', (e) => this.keys[e.key] = true);
+            window.addEventListener('keyup', (e) => this.keys[e.key] = false);
+        }
+
+        start(isContinuing = false) {
+            this.gameState = 'playing';
+            this.uiManager.mainMenu.style.display = 'none'; 
+            this.uiManager.gameArea.style.display = 'block';
+            this.uiManager.gameOverModal.style.display = 'none';
+
+            if (!isContinuing) {
+                this.stage = 1;
+                this.score = 0;
+            } else {
+                this.score = this.scoreAtStageStart; // Restore score to start of stage
+            }
+            
+            const selectedConfigId = this.uiManager.shipSelection.querySelector('button.active').dataset.configId;
+            this.player = new Player(playerConfigs[selectedConfigId], this.canvas.width, this.canvas.height);
+            this.enemies = []; 
+            this.projectiles = []; 
+            this.particles = []; 
+            
+            this.isBossActive = false;
+            this.stageTimer = 45000;
+            this.lastTime = performance.now();
+            
+            if (!this.gameLoopAnimation) {
+                 this.gameLoop(this.lastTime);
+            }
+        }
+        
+        continueGame() {
+            this.start(true);
+        }
+
+        gameOver() {
+            this.gameState = 'gameover';
+            setTimeout(() => {
+                 if (this.gameState === 'gameover') {
+                    this.uiManager.gameOverModal.style.display = 'flex';
+                 }
+            }, 1500);
+        }
+        
+        gameLoop(timestamp) {
+            if (this.gameState === 'menu') {
+                this.gameLoopAnimation = null;
+                return;
+            };
+
+            const deltaTime = Math.min(timestamp - this.lastTime, 100);
+            this.lastTime = timestamp;
+            
+            this.update(deltaTime, timestamp);
+            this.draw(timestamp);
+            
+            this.gameLoopAnimation = requestAnimationFrame((t) => this.gameLoop(t));
+        }
+
+        checkCollisions() {
+            this.projectiles.forEach((p) => {
+                if (!p.isAlive) return;
+
+                if (p.owner === 'player') {
+                    this.enemies.forEach((e) => {
+                        if (!e.isAlive) return;
+                        const dist = Math.hypot(p.x - e.x, p.y - e.y);
+                        if (dist < e.size / 2 + 5) {
+                            p.isAlive = false;
+                            e.hp--;
+                            if (e.hp <= 0) {
+                                e.isAlive = false;
+                                this.score += (e instanceof Boss) ? 1000 : 100;
+                                this.createExplosion(e.x, e.y, 15);
+                            } else {
+                                this.createExplosion(p.x, p.y, 5);
+                            }
+                        }
+                    });
+                } else { // Peluru musuh
+                    if (this.player.isAlive) {
+                        const dist = Math.hypot(p.x - this.player.x, p.y - this.player.y);
+                        if (dist < this.player.size / 3) {
+                            p.isAlive = false;
+                            this.player.isAlive = false;
+                            this.createExplosion(this.player.x, this.player.y, 30);
+                        }
+                    }
+                }
+            });
+
+            this.enemies.forEach(e => {
+                if (!e.isAlive || !this.player.isAlive) return;
+                const dist = Math.hypot(this.player.x - e.x, this.player.y - e.y);
+                if (dist < (this.player.size / 3 + e.size / 3)) {
+                    this.player.isAlive = false;
+                    e.isAlive = false;
+                    this.createExplosion(this.player.x, this.player.y, 30);
+                    this.createExplosion(e.x, e.y, 15);
+                }
+            });
+        }
+
+        createExplosion(x, y, count) {
+            for (let i = 0; i < count; i++) {
+                this.particles.push(new Particle(x, y));
+            }
+        }
+        
+        update(deltaTime, timestamp) {
+            if (this.gameState === 'playing') {
+                this.player.update(this.keys);
+                if (this.keys[' ']) {
+                    const p = this.player.shoot();
+                    if (p) this.projectiles.push(p);
+                }
+            }
+            this.projectiles.forEach(p => p.update());
+            this.particles.forEach(p => p.update());
+            
+            if (this.gameState === 'playing' && !this.isBossActive && deltaTime > 0) {
+                this.stageTimer -= deltaTime;
+                if (this.stageTimer <= 0) {
+                    this.spawnBoss();
+                }
+            }
+
+            if (this.gameState === 'playing') {
+                this.waveManager.update(deltaTime || 0);
+            }
+            this.enemies.forEach(e => e.update(this.player, this));
+            
+            if(this.player.isAlive) this.checkCollisions();
+            else if (this.gameState !== 'gameover') this.gameOver();
+
+            this.enemies = this.enemies.filter(e => e.isAlive && e.y < this.canvas.height + e.size);
+            this.projectiles = this.projectiles.filter(p => p.isAlive && p.y > -p.height && p.y < this.canvas.height);
+            this.particles = this.particles.filter(p => p.lifespan > 0);
+            
+            if (this.isBossActive && this.enemies.length > 0 && this.enemies.every(e => !e.isAlive || !(e instanceof Boss))) {
+                this.nextStage();
+            }
+
+            this.uiManager.score.textContent = `SKOR: ${this.score}`;
+            this.uiManager.stage.textContent = `PERINGKAT: ${this.stage}`;
+        }
+
+        draw(timestamp) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            if(this.player.isAlive) this.player.draw(this.ctx, timestamp / 100);
+            this.projectiles.forEach(p => p.draw(this.ctx));
+            this.enemies.forEach(e => e.draw(this.ctx, timestamp / 100));
+            this.particles.forEach(p => p.draw(this.ctx));
+        }
+
+        spawnBoss() {
+            this.isBossActive = true;
+            const boss = new Boss(bossTitanConfig, this.canvas.width / 2, -100);
+            boss.pattern = (e, player) => { 
+                if (e.y < 100) {
+                    e.y += 1; 
+                } else {
+                    e.x = e.initialX + Math.sin(e.age / 80) * (this.canvas.width / 2 - e.size / 2 - 20);
+                }
+            };
+            this.enemies.push(boss);
+        }
+
+        nextStage() {
+            this.stage++;
+            this.score += 1000;
+            this.scoreAtStageStart = this.score;
+            this.isBossActive = false;
+            this.stageTimer = 45000;
+            this.waveManager.waveTimer = 3000;
+        }
+    }
+    
+    new Game();
+});
+</script>
+
+</body>
+</html>
+
