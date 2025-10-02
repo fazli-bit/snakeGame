@@ -14,7 +14,6 @@
             overflow: hidden;
             touch-action: none;
         }
-        /* Stail untuk menu utama */
         .game-container {
             display: flex;
             justify-content: center;
@@ -29,32 +28,39 @@
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 255, 0, 0.2);
             text-align: center;
+            /* PENAMBAHBAIKAN: Had lebar dikurangkan */
+            max-width: 640px;
+            width: 90%;
         }
 
-        /* Reka letak untuk paparan permainan aktif */
         .game-container.game-active-layout {
             flex-direction: column;
             justify-content: flex-start;
-            align-items: stretch;
+            align-items: center;
             padding: 0;
+            /* PENAMBAHBAIKAN: Had lebar dikurangkan */
+            max-width: 640px; 
+            margin: 0 auto;
         }
         #game-area {
-            flex: 2.5; /* Nisbah untuk paparan permainan */
+            flex: 2.5; 
             position: relative;
             background-color: #000;
             display: flex;
             justify-content: center;
             align-items: center;
+            width: 100%;
         }
         #gamepad-area {
-            flex: 1; /* Nisbah untuk gamepad */
+            flex: 1; 
             background-color: #111;
             border-top: 4px solid #00ff00;
-            display: flex;
+            display: none; /* Disembunyikan secara lalai, dikawal oleh JS */
             justify-content: space-between;
             align-items: center;
             padding: 10px 30px;
             box-sizing: border-box;
+            width: 100%;
         }
         
         #game-board-wrapper {
@@ -77,16 +83,18 @@
             to { background-position-y: 100%; }
         }
         
-        h1, h2 { color: #00ff00; font-family: 'Press Start 2P', cursive; }
+        h1, h2, h3 { color: #00ff00; font-family: 'Press Start 2P', cursive; }
 
-        #ship-selection { display: flex; gap: 20px; justify-content: center; align-items: center; }
+        #ship-selection { display: flex; gap: 20px; justify-content: center; align-items: center; margin-bottom: 20px; }
         #ship-selection button { background: none; border: 2px solid transparent; border-radius: 8px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
         #ship-selection img { width: 80px; height: 80px; object-fit: contain; }
         #ship-selection p { margin: 0; font-size: 0.7rem; color: #ccc; }
         #ship-selection button.active { border-color: #00ff00; background-color: rgba(0, 255, 0, 0.1); }
         #ship-selection button.active p { color: #00ff00; }
-        #start-game-button { background-color: #00ff00; color: #000; font-size: 1rem; padding: 15px 30px; margin-top: 15px; border: none; border-radius: 4px;}
+        #start-game-button { background-color: #00ff00; color: #000; font-size: 1rem; padding: 15px 30px; margin-top: 15px; border: none; border-radius: 4px; cursor: pointer;}
+        
         #ui-layer { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; font-size: 1rem; z-index: 10; pointer-events: none; text-shadow: 2px 2px #000; }
+        #player-stats { display: flex; gap: 20px; }
         
         #game-board-wrapper.boss-active-bg #game-canvas { animation-duration: 5s; }
         #game-board-wrapper.boss-active-bg::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(ellipse at center, rgba(255,0,0,0.4) 0%,rgba(255,0,0,0) 70%); z-index: 5; pointer-events: none; animation: pulse-red 2s infinite; }
@@ -108,32 +116,40 @@
         .highscore-list li, .highscore-columns-shared li { margin-bottom: 8px; color: #f0f0f0; }
         .highscore-list li span, .highscore-columns-shared li span { color: #ffff00; float: right; }
 
-        /* Stail Gamepad */
-        #joystick-area {
-            width: 120px; height: 120px; background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 50%; position: relative;
+        #joystick-area { width: 120px; height: 120px; background-color: rgba(255, 255, 255, 0.1); border-radius: 50%; position: relative; }
+        #joystick-handle { width: 60px; height: 60px; background-color: rgba(255, 255, 255, 0.3); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 50%; position: absolute; top: 30px; left: 30px; }
+        #action-buttons { display: flex; align-items: center; gap: 20px; }
+        .action-button { width: 80px; height: 80px; border-radius: 50%; color: white; font-size: 2rem; display: flex; justify-content: center; align-items: center; border: 2px solid; }
+        #fire-button { background-color: rgba(255, 0, 0, 0.3); border-color: rgba(255, 0, 0, 0.6); }
+        #special-attack-button { background-color: rgba(0, 100, 255, 0.3); border-color: rgba(0, 100, 255, 0.6); }
+        
+        /* Menu Arahan */
+        #toggle-instructions-button {
+            background-color: transparent;
+            border: 2px solid #555;
+            color: #ccc;
+            padding: 8px 15px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 30px;
         }
-        #joystick-handle {
-            width: 60px; height: 60px; background-color: rgba(255, 255, 255, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 50%;
-            position: absolute; top: 30px; left: 30px;
+        #toggle-instructions-button:hover { background-color: #333; }
+        #instructions {
+            border: 2px solid #555;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+            text-align: left;
+            font-size: 0.7rem;
+            line-height: 1.5;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
         }
-        #action-buttons {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        .action-button {
-            width: 80px; height: 80px; border-radius: 50%; color: white;
-            font-size: 2rem; display: flex; justify-content: center;
-            align-items: center; border: 2px solid;
-        }
-        #fire-button {
-            background-color: rgba(255, 0, 0, 0.3); border-color: rgba(255, 0, 0, 0.6);
-        }
-        #special-attack-button {
-            background-color: rgba(0, 100, 255, 0.3); border-color: rgba(0, 100, 255, 0.6);
-        }
+        #instructions h3 { margin-top: 0; text-align: center;}
+        #instructions span { color: #ffff00; }
 
     </style>
 </head>
@@ -146,6 +162,18 @@
             <h2>PILIH KAPAL</h2>
             <div id="ship-selection"></div>
             <button id="start-game-button">MULA</button>
+            <button id="toggle-instructions-button">TUNJUK ARAHAN</button>
+            <div id="instructions" style="display: none;">
+                <h3>ARAHAN</h3>
+                <b>Papan Kekunci:</b><br>
+                <span>Anak Panah/WASD:</span> Bergerak<br>
+                <span>Spacebar:</span> Tembak<br>
+                <span>B:</span> Serangan Istimewa<br>
+                <b>Skrin Sentuh:</b><br>
+                <span>Joystick Kiri:</span> Bergerak<br>
+                <span>Butang Merah:</span> Tembak<br>
+                <span>Butang Biru:</span> Serangan Istimewa
+            </div>
             <div id="highscore-container">
                 <h3>MARKAH TERTINGGI</h3><button id="refresh-scores-button" disabled>🔄</button>
                 <div class="highscore-list">
@@ -158,7 +186,10 @@
             <div id="game-board-wrapper">
                  <canvas id="game-canvas"></canvas>
                  <div id="ui-layer">
-                     <span id="score">SKOR: 0</span>
+                     <div id="player-stats">
+                        <span id="score">SKOR: 0</span>
+                        <span id="bombs">💣: 0</span>
+                     </div>
                      <span id="stage">PERINGKAT: 1</span>
                  </div>
             </div>
@@ -200,8 +231,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const GAME_VERSION = "1.0.6";
+    const GAME_VERSION = "1.1.1";
     
+    // --- KONFIGURASI ASET ---
     const interceptorConfig = { "id": "interceptor", "name": "Interceptor", "type": "Pemain", "drawOrder": [ "engineFlame", "body", "cockpit", "wings" ], "parts": { "body": { "shape": "polygon", "color": "#c0c0c0", "x": 0, "y": 0, "rotation": 0, "points": [ 0, -25, -15, 20, 0, 10, 15, 20 ], "scaleX": 100, "scaleY": 100 }, "cockpit": { "shape": "polygon", "color": "#4d94ff", "x": 0, "y": -5, "rotation": 0, "points": [ 0, -15, -8, 5, 8, 5 ], "scaleX": 67, "scaleY": 100 }, "wings": { "shape": "polygon", "color": "#a0a0a0", "x": 0, "y": 13, "rotation": 0, "points": [ -25, 0, 25, 0, 0, -10 ], "scaleX": 126, "scaleY": 118 }, "engineFlame": { "shape": "polygon", "color": "#ffcc00", "x": 0, "y": 16, "rotation": 0, "points": [ -7, 0, 7, 0, 0, 15 ], "scaleX": 100, "scaleY": 100, "animation": { "property": "opacity", "speed": 10, "amplitude": 0.5 } } } };
     const assaultConfig = { "id": "assault", "name": "Assault", "type": "Pemain", "drawOrder": [ "body", "wings", "cockpit", "cannons" ], "parts": { "body": { "shape": "rect", "color": "#808080", "x": 0, "y": 0, "rotation": 0, "width": 49, "height": 49 }, "wings": { "shape": "rect", "color": "#a0a0a0", "x": 0, "y": 0, "rotation": 45, "width": 50, "height": 47 }, "cockpit": { "shape": "rect", "color": "#ff6600", "x": 0, "y": 19, "rotation": 0, "width": 24, "height": 22 }, "cannons": { "shape": "rect", "color": "#666666", "x": 0, "y": -2, "rotation": 89, "width": 53, "height": 5 } } };
     const bomberConfig = { "id": "bomber", "name": "Bomber", "type": "Pemain", "drawOrder": [ "body", "wings", "pods" ], "parts": { "body": { "shape": "rect", "color": "#003300", "x": 0, "y": -1, "rotation": 0, "width": 19, "height": 49 }, "wings": { "shape": "polygon", "color": "#006400", "x": 0, "y": 19, "rotation": 180, "points": [ -40, 0, 40, 0, 20, 10, -20, 10 ], "scaleX": 126, "scaleY": 101 }, "pods": { "shape": "polygon", "color": "#556b2f", "x": 0, "y": -26, "rotation": 0, "points": [ -10, 10, 10, 10, 0, -10 ], "scaleX": 83, "scaleY": 200 } } };
@@ -220,6 +252,14 @@ document.addEventListener('DOMContentLoaded', () => {
         assault: "https://raw.githubusercontent.com/fazli-bit/snakeGame/refs/heads/png/assault.png",
         bomber: "https://raw.githubusercontent.com/fazli-bit/snakeGame/refs/heads/png/bomber.png"
     };
+    
+    const shipStats = {
+        interceptor: { hp: 1, maxHp: 2, startingBombs: 1, bombPickupAmount: 1, fireRate: 150 },
+        assault: { hp: 2, maxHp: 3, startingBombs: 1, bombPickupAmount: 1, fireRate: 300 },
+        bomber: { hp: 1, maxHp: 2, startingBombs: 2, bombPickupAmount: 2, fireRate: 200 }
+    };
+    
+    // --- KELAS-KELAS PERMAINAN ---
 
     class GameObject {
         constructor(config, x, y, size) { this.config = config; this.x = x; this.y = y; this.size = size; this.isAlive = true; }
@@ -263,15 +303,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     class Player extends GameObject {
-        constructor(config, boardWidth, boardHeight) {
+        constructor(config, stats, boardWidth, boardHeight) {
             super(config, boardWidth / 2, boardHeight - 50, 55);
-            this.boardWidth = boardWidth; this.boardHeight = boardHeight;
-            this.speed = 5; this.canShoot = true; this.shootCooldown = 200;
+            this.boardWidth = boardWidth; 
+            this.boardHeight = boardHeight;
+            this.speed = 5; 
+            this.canShoot = true; 
+            
+            this.hp = stats.hp;
+            this.maxHp = stats.maxHp;
+            this.bombs = stats.startingBombs;
+            this.bombPickupAmount = stats.bombPickupAmount;
+            this.shootCooldown = stats.fireRate;
         }
         update(keys, touchDx, touchDy) {
-            let dx = 0, dy = 0;
-            if (keys['ArrowLeft'] || keys['a']) dx = -1; if (keys['ArrowRight'] || keys['d']) dx = 1;
-            if (keys['ArrowUp'] || keys['w']) dy = -1; if (keys['ArrowDown'] || keys['s']) dy = 1;
+            let dx = 0; 
+            let dy = 0;
+            
+            if (keys['ArrowLeft'] || keys['a']) dx = -1;
+            else if (keys['ArrowRight'] || keys['d']) dx = 1;
+
+            if (keys['ArrowUp'] || keys['w']) dy = -1;
+            else if (keys['ArrowDown'] || keys['s']) dy = 1;
             
             if (touchDx !== 0 || touchDy !== 0) {
                 dx = touchDx;
@@ -291,6 +344,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 return new Projectile(this.x, this.y - 20, 'player');
             }
             return null;
+        }
+        takeDamage() {
+            this.hp--;
+            if (this.hp <= 0) {
+                this.isAlive = false;
+            }
+        }
+        addShield() {
+            if (this.hp < this.maxHp) {
+                this.hp++;
+            }
+        }
+        addBombs() {
+            this.bombs += this.bombPickupAmount;
+        }
+        useBomb(game) {
+            if (this.bombs > 0) {
+                this.bombs--;
+                game.triggerSpecialAttack();
+                return true;
+            }
+            return false;
+        }
+        drawShield(ctx) {
+            if (this.hp <= 1) return;
+            const shieldCount = this.hp - 1;
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            
+            for(let i = 1; i <= shieldCount; i++) {
+                const alpha = 0.2 + (i * 0.2);
+                ctx.fillStyle = `rgba(102, 217, 255, ${alpha})`;
+                ctx.strokeStyle = `rgba(150, 230, 255, ${alpha + 0.2})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, (this.size * 0.5) + (i * 5), Math.PI * 1.15, Math.PI * 1.85);
+                ctx.fill();
+                ctx.stroke();
+            }
+            ctx.restore();
         }
     }
     class Enemy extends GameObject {
@@ -375,6 +468,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    class PowerUp {
+        constructor(x, y, type) {
+            this.x = x;
+            this.y = y;
+            this.type = type; // 'shield' atau 'bomb'
+            this.size = 25;
+            this.speedY = 2;
+            this.isAlive = true;
+        }
+        update() {
+            this.y += this.speedY;
+        }
+        draw(ctx) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            
+            ctx.fillStyle = this.type === 'shield' ? 'rgba(0, 150, 255, 0.8)' : 'rgba(255, 200, 0, 0.8)';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#fff';
+            ctx.font = `${this.size * 0.6}px 'Press Start 2P'`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const text = this.type === 'shield' ? 'S' : 'B';
+            ctx.fillText(text, 0, 2);
+
+            ctx.restore();
+        }
+    }
+    
     class WaveManager {
         constructor(game) {
             this.game = game;
@@ -433,6 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.gameOverModal = document.getElementById('game-over-modal');
             this.score = document.getElementById('score');
             this.stage = document.getElementById('stage');
+            this.bombs = document.getElementById('bombs');
             this.shipSelection = document.getElementById('ship-selection');
             this.highscoreList = document.getElementById('highscore-list');
             this.gosList1 = document.getElementById('gos-list-1');
@@ -448,12 +578,17 @@ document.addEventListener('DOMContentLoaded', () => {
             this.gameOverModal.style.display = 'none';
             this.mainMenu.style.display = 'block';
         }
-        showGame() {
+        showGame(isTouchDevice) {
             this.gameContainer.classList.add('game-active-layout');
             this.mainMenu.style.display = 'none'; 
             this.gameOverModal.style.display = 'none';
             this.gameArea.style.display = 'flex';
-            this.gamepadArea.style.display = 'flex';
+            if(isTouchDevice) {
+                this.gamepadArea.style.display = 'flex';
+            }
+        }
+        updateBombs(count) {
+            this.bombs.textContent = `💣: ${count}`;
         }
         displayHighScores(scores, { list1, list2 = null, limit = 3, showMedals = false }) {
             const medals = ['🥇', '🥈', '🥉'];
@@ -477,15 +612,8 @@ document.addEventListener('DOMContentLoaded', () => {
     class ScoreManager {
         constructor() { this.scores = []; }
         getScores() { return this.scores; }
-        async saveUserScore(db, userId, name, score) {
-            if (true) return;
-        }
-        async loadGlobalScores(db) {
-            if (true) {
-                this.scores = [];
-                return;
-            };
-        }
+        async saveUserScore() { return; }
+        async loadGlobalScores() { this.scores = []; return; }
         isHighScore(score) {
             if (score <= 0) return false;
             if (this.scores.length < 10) return true;
@@ -502,15 +630,32 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('game-version').textContent = `v${GAME_VERSION}`;
             this.gameState = 'menu'; 
             this.keys = {}; 
-            this.player = null; this.enemies = []; this.projectiles = []; this.particles = [];
-            this.stage = 1; this.score = 0; this.scoreAtStageStart = 0;
+            this.player = null; 
+            this.enemies = []; 
+            this.projectiles = []; 
+            this.particles = [];
+            this.powerUps = [];
+            this.stage = 1; 
+            this.score = 0; 
+            this.scoreAtStageStart = 0;
             this.waveManager = new WaveManager(this);
-            this.stageTimer = 45000; this.isBossActive = false;
-            this.lastTime = 0; this.gameLoopAnimation = null;
-            this.touchDx = 0; this.touchDy = 0; this.isTouchFiring = false; this.screenShakeIntensity = 0;
+            this.stageTimer = 45000; 
+            this.isBossActive = false;
+            this.lastTime = 0; 
+            this.gameLoopAnimation = null;
+            this.touchDx = 0; 
+            this.touchDy = 0; 
+            this.isTouchFiring = false; 
+            this.isSpecialAttackPressed = false;
+            this.screenShakeIntensity = 0;
+            this.screenFlashAlpha = 0;
+            
+            this.bombPowerUpDroppedThisStage = false;
+            this.shieldPowerUpDroppedThisStage = false;
+
             this.setupShipSelection(); 
             this.setupEventListeners();
-            this.initializeFirebase();
+            this.refreshHighScores();
         }
         
         setupShipSelection() {
@@ -540,13 +685,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        async initializeFirebase() {
-            if (true) { this.refreshHighScores(); return; };
-        }
-        
         setupEventListeners() {
+            // PEPEJAT DIBETULKAN: Gunakan e.key tanpa toLowerCase()
             window.addEventListener('keydown', (e) => this.keys[e.key] = true);
             window.addEventListener('keyup', (e) => this.keys[e.key] = false);
+
             document.getElementById('start-game-button').addEventListener('click', () => this.start());
             document.getElementById('main-menu-button').addEventListener('click', () => { 
                 this.gameState = 'menu';
@@ -555,13 +698,22 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('continue-button').addEventListener('click', () => this.continueGame());
             document.getElementById('save-score-button').addEventListener('click', async () => {
                 const name = document.getElementById('player-name').value.trim().toUpperCase() || 'PLAYER';
-                await this.scoreManager.saveUserScore(this.db, this.userId, name, this.score);
+                await this.scoreManager.saveUserScore();
                 this.uiManager.newHighscoreEntry.style.display = 'none';
                 this.uiManager.gameOverScores.style.display = 'block';
                 await this.refreshHighScores(true); 
             });
             document.getElementById('refresh-scores-button').addEventListener('click', () => this.refreshHighScores());
             
+            // PENAMBAHBAIKAN: Butang untuk tunjuk/sembunyi arahan
+            document.getElementById('toggle-instructions-button').addEventListener('click', () => {
+                const instructions = document.getElementById('instructions');
+                const button = document.getElementById('toggle-instructions-button');
+                const isHidden = instructions.style.display === 'none';
+                instructions.style.display = isHidden ? 'block' : 'none';
+                button.textContent = isHidden ? 'SEMBUNYI ARAHAN' : 'TUNJUK ARAHAN';
+            });
+
             const joystickArea = document.getElementById('joystick-area');
             const joystickHandle = document.getElementById('joystick-handle');
             const fireButton = document.getElementById('fire-button');
@@ -608,7 +760,8 @@ document.addEventListener('DOMContentLoaded', () => {
             joystickArea.addEventListener('touchcancel', resetJoystick);
             fireButton.addEventListener('touchstart', (e) => { e.preventDefault(); this.isTouchFiring = true; }, { passive: false });
             fireButton.addEventListener('touchend', (e) => { e.preventDefault(); this.isTouchFiring = false; }, { passive: false });
-            specialAttackButton.addEventListener('touchstart', (e) => { e.preventDefault(); console.log('Serangan Istimewa!'); }, { passive: false });
+            specialAttackButton.addEventListener('touchstart', (e) => { e.preventDefault(); this.isSpecialAttackPressed = true; }, { passive: false });
+            specialAttackButton.addEventListener('touchend', (e) => { e.preventDefault(); this.isSpecialAttackPressed = false; }, { passive: false });
         }
 
         async refreshHighScores(isGameOver = false) {
@@ -623,9 +776,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         start(isContinuing = false) {
             this.gameState = 'playing';
-            this.uiManager.showGame();
+            // PEPEJAT DIBETULKAN: Logik untuk tunjuk/sembunyi gamepad
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            this.uiManager.showGame(isTouchDevice);
             
-            // Melaraskan saiz kanvas
             this.canvas.width = this.canvas.offsetWidth;
             this.canvas.height = this.canvas.offsetHeight;
 
@@ -636,8 +790,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.score = 0;
             }
             const selectedConfigId = this.uiManager.shipSelection.querySelector('button.active').dataset.configId;
-            this.player = new Player(playerConfigs[selectedConfigId], this.canvas.width, this.canvas.height);
-            this.enemies = []; this.projectiles = []; this.particles = []; 
+            const stats = shipStats[selectedConfigId];
+            this.player = new Player(playerConfigs[selectedConfigId], stats, this.canvas.width, this.canvas.height);
+            this.enemies = []; this.projectiles = []; this.particles = []; this.powerUps = [];
+            
+            this.bombPowerUpDroppedThisStage = false;
+            this.shieldPowerUpDroppedThisStage = false;
             this.scoreAtStageStart = this.score;
             this.isBossActive = false;
             this.stageTimer = 45000;
@@ -695,14 +853,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                 e.isAlive = false;
                                 this.score += (e instanceof Boss) ? 1000 : 100;
                                 this.createExplosion(e.x, e.y, 15);
+                                this.tryDropPowerUp(e.x, e.y);
                                 if (e instanceof Boss) { setTimeout(() => this.nextStage(), 2000); }
                             } else { this.createExplosion(p.x, p.y, 5); }
                         }
                     });
-                } else {
+                } else { 
                     if (this.player.isAlive) {
                         const dist = Math.hypot(p.x - this.player.x, p.y - this.player.y);
-                        if (dist < this.player.size / 3) { p.isAlive = false; this.player.isAlive = false; }
+                        if (dist < this.player.size / 3) { 
+                            p.isAlive = false; 
+                            this.player.takeDamage();
+                        }
                     }
                 }
             });
@@ -710,9 +872,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!e.isAlive || !this.player.isAlive) return;
                 const dist = Math.hypot(this.player.x - e.x, this.player.y - e.y);
                 if (dist < (this.player.size / 3 + e.size / 3)) {
-                    this.player.isAlive = false;
+                    this.player.takeDamage();
                     e.isAlive = false;
                     this.createExplosion(e.x, e.y, 15);
+                }
+            });
+            this.powerUps.forEach(pu => {
+                if(!pu.isAlive || !this.player.isAlive) return;
+                const dist = Math.hypot(this.player.x - pu.x, this.player.y - pu.y);
+                if (dist < this.player.size / 2 + pu.size / 2) {
+                    if(pu.type === 'shield') {
+                        this.player.addShield();
+                    } else if (pu.type === 'bomb') {
+                        this.player.addBombs();
+                    }
+                    pu.isAlive = false;
                 }
             });
         }
@@ -721,16 +895,52 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let i = 0; i < count; i++) { this.particles.push(new Particle(x, y)); }
         }
         
+        tryDropPowerUp(x, y) {
+            const dropChance = 0.2; // 20%
+            if (Math.random() > dropChance) return;
+            
+            const dropType = Math.random() < 0.5 ? 'shield' : 'bomb';
+            if (dropType === 'shield' && !this.shieldPowerUpDroppedThisStage) {
+                this.powerUps.push(new PowerUp(x, y, 'shield'));
+                this.shieldPowerUpDroppedThisStage = true;
+            } else if (dropType === 'bomb' && !this.bombPowerUpDroppedThisStage) {
+                this.powerUps.push(new PowerUp(x, y, 'bomb'));
+                this.bombPowerUpDroppedThisStage = true;
+            }
+        }
+        
+        triggerSpecialAttack() {
+            this.screenFlashAlpha = 1.0;
+            this.enemies.forEach(e => {
+                if (e.isAlive) {
+                    e.hp -= 5;
+                    if (e.hp <= 0) {
+                        e.isAlive = false;
+                        this.score += (e instanceof Boss) ? 1000 : 100;
+                        this.createExplosion(e.x, e.y, 15);
+                        if (e instanceof Boss) { setTimeout(() => this.nextStage(), 2000); }
+                    }
+                }
+            });
+        }
+        
         update(deltaTime, timestamp) {
-            if (this.gameState === 'playing') {
+            if (this.player && this.gameState === 'playing') {
                 this.player.update(this.keys, this.touchDx, this.touchDy);
                 if (this.keys[' '] || this.isTouchFiring) {
                     const p = this.player.shoot();
                     if (p) this.projectiles.push(p);
                 }
+                if(this.keys['b'] || this.isSpecialAttackPressed) {
+                    if(this.player.useBomb(this)) {
+                        this.keys['b'] = false;
+                        this.isSpecialAttackPressed = false;
+                    }
+                }
             }
             this.projectiles.forEach(p => p.update());
             this.particles.forEach(p => p.update());
+            this.powerUps.forEach(p => p.update());
             
             if (this.gameState === 'playing' && !this.isBossActive && deltaTime > 0) {
                 this.stageTimer -= deltaTime;
@@ -738,16 +948,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (this.gameState === 'playing') { this.waveManager.update(deltaTime || 0); }
             this.enemies.forEach(e => e.update(this.player, this));
-            if(this.player.isAlive) this.checkCollisions();
-            if (!this.player.isAlive && this.gameState !== 'gameover') {
+            
+            if(this.player && this.player.isAlive) this.checkCollisions();
+            
+            if (this.player && !this.player.isAlive && this.gameState !== 'gameover') {
                  this.createExplosion(this.player.x, this.player.y, 30);
                  this.gameOver();
             }
+
             this.enemies = this.enemies.filter(e => e.isAlive && e.y < this.canvas.height + e.size && e.x > -e.size && e.x < this.canvas.width + e.size);
             this.projectiles = this.projectiles.filter(p => p.isAlive && p.y > -p.height && p.y < this.canvas.height);
             this.particles = this.particles.filter(p => p.lifespan > 0);
+            this.powerUps = this.powerUps.filter(p => p.isAlive && p.y < this.canvas.height + p.size);
+            
             this.uiManager.score.textContent = `SKOR: ${this.score}`;
             this.uiManager.stage.textContent = `PERINGKAT: ${this.stage}`;
+            if(this.player) this.uiManager.updateBombs(this.player.bombs);
+            
+            if (this.screenFlashAlpha > 0) {
+                this.screenFlashAlpha -= 0.05;
+            }
         }
 
         draw(timestamp) {
@@ -758,10 +978,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.ctx.translate(dx, dy);
             }
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            if(this.player.isAlive) this.player.draw(this.ctx, timestamp / 100);
+            
+            if(this.player && this.player.isAlive) {
+                this.player.drawShield(this.ctx);
+                this.player.draw(this.ctx, timestamp / 100);
+            }
             this.projectiles.forEach(p => p.draw(this.ctx));
             this.enemies.forEach(e => e.draw(this.ctx, timestamp / 100));
             this.particles.forEach(p => p.draw(this.ctx));
+            this.powerUps.forEach(p => p.draw(this.ctx));
+
+            if (this.screenFlashAlpha > 0) {
+                this.ctx.fillStyle = `rgba(255, 255, 255, ${this.screenFlashAlpha})`;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
             this.ctx.restore();
         }
 
@@ -793,6 +1024,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('game-board-wrapper').classList.remove('boss-active-bg');
             this.stageTimer = 45000;
             this.waveManager.waveTimer = 3000;
+            this.bombPowerUpDroppedThisStage = false;
+            this.shieldPowerUpDroppedThisStage = false;
         }
     }
     
