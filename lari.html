@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pecutan Cyberpunk v0.8.1</title>
+    <title>Pecutan Cyberpunk v0.8.3</title>
     <style>
         body {
             margin: 0;
@@ -15,69 +15,87 @@
             height: 100vh;
             color: #0f0;
             font-family: 'Courier New', Courier, monospace;
-            overflow: hidden; /* Prevent scrolling on mobile */
+            overflow: hidden;
         }
         canvas {
             border: 2px solid #0f0;
             background-color: #0a0a0a;
             max-width: 100%;
             max-height: 100%;
+            flex-shrink: 0; /* BUG FIX: Prevent canvas from shrinking */
         }
         #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* BUG FIX: Center content vertically */
             text-align: center;
+            height: 100vh;
+            width: 100%;
+            box-sizing: border-box;
         }
         h1 {
             font-size: 1.5rem;
-            margin-bottom: 15px;
+            margin-bottom: 5px;
         }
-        /* NEW: Orientation warning */
-        #orientation-warning {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
+        #fullscreenButton {
+            background: none;
+            border: 1px solid #0f0;
             color: #0f0;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            font-size: 1.2rem;
+            padding: 5px 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
         }
-        /* Show warning in portrait mode on touch devices */
+        #mobile-controls {
+            display: none;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 10px;
+        }
+        #mobile-controls button {
+            background-color: #111;
+            border: 1px solid #0f0;
+            color: #0f0;
+            padding: 20px 30px;
+            font-size: 1.2rem;
+            font-family: 'Courier New', Courier, monospace;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Show HTML buttons only in portrait on mobile */
         @media screen and (orientation: portrait) and (hover: none) and (pointer: coarse) {
-            #container {
-                display: none;
-            }
-            #orientation-warning {
+            #mobile-controls {
                 display: flex;
+            }
+        }
+        /* Hide HTML buttons in landscape */
+         @media screen and (orientation: landscape) {
+            #mobile-controls {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
     <div id="container">
-        <h1>Pecutan Cyberpunk - Versi Pembangunan 0.8.1</h1>
+        <h1>Pecutan Cyberpunk - Versi Pembangunan 0.8.3</h1>
+        <button id="fullscreenButton">Skrin Penuh</button>
         <canvas id="gameCanvas"></canvas>
+        <div id="mobile-controls">
+            <button id="dashButton">DASH</button>
+            <button id="jumpButton">LOMPAT</button>
+        </div>
     </div>
-    <!-- NEW: Orientation warning message -->
-    <div id="orientation-warning">
-        <p>Sila putarkan peranti anda ke mod landskap.</p>
-    </div>
-
 
     <script>
         // ... (Sejarah versi sebelumnya) ...
         
-        // --- VERSI 0.8.1: PEMBETULAN UI & PENGALAMAN MUDAH ALIH ---
-        // 1. Membetulkan pepijat di mana butang "Kembali" berubah kedudukan.
-        // 2. Menambah amaran orientasi untuk mod potret pada peranti mudah alih.
-        // 3. Melaksanakan mod skrin penuh apabila permainan dimulakan.
-        // 4. Menambah penskalaan kanvas dinamik.
+        // --- VERSI 0.8.3: PEMBETULAN UI & KAWALAN SENTUHAN ---
+        // 1. Membetulkan semua butang menu & UI yang tidak berfungsi disebabkan isu penskalaan.
+        // 2. Mengembalikan kawalan sentuhan di atas kanvas untuk mod landskap.
+        // 3. Memperbaiki susun atur CSS untuk mengelakkan paparan terpotong.
 
         class InputHandler {
-            constructor(game) {
+            constructor(game, jumpButton, dashButton) {
                 this.game = game;
                 this.keys = [];
                 
@@ -95,30 +113,51 @@
                 this.game.canvas.addEventListener('mousedown', e => this.handlePointerDown(e.offsetX, e.offsetY));
                 this.game.canvas.addEventListener('touchstart', e => {
                     e.preventDefault();
-                    this.handlePointerDown(e.touches[0].clientX - this.game.canvas.getBoundingClientRect().left, e.touches[0].clientY - this.game.canvas.getBoundingClientRect().top);
+                    // Handle multiple touches, just use the first one
+                    const touch = e.touches[0];
+                    this.handlePointerDown(touch.clientX - this.game.canvas.getBoundingClientRect().left, touch.clientY - this.game.canvas.getBoundingClientRect().top);
                 }, { passive: false });
-                 this.game.canvas.addEventListener('touchend', e => {
+                
+                // Clear keys on touch end for all mobile controls
+                window.addEventListener('touchend', e => {
                     e.preventDefault();
                     this.keys = [];
                 }, { passive: false });
+
+                // Handle HTML buttons for portrait mode
+                if (game.isMobile) {
+                    jumpButton.addEventListener('touchstart', e => { e.preventDefault(); this.keys.push(' '); }, { passive: false });
+                    dashButton.addEventListener('touchstart', e => { e.preventDefault(); this.keys.push('Shift'); }, { passive: false });
+                }
             }
 
             handlePointerDown(x, y) {
+                // BUG FIX: Scale click/touch coordinates to match canvas internal resolution
+                const rect = this.game.canvas.getBoundingClientRect();
+                const scaleX = this.game.canvas.width / rect.width;
+                const scaleY = this.game.canvas.height / rect.height;
+                const scaledX = x * scaleX;
+                const scaledY = y * scaleY;
+
                 if (this.game.gameState === 'MENU') {
-                    if (this.isButtonClicked(x, y, this.game.ui.startButton)) this.game.startGame();
-                    if (this.isButtonClicked(x, y, this.game.ui.instructionsButton)) this.game.gameState = 'ARAHAN';
+                    if (this.isButtonClicked(scaledX, scaledY, this.game.ui.startButton)) this.game.startGame();
+                    if (this.isButtonClicked(scaledX, scaledY, this.game.ui.instructionsButton)) this.game.gameState = 'ARAHAN';
                 } else if (this.game.gameState === 'ARAHAN') {
-                    if (this.isButtonClicked(x, y, this.game.ui.instructionsBackButton)) this.game.gameState = 'MENU'; // BUG FIX: Used specific button
+                    if (this.isButtonClicked(scaledX, scaledY, this.game.ui.instructionsBackButton)) this.game.gameState = 'MENU';
                 } else if (this.game.gameState === 'GAME_OVER') {
-                    if (this.isButtonClicked(x, y, this.game.ui.gameOverMenuButton)) this.game.gameState = 'MENU'; // BUG FIX: Used specific button
-                    if (this.isButtonClicked(x, y, this.game.ui.restartButton)) this.game.reset();
+                    if (this.isButtonClicked(scaledX, scaledY, this.game.ui.gameOverMenuButton)) this.game.gameState = 'MENU';
+                    if (this.isButtonClicked(scaledX, scaledY, this.game.ui.restartButton)) this.game.reset();
                 }
 
-                if (this.game.isMobile && this.game.gameState === 'PLAYING') {
-                    if (x > this.game.width / 2) {
-                        if (this.keys.indexOf(' ') === -1) this.keys.push(' ');
-                    } else {
+                // BUG FIX: Handle on-canvas controls for landscape mobile
+                if (this.game.isMobile && this.game.gameState === 'PLAYING' && window.innerWidth > window.innerHeight) {
+                    const distDash = Math.hypot(scaledX - this.game.ui.landscapeDashButton.x, scaledY - this.game.ui.landscapeDashButton.y);
+                    const distJump = Math.hypot(scaledX - this.game.ui.landscapeJumpButton.x, scaledY - this.game.ui.landscapeJumpButton.y);
+
+                    if (distDash < this.game.ui.landscapeDashButton.r) {
                         if (this.keys.indexOf('Shift') === -1) this.keys.push('Shift');
+                    } else if (distJump < this.game.ui.landscapeJumpButton.r) {
+                        if (this.keys.indexOf(' ') === -1) this.keys.push(' ');
                     }
                 }
             }
@@ -130,51 +169,26 @@
 
         class Particle {
             constructor(game, x, y, size, color, speedX, speedY) {
-                this.game = game;
-                this.x = x;
-                this.y = y;
-                this.size = size;
-                this.color = color;
-                this.speedX = speedX;
-                this.speedY = speedY;
-                this.life = 1;
-                this.markedForDeletion = false;
+                this.game = game; this.x = x; this.y = y; this.size = size; this.color = color;
+                this.speedX = speedX; this.speedY = speedY; this.life = 1; this.markedForDeletion = false;
             }
             update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.life -= 0.1;
+                this.x += this.speedX; this.y += this.speedY; this.life -= 0.1;
                 if (this.life <= 0) this.markedForDeletion = true;
             }
             draw(context) {
-                context.save();
-                context.globalAlpha = this.life;
-                context.fillStyle = this.color;
-                context.fillRect(this.x, this.y, this.size, this.size);
-                context.restore();
+                context.save(); context.globalAlpha = this.life; context.fillStyle = this.color;
+                context.fillRect(this.x, this.y, this.size, this.size); context.restore();
             }
         }
 
         class Player {
              constructor(game) {
-                this.game = game;
-                this.width = 30;
-                this.height = 50;
-                this.x = 150; 
-                this.y = this.game.height - this.height - 100;
-                this.vy = 0;
-                this.weight = 0.5;
-                this.jumpStrength = 15;
-                this.shield = 0;
-                this.maxStamina = 5;
-                this.stamina = this.maxStamina;
-                this.staminaRegenTimer = 0;
-                this.staminaRegenInterval = 2000;
-                this.dashCost = 3;
-                this.dashBoost = 0;
-                this.maxDashBoost = 80;
-                this.dashReturnSpeed = 1.0;
-                this.wasOnGround = false;
+                this.game = game; this.width = 30; this.height = 50; this.x = 150; 
+                this.y = this.game.height - this.height - 100; this.vy = 0; this.weight = 0.5;
+                this.jumpStrength = 15; this.shield = 0; this.maxStamina = 5; this.stamina = this.maxStamina;
+                this.staminaRegenTimer = 0; this.staminaRegenInterval = 2000; this.dashCost = 3;
+                this.dashBoost = 0; this.maxDashBoost = 80; this.dashReturnSpeed = 1.0; this.wasOnGround = false;
             }
 
             update(input, deltaTime) {
@@ -183,14 +197,12 @@
                 if (this.stamina < this.maxStamina) {
                     this.staminaRegenTimer += deltaTime;
                     if (this.staminaRegenTimer >= this.staminaRegenInterval) {
-                        this.stamina++;
-                        this.staminaRegenTimer = 0;
+                        this.stamina++; this.staminaRegenTimer = 0;
                     }
                 }
 
                 if (input.keys.includes('Shift') && this.stamina >= this.dashCost && this.dashBoost <= 1) {
-                    this.stamina -= this.dashCost;
-                    this.dashBoost = this.maxDashBoost;
+                    this.stamina -= this.dashCost; this.dashBoost = this.maxDashBoost;
                 }
 
                 if (this.dashBoost > 0) {
@@ -241,25 +253,15 @@
                     const playerBottom = this.y + this.height;
                     const playerIsHorizontallyAligned = (this.x + this.dashBoost) < platform.x + platform.width && (this.x + this.dashBoost) + this.width > platform.x;
                     const detectionWindow = this.vy > 0 ? this.vy : 10;
-
-                    if (this.vy >= 0 && 
-                        playerBottom >= platform.y && 
-                        playerBottom <= platform.y + detectionWindow && 
-                        playerIsHorizontallyAligned) {
-                        this.y = platform.y - this.height;
-                        return true;
+                    if (this.vy >= 0 &&  playerBottom >= platform.y && playerBottom <= platform.y + detectionWindow && playerIsHorizontallyAligned) {
+                        this.y = platform.y - this.height; return true;
                     }
-                }
-                return false;
+                } return false;
             }
             
             respawn(x, y) {
-                this.x = x;
-                this.y = y;
-                this.vy = 0;
-                this.stamina = this.maxStamina;
-                this.dashBoost = 0;
-                this.shield = 0;
+                this.x = x; this.y = y; this.vy = 0; this.stamina = this.maxStamina;
+                this.dashBoost = 0; this.shield = 0;
             }
         }
 
@@ -269,40 +271,26 @@
         
         class Platform {
             constructor(game, x, y, width) {
-                this.game = game;
-                this.x = x;
-                this.y = y;
-                this.width = width;
-                this.markedForDeletion = false;
+                this.game = game; this.x = x; this.y = y; this.width = width; this.markedForDeletion = false;
             }
             update() {
-                this.x -= this.game.speed;
-                if (this.x + this.width < 0) this.markedForDeletion = true;
+                this.x -= this.game.speed; if (this.x + this.width < 0) this.markedForDeletion = true;
             }
             draw(context) {
-                context.fillStyle = '#080';
-                context.fillRect(this.x, this.y, this.width, this.game.height - this.y);
-                context.fillStyle = '#0f0';
-                context.fillRect(this.x, this.y, this.width, 5);
+                context.fillStyle = '#080'; context.fillRect(this.x, this.y, this.width, this.game.height - this.y);
+                context.fillStyle = '#0f0'; context.fillRect(this.x, this.y, this.width, 5);
             }
         }
         
         class Enemy {
             constructor(game, x, y) {
-                this.game = game;
-                this.x = x;
-                this.y = y;
-                this.width = 30;
-                this.height = 30;
-                this.markedForDeletion = false;
+                this.game = game; this.x = x; this.y = y; this.width = 30; this.height = 30; this.markedForDeletion = false;
             }
             update() {
-                this.x -= this.game.speed;
-                if (this.x + this.width < 0) this.markedForDeletion = true;
+                this.x -= this.game.speed; if (this.x + this.width < 0) this.markedForDeletion = true;
             }
             draw(context) {
-                context.fillStyle = '#f00';
-                context.fillRect(this.x, this.y, this.width, this.height);
+                context.fillStyle = '#f00'; context.fillRect(this.x, this.y, this.width, this.height);
             }
         }
 
@@ -312,40 +300,26 @@
 
         class PowerUp {
             constructor(game, x, y) {
-                this.game = game;
-                this.x = x;
-                this.y = y;
-                this.markedForDeletion = false;
+                this.game = game; this.x = x; this.y = y; this.markedForDeletion = false;
             }
              update() {
-                this.x -= this.game.speed;
-                if (this.x + this.width < 0) this.markedForDeletion = true;
+                this.x -= this.game.speed; if (this.x + this.width < 0) this.markedForDeletion = true;
             }
         }
         
         class Shield extends PowerUp {
              constructor(game, x, y) {
-                super(game, x, y);
-                this.width = 20;
-                this.height = 20;
+                super(game, x, y); this.width = 20; this.height = 20;
             }
             draw(context) {
-                context.fillStyle = '#0ff';
-                context.fillRect(this.x, this.y, this.width, this.height);
+                context.fillStyle = '#0ff'; context.fillRect(this.x, this.y, this.width, this.height);
             }
         }
         
         class Layer {
             constructor(game, image, speedModifier, color, shapes) {
-                this.game = game;
-                this.image = image;
-                this.speedModifier = speedModifier;
-                this.color = color;
-                this.shapes = shapes;
-                this.x = 0;
-                this.y = 0;
-                this.width = this.game.width * 2;
-                this.height = this.game.height;
+                this.game = game; this.image = image; this.speedModifier = speedModifier; this.color = color;
+                this.shapes = shapes; this.x = 0; this.y = 0; this.width = this.game.width * 2; this.height = this.game.height;
             }
             update() {
                 if (this.game.gameState !== 'PLAYING' && this.game.gameState !== 'RESPAWNING') return;
@@ -353,9 +327,7 @@
                 if (this.x <= -this.game.width) this.x = 0;
             }
             draw(context) {
-                context.fillStyle = this.color;
-                context.save();
-                context.translate(this.x, this.y);
+                context.fillStyle = this.color; context.save(); context.translate(this.x, this.y);
                 this.shapes.forEach(shape => {
                     context.fillRect(shape.x, shape.y, shape.w, shape.h);
                     context.fillRect(shape.x + this.game.width, shape.y, shape.w, shape.h);
@@ -366,278 +338,157 @@
 
         class Background {
              constructor(game) {
-                this.game = game;
-                this.layers = [];
-                let stars = [];
-                for (let i = 0; i < 50; i++) {
-                    stars.push({
-                        x: Math.random() * game.width,
-                        y: Math.random() * game.height * 0.8,
-                        w: Math.random() * 2,
-                        h: Math.random() * 2
-                    });
-                }
+                this.game = game; this.layers = [];
+                let stars = []; for (let i = 0; i < 50; i++) { stars.push({ x: Math.random() * game.width, y: Math.random() * game.height * 0.8, w: Math.random() * 2, h: Math.random() * 2 }); }
                 this.layers.push(new Layer(game, null, 0.1, '#ccc', stars));
                 
                 let buildings = [];
-                 for (let i = 0; i < 10; i++) {
-                    const w = Math.random() * 50 + 20;
-                    const h = Math.random() * 150 + 50;
-                    buildings.push({
-                        x: Math.random() * game.width,
-                        y: game.height - h,
-                        w: w,
-                        h: h
-                    });
-                }
+                 for (let i = 0; i < 10; i++) { const w = Math.random() * 50 + 20; const h = Math.random() * 150 + 50; buildings.push({ x: Math.random() * game.width, y: game.height - h, w: w, h: h }); }
                 this.layers.push(new Layer(game, null, 0.3, '#222', buildings));
             }
-            update() {
-                this.layers.forEach(layer => layer.update());
-            }
-            draw(context) {
-                 this.layers.forEach(layer => layer.draw(context));
-            }
+            update() { this.layers.forEach(layer => layer.update()); }
+            draw(context) { this.layers.forEach(layer => layer.draw(context)); }
         }
         
         class ScoreManager {
             constructor() {
-                this.score = 0;
-                this.highScore = parseInt(localStorage.getItem('cyberRunnerHighScore')) || 0;
+                this.score = 0; this.highScore = parseInt(localStorage.getItem('cyberRunnerHighScore')) || 0;
             }
-            update() {
-                this.score++;
-            }
-            saveHighScore() {
-                 if (this.score > this.highScore) {
-                    this.highScore = this.score;
-                    localStorage.setItem('cyberRunnerHighScore', this.highScore);
-                }
-            }
-            resetScore() {
-                this.score = 0;
-            }
+            update() { this.score++; }
+            saveHighScore() { if (this.score > this.highScore) { this.highScore = this.score; localStorage.setItem('cyberRunnerHighScore', this.highScore); } }
+            resetScore() { this.score = 0; }
         }
 
         class UIManager {
             constructor(game) {
-                this.game = game;
-                this.fontSize = 24;
-                this.fontFamily = 'Courier New';
-                // Button definitions - BUG FIX: Made separate buttons for each screen
-                this.startButton = { x: this.game.width / 2 - 100, y: 200, w: 200, h: 50 };
-                this.instructionsButton = { x: this.game.width / 2 - 100, y: 270, w: 200, h: 50 };
+                this.game = game; this.fontSize = 24; this.fontFamily = 'Courier New';
+                this.startButton = { x: this.game.width / 2 - 100, y: 180, w: 200, h: 50 };
+                this.instructionsButton = { x: this.game.width / 2 - 100, y: 240, w: 200, h: 50 };
                 this.instructionsBackButton = { x: this.game.width / 2 - 100, y: 330, w: 200, h: 50 };
                 this.restartButton = { x: this.game.width / 2 - 155, y: 200, w: 150, h: 50 };
                 this.gameOverMenuButton = { x: this.game.width / 2 + 5, y: 200, w: 150, h: 50 };
+                // NEW: Landscape on-canvas button definitions
+                this.landscapeDashButton = { x: 80, y: this.game.height - 80, r: 50 };
+                this.landscapeJumpButton = { x: this.game.width - 80, y: this.game.height - 80, r: 50 };
             }
 
             draw(context) {
                 context.save();
                 switch (this.game.gameState) {
-                    case 'MENU':
-                        this.drawMenu(context);
-                        break;
-                    case 'ARAHAN':
-                        this.drawInstructions(context);
-                        break;
-                    case 'PLAYING':
-                    case 'RESPAWNING':
+                    case 'MENU': this.drawMenu(context); break;
+                    case 'ARAHAN': this.drawInstructions(context); break;
+                    case 'PLAYING': case 'RESPAWNING':
                         this.drawHUD(context);
-                        if(this.game.isMobile) this.drawMobileControls(context);
+                        if(this.game.isMobile && window.innerWidth > window.innerHeight) this.drawMobileControls(context);
                         break;
-                    case 'GAME_OVER':
-                        this.drawGameOver(context);
-                        break;
+                    case 'GAME_OVER': this.drawGameOver(context); break;
                 }
                 context.restore();
             }
 
             drawMenu(context) {
-                context.textAlign = 'center';
-                context.fillStyle = '#0f0';
-                context.font = `40px ${this.fontFamily}`;
+                context.textAlign = 'center'; context.fillStyle = '#0f0'; context.font = `40px ${this.fontFamily}`;
                 context.fillText('Pecutan Cyberpunk', this.game.width / 2, 80);
                 this.drawButton(context, this.startButton, 'Mula');
                 this.drawButton(context, this.instructionsButton, 'Arahan');
-                context.font = `20px ${this.fontFamily}`;
-                context.fillText('SKOR TERTINGGI', this.game.width / 2, 350);
-                context.fillText(`🥇 ${this.game.scoreManager.highScore}`, this.game.width / 2, 380);
+                context.font = `14px ${this.fontFamily}`; context.fillStyle = '#aaa';
+                context.fillText('Untuk paparan terbaik, guna mod landskap & skrin penuh.', this.game.width / 2, 305);
+                context.font = `20px ${this.fontFamily}`; context.fillStyle = '#0f0';
+                context.fillText('SKOR TERTINGGI', this.game.width / 2, 340);
+                context.fillText(`🥇 ${this.game.scoreManager.highScore}`, this.game.width / 2, 370);
             }
 
             drawInstructions(context) {
-                context.textAlign = 'center';
-                context.fillStyle = '#fff';
-                context.font = `30px ${this.fontFamily}`;
+                context.textAlign = 'center'; context.fillStyle = '#fff'; context.font = `30px ${this.fontFamily}`;
                 context.fillText('Arahan Permainan', this.game.width / 2, 80);
-                
-                context.font = `20px ${this.fontFamily}`;
-                context.textAlign = 'left';
+                context.font = `20px ${this.fontFamily}`; context.textAlign = 'left';
                 context.fillText('-> Tekan [SPACE] untuk melompat.', 150, 150);
                 context.fillText('-> Tekan [SHIFT] untuk meluru (dash).', 150, 190);
                 context.fillText('-> Elak atau musnahkan dron.', 150, 230);
                 context.fillText('-> Kutip perisai untuk perlindungan.', 150, 270);
-
-                this.drawButton(context, this.instructionsBackButton, 'Kembali'); // BUG FIX: Used specific button
+                this.drawButton(context, this.instructionsBackButton, 'Kembali');
             }
 
             drawGameOver(context) {
-                context.textAlign = 'center';
-                context.fillStyle = 'rgba(0,0,0,0.7)';
+                context.textAlign = 'center'; context.fillStyle = 'rgba(0,0,0,0.7)';
                 context.fillRect(0,0, this.game.width, this.game.height);
-
-                context.fillStyle = '#f00';
-                context.font = `40px ${this.fontFamily}`;
+                context.fillStyle = '#f00'; context.font = `40px ${this.fontFamily}`;
                 context.fillText('PERMAINAN TAMAT', this.game.width / 2, 80);
-
-                context.fillStyle = '#fff';
-                context.font = `24px ${this.fontFamily}`;
+                context.fillStyle = '#fff'; context.font = `24px ${this.fontFamily}`;
                 context.fillText(`Markah Anda: ${this.game.scoreManager.score}`, this.game.width / 2, 140);
-                
                 this.drawButton(context, this.restartButton, 'Sambung');
-                this.drawButton(context, this.gameOverMenuButton, 'Menu Utama'); // BUG FIX: Used specific button
-                 
-                context.font = `20px ${this.fontFamily}`;
-                context.fillText('TOP 10', this.game.width / 2, 280);
+                this.drawButton(context, this.gameOverMenuButton, 'Menu Utama');
+                context.font = `20px ${this.fontFamily}`; context.fillText('TOP 10', this.game.width / 2, 280);
                 context.fillText(`${this.game.scoreManager.highScore}`, this.game.width / 2, 310);
             }
 
             drawHUD(context) {
-                context.fillStyle = '#0f0';
-                context.font = `${this.fontSize}px ${this.fontFamily}`;
+                context.fillStyle = '#0f0'; context.font = `${this.fontSize}px ${this.fontFamily}`;
                 context.textAlign = 'left';
                 context.fillText(`SCORE: ${this.game.scoreManager.score}`, 20, 40);
                 context.fillText(`HI: ${this.game.scoreManager.highScore}`, 20, 70);
-                for(let i = 0; i < this.game.lives; i++) {
-                     context.fillText('♥', 20 + i * 30, 100);
-                }
-                
+                for(let i = 0; i < this.game.lives; i++) { context.fillText('♥', 20 + i * 30, 100); }
                 context.textAlign = 'right';
                 context.fillText(`STAMINA`, this.game.width - 20, 40);
                 for (let i = 0; i < this.game.player.maxStamina; i++) {
-                    context.strokeStyle = '#0f0';
-                    context.strokeRect(this.game.width - 150 + (i * 25), 50, 20, 20);
-                    if(i < this.game.player.stamina) {
-                        context.fillRect(this.game.width - 150 + (i * 25), 50, 20, 20);
-                    }
+                    context.strokeStyle = '#0f0'; context.strokeRect(this.game.width - 150 + (i * 25), 50, 20, 20);
+                    if(i < this.game.player.stamina) { context.fillRect(this.game.width - 150 + (i * 25), 50, 20, 20); }
                 }
-                
                 if (this.game.gameState === 'RESPAWNING') {
-                    context.textAlign = 'center';
-                    context.font = `40px ${this.fontFamily}`;
+                    context.textAlign = 'center'; context.font = `40px ${this.fontFamily}`;
                     context.fillText(Math.ceil(this.game.respawnTimer / 1000), this.game.player.x + this.game.player.width / 2, this.game.player.y - 30);
                 }
             }
             
             drawButton(context, button, text) {
-                context.strokeStyle = '#0f0';
-                context.strokeRect(button.x, button.y, button.w, button.h);
-                context.font = `24px ${this.fontFamily}`;
-                context.fillText(text, button.x + button.w / 2, button.y + 35);
+                context.strokeStyle = '#0f0'; context.strokeRect(button.x, button.y, button.w, button.h);
+                context.font = `24px ${this.fontFamily}`; context.fillText(text, button.x + button.w / 2, button.y + 35);
             }
 
             drawMobileControls(context) {
-                context.save();
-                context.strokeStyle = '#0f0';
-                context.globalAlpha = 0.3;
-                context.textAlign = 'center';
+                context.save(); context.strokeStyle = '#0f0'; context.globalAlpha = 0.3; context.textAlign = 'center';
                 context.font = '20px Courier New';
-                // Dash button
-                context.beginPath();
-                context.arc(80, this.game.height - 80, 50, 0, Math.PI * 2);
-                context.stroke();
-                context.fillText('DASH', 80, this.game.height - 75);
-
-                // Jump button
-                context.beginPath();
-                context.arc(this.game.width - 80, this.game.height - 80, 50, 0, Math.PI * 2);
-                context.stroke();
-                context.fillText('LOMPAT', this.game.width - 80, this.game.height - 75);
+                context.beginPath(); context.arc(this.landscapeDashButton.x, this.landscapeDashButton.y, this.landscapeDashButton.r, 0, Math.PI * 2); context.stroke();
+                context.fillText('DASH', this.landscapeDashButton.x, this.landscapeDashButton.y + 5);
+                context.beginPath(); context.arc(this.landscapeJumpButton.x, this.landscapeJumpButton.y, this.landscapeJumpButton.r, 0, Math.PI * 2); context.stroke();
+                context.fillText('LOMPAT', this.landscapeJumpButton.x, this.landscapeJumpButton.y + 5);
                 context.restore();
             }
         }
 
         class Game {
             constructor(canvas, width, height) {
-                this.canvas = canvas;
-                this.width = width;
-                this.height = height;
-                this.isMobile = 'ontouchstart' in window;
-                this.initialSpeed = 3;
-                this.maxSpeed = 6;
-                this.initialGracePeriod = 15000;
-                this.difficultyIncreaseInterval = 15000;
-                this.maxLives = 3;
-                
-                this.scoreManager = new ScoreManager();
-                this.ui = new UIManager(this);
-                this.background = new Background(this);
-                this.input = new InputHandler(this);
-
-                this.gameState = 'MENU';
-                this.player = new Glider(this);
-                this.platforms = [];
-                this.enemies = [];
-                this.powerUps = [];
-                this.particles = [];
+                this.canvas = canvas; this.width = width; this.height = height; this.isMobile = 'ontouchstart' in window;
+                this.initialSpeed = 3; this.maxSpeed = 6; this.initialGracePeriod = 15000; this.difficultyIncreaseInterval = 15000; this.maxLives = 3;
+                this.scoreManager = new ScoreManager(); this.ui = new UIManager(this); this.background = new Background(this);
+                this.input = null; this.gameState = 'MENU'; this.player = new Glider(this);
+                this.platforms = []; this.enemies = []; this.powerUps = []; this.particles = [];
             }
             
-            startGame() {
-                this.reset();
-                this.toggleFullscreen();
-            }
+            startGame() { this.reset(); }
 
             toggleFullscreen() {
                 if (!document.fullscreenElement) {
-                    this.canvas.requestFullscreen().catch(err => {
-                        console.log(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-                    });
-                } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    }
-                }
+                    document.documentElement.requestFullscreen().catch(err => { console.log(`Error: ${err.message}`); });
+                } else { if (document.exitFullscreen) { document.exitFullscreen(); } }
             }
             
             reset() {
-                this.gameState = 'PLAYING';
-                this.scoreManager.saveHighScore();
-                this.scoreManager.resetScore();
-                this.lives = this.maxLives;
-                this.speed = this.initialSpeed;
-                this.player = new Glider(this);
-                this.platforms = [];
-                this.enemies = [];
-                this.powerUps = [];
-                this.particles = [];
-                this.gameTime = 0;
-                this.difficultyTimer = 0;
-                this.minEnemyPlatformWidth = 200;
-
-                this.enemyTimer = 0;
-                this.minEnemyInterval = 1500;
-                this.maxEnemyInterval = 6000;
+                this.gameState = 'PLAYING'; this.scoreManager.saveHighScore(); this.scoreManager.resetScore();
+                this.lives = this.maxLives; this.speed = this.initialSpeed; this.player = new Glider(this);
+                this.platforms = []; this.enemies = []; this.powerUps = []; this.particles = [];
+                this.gameTime = 0; this.difficultyTimer = 0; this.minEnemyPlatformWidth = 200;
+                this.enemyTimer = 0; this.minEnemyInterval = 1500; this.maxEnemyInterval = 6000;
                 this.enemyInterval = Math.random() * (this.maxEnemyInterval - this.minEnemyInterval) + this.minEnemyInterval;
-
-                this.powerUpTimer = 0;
-                this.powerUpInterval = 25000;
+                this.powerUpTimer = 0; this.powerUpInterval = 25000;
                 this.generateInitialPlatforms();
             }
             
             loseLife() {
-                this.lives--;
-                if (this.lives <= 0) {
-                    this.gameState = 'GAME_OVER';
-                } else {
-                    this.gameState = 'RESPAWNING';
-                    this.respawnTimer = 3000;
-                    
-                    this.platforms = [];
-                    this.enemies = [];
-                    this.powerUps = [];
-                    this.particles = [];
+                this.lives--; if (this.lives <= 0) { this.gameState = 'GAME_OVER'; } else {
+                    this.gameState = 'RESPAWNING'; this.respawnTimer = 3000;
+                    this.platforms = []; this.enemies = []; this.powerUps = []; this.particles = [];
                     this.generateInitialPlatforms();
-                    
                     this.player.respawn(150, this.height - 150); 
                 }
             }
@@ -646,220 +497,116 @@
                 this.platforms.push(new Platform(this, 0, this.height - 50, 400));
                 let lastPlatformX = 300;
                 for (let i = 0; i < 5; i++) {
-                    const width = Math.random() * 200 + 100;
-                    const gap = Math.random() * 100 + 50;
+                    const width = Math.random() * 200 + 100; const gap = Math.random() * 100 + 50;
                     const y = Math.random() * 100 + (this.height - 150);
-                    lastPlatformX += gap;
-                    this.platforms.push(new Platform(this, lastPlatformX, y, width));
+                    lastPlatformX += gap; this.platforms.push(new Platform(this, lastPlatformX, y, width));
                     lastPlatformX += width;
                 }
             }
 
             update(deltaTime) {
                 if (!deltaTime) return;
-                
                 this.background.update();
 
                 if (this.gameState === 'PLAYING') {
-                     this.gameTime += deltaTime;
-                    this.difficultyTimer += deltaTime;
-
+                    this.gameTime += deltaTime; this.difficultyTimer += deltaTime;
                     this.speed = Math.min(this.maxSpeed, this.initialSpeed + (this.scoreManager.score / 4000));
-
-                    if (this.difficultyTimer > this.difficultyIncreaseInterval) {
-                        this.difficultyTimer = 0;
-                        if (this.minEnemyPlatformWidth > 120) this.minEnemyPlatformWidth -= 10;
-                    }
-
+                    if (this.difficultyTimer > this.difficultyIncreaseInterval) { this.difficultyTimer = 0; if (this.minEnemyPlatformWidth > 120) this.minEnemyPlatformWidth -= 10; }
                     this.player.update(this.input, deltaTime);
-                    
-                    this.platforms.forEach(p => p.update());
-                    this.platforms = this.platforms.filter(p => !p.markedForDeletion);
+                    this.platforms.forEach(p => p.update()); this.platforms = this.platforms.filter(p => !p.markedForDeletion);
                     const lastPlatform = this.platforms[this.platforms.length - 1];
                     if (lastPlatform && lastPlatform.x + lastPlatform.width < this.width) {
-                        const difficultyModifier = Math.min(this.scoreManager.score / 10000, 1);
-                        const maxGap = 100 + (80 * difficultyModifier);
-                        const maxHeightDiff = 100 + (100 * difficultyModifier);
-                        const width = Math.random() * 200 + 100;
-                        const gap = Math.random() * (maxGap - 80) + 80;
-                        const y = Math.max(150, Math.min(this.height - 80, lastPlatform.y + (Math.random() * (maxHeightDiff * 2) - maxHeightDiff)));
+                        const difficultyModifier = Math.min(this.scoreManager.score / 10000, 1); const maxGap = 100 + (80 * difficultyModifier);
+                        const maxHeightDiff = 100 + (100 * difficultyModifier); const width = Math.random() * 200 + 100;
+                        const gap = Math.random() * (maxGap - 80) + 80; const y = Math.max(150, Math.min(this.height - 80, lastPlatform.y + (Math.random() * (maxHeightDiff * 2) - maxHeightDiff)));
                         this.platforms.push(new Platform(this, lastPlatform.x + lastPlatform.width + gap, y, width));
                     }
-
                     if (this.gameTime > this.initialGracePeriod) {
                         if (this.enemyTimer > this.enemyInterval) {
                             const lastPlat = this.platforms[this.platforms.length - 1];
-                            if (lastPlat && lastPlat.width > this.minEnemyPlatformWidth) {
-                                this.enemies.push(new Drone(this, lastPlat.x + lastPlat.width / 2, lastPlat.y - 30));
-                            }
-                            this.enemyTimer = 0;
-                            this.enemyInterval = Math.random() * (this.maxEnemyInterval - this.minEnemyInterval) + this.minEnemyInterval;
+                            if (lastPlat && lastPlat.width > this.minEnemyPlatformWidth) { this.enemies.push(new Drone(this, lastPlat.x + lastPlat.width / 2, lastPlat.y - 30)); }
+                            this.enemyTimer = 0; this.enemyInterval = Math.random() * (this.maxEnemyInterval - this.minEnemyInterval) + this.minEnemyInterval;
                         } else { this.enemyTimer += deltaTime; }
                     }
-                    this.enemies.forEach(e => e.update());
-                    this.enemies = this.enemies.filter(e => !e.markedForDeletion);
-
+                    this.enemies.forEach(e => e.update()); this.enemies = this.enemies.filter(e => !e.markedForDeletion);
                     if (this.powerUpTimer > this.powerUpInterval) {
-                        const spawnType = Math.random();
-                        const lastPlat = this.platforms[this.platforms.length - 1];
-                        let spawnX, spawnY;
-
-                        if (spawnType < 0.33) {
-                            spawnX = lastPlat.x + lastPlat.width / 2;
-                            spawnY = lastPlat.y - 20;
-                        } else if (spawnType < 0.66) {
-                            spawnX = lastPlat.x + lastPlat.width / 2;
-                            spawnY = lastPlat.y - 80;
-                        } else {
-                            const prevPlat = this.platforms[this.platforms.length - 2];
-                            if(prevPlat){
-                               spawnX = prevPlat.x + prevPlat.width + (lastPlat.x - (prevPlat.x + prevPlat.width)) / 2;
-                               spawnY = Math.min(prevPlat.y, lastPlat.y) - 50;
-                            }
-                        }
-                        if(spawnX && spawnY) this.powerUps.push(new Shield(this, spawnX, spawnY));
-                        this.powerUpTimer = 0;
+                        const spawnType = Math.random(); const lastPlat = this.platforms[this.platforms.length - 1]; let spawnX, spawnY;
+                        if (spawnType < 0.33) { spawnX = lastPlat.x + lastPlat.width / 2; spawnY = lastPlat.y - 20; }
+                        else if (spawnType < 0.66) { spawnX = lastPlat.x + lastPlat.width / 2; spawnY = lastPlat.y - 80; }
+                        else { const prevPlat = this.platforms[this.platforms.length - 2]; if(prevPlat){ spawnX = prevPlat.x + prevPlat.width + (lastPlat.x - (prevPlat.x + prevPlat.width)) / 2; spawnY = Math.min(prevPlat.y, lastPlat.y) - 50; } }
+                        if(spawnX && spawnY) this.powerUps.push(new Shield(this, spawnX, spawnY)); this.powerUpTimer = 0;
                     } else { this.powerUpTimer += deltaTime; }
-                    this.powerUps.forEach(p => p.update());
-                    this.powerUps = this.powerUps.filter(p => !p.markedForDeletion);
-                    
-                    this.checkCollisions();
-                    this.scoreManager.update();
-
-                    if (this.player.y + this.player.height >= this.height) this.loseLife();
-                    if ((this.player.x + this.player.dashBoost) < 0) this.loseLife();
+                    this.powerUps.forEach(p => p.update()); this.powerUps = this.powerUps.filter(p => !p.markedForDeletion);
+                    this.checkCollisions(); this.scoreManager.update();
+                    if (this.player.y + this.player.height >= this.height) this.loseLife(); if ((this.player.x + this.player.dashBoost) < 0) this.loseLife();
                 } else if (this.gameState === 'RESPAWNING') {
-                     this.respawnTimer -= deltaTime;
-                    if (this.respawnTimer <= 0) {
-                        this.gameState = 'PLAYING';
-                    }
+                     this.respawnTimer -= deltaTime; if (this.respawnTimer <= 0) { this.gameState = 'PLAYING'; }
                 }
-                
-                this.particles.forEach(p => p.update());
-                this.particles = this.particles.filter(p => !p.markedForDeletion);
+                this.particles.forEach(p => p.update()); this.particles = this.particles.filter(p => !p.markedForDeletion);
             }
 
             draw(context) {
                 context.clearRect(0, 0, this.width, this.height);
                 this.background.draw(context);
-
                 if (this.gameState === 'PLAYING' || this.gameState === 'RESPAWNING' || this.gameState === 'GAME_OVER') {
-                    this.platforms.forEach(p => p.draw(context));
-                    this.enemies.forEach(e => e.draw(context));
-                    this.powerUps.forEach(p => p.draw(context));
-                    this.player.draw(context);
+                    this.platforms.forEach(p => p.draw(context)); this.enemies.forEach(e => e.draw(context));
+                    this.powerUps.forEach(p => p.draw(context)); this.player.draw(context);
                 }
-               
-                this.particles.forEach(p => p.draw(context));
-                this.ui.draw(context);
+                this.particles.forEach(p => p.draw(context)); this.ui.draw(context);
             }
             
             checkCollisions() {
-                const playerX = this.player.x + this.player.dashBoost;
-                const isDashing = this.player.dashBoost > 1;
-
+                const playerX = this.player.x + this.player.dashBoost; const isDashing = this.player.dashBoost > 1;
                 this.enemies.forEach(enemy => {
-                    if (playerX < enemy.x + enemy.width &&
-                        playerX + this.player.width > enemy.x &&
-                        this.player.y < enemy.y + enemy.height &&
-                        this.player.y + this.player.height > enemy.y) 
-                    {
+                    if (playerX < enemy.x + enemy.width && playerX + this.player.width > enemy.x && this.player.y < enemy.y + enemy.height && this.player.y + this.player.height > enemy.y) {
                         if (isDashing) {
                             if (this.player.shield > 0) {
-                                enemy.markedForDeletion = true;
-                                this.player.shield--;
-                                for (let i = 0; i < 15; i++) {
-                                    this.particles.push(new Particle(this, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 5, '#f00', Math.random() * 4 - 2, Math.random() * 4 - 2));
-                                }
-                            } else {
-                                this.loseLife();
-                            }
+                                enemy.markedForDeletion = true; this.player.shield--;
+                                for (let i = 0; i < 15; i++) { this.particles.push(new Particle(this, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 5, '#f00', Math.random() * 4 - 2, Math.random() * 4 - 2)); }
+                            } else { this.loseLife(); }
                         } else {
                             if (this.player.shield > 0) {
-                                this.player.shield = 0;
-                                enemy.markedForDeletion = true;
-                                for (let i = 0; i < 15; i++) {
-                                    this.particles.push(new Particle(this, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 5, '#0ff', Math.random() * 4 - 2, Math.random() * 4 - 2));
-                                }
-                            } else {
-                                this.loseLife();
-                            }
+                                this.player.shield = 0; enemy.markedForDeletion = true;
+                                for (let i = 0; i < 15; i++) { this.particles.push(new Particle(this, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 5, '#0ff', Math.random() * 4 - 2, Math.random() * 4 - 2)); }
+                            } else { this.loseLife(); }
                         }
                     }
                 });
-
                 this.powerUps.forEach(powerUp => {
-                    if (playerX < powerUp.x + powerUp.width &&
-                        playerX + this.player.width > powerUp.x &&
-                        this.player.y < powerUp.y + powerUp.height &&
-                        this.player.y + this.player.height > powerUp.y) 
-                    {
+                    if (playerX < powerUp.x + powerUp.width && playerX + this.player.width > powerUp.x && this.player.y < powerUp.y + powerUp.height && this.player.y + this.player.height > powerUp.y) {
                         powerUp.markedForDeletion = true;
-                        if (powerUp instanceof Shield) {
-                            this.player.shield = 2;
-                             for (let i = 0; i < 10; i++) {
-                                this.particles.push(new Particle(this, powerUp.x + powerUp.width / 2, powerUp.y + powerUp.height / 2, 4, '#0ff', Math.random() * 2 - 1, Math.random() * 2 - 1));
-                            }
-                        }
+                        if (powerUp instanceof Shield) { this.player.shield = 2; for (let i = 0; i < 10; i++) { this.particles.push(new Particle(this, powerUp.x + powerUp.width / 2, powerUp.y + powerUp.height / 2, 4, '#0ff', Math.random() * 2 - 1, Math.random() * 2 - 1)); } }
                     }
                 });
-
                 this.platforms.forEach(platform => {
-                    const playerVisualX = this.player.x + this.player.dashBoost;
-                    const playerRight = playerVisualX + this.player.width;
-                    const playerBottom = this.player.y + this.player.height;
-
-                    if (playerRight > platform.x && 
-                        playerVisualX < platform.x &&
-                        playerBottom > platform.y + 1)
-                    {
-                        this.player.x = platform.x - this.player.width;
-                        if(this.player.dashBoost > 0) this.player.dashBoost = 0;
+                    const playerVisualX = this.player.x + this.player.dashBoost; const playerRight = playerVisualX + this.player.width; const playerBottom = this.player.y + this.player.height;
+                    if (playerRight > platform.x && playerVisualX < platform.x && playerBottom > platform.y + 1) {
+                        this.player.x = platform.x - this.player.width; if(this.player.dashBoost > 0) this.player.dashBoost = 0;
                     }
                 });
             }
         }
 
         window.addEventListener('load', function() {
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            // NEW: Dynamic canvas sizing
+            const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+            const fullscreenButton = document.getElementById('fullscreenButton'); const jumpButton = document.getElementById('jumpButton'); const dashButton = document.getElementById('dashButton');
             function resizeCanvas() {
-                const aspectRatio = 16 / 9;
-                const vh = window.innerHeight;
-                const vw = window.innerWidth;
-                
-                canvas.width = 800; // Keep internal resolution
-                canvas.height = 400;
-
-                let newWidth = vw;
-                let newHeight = newWidth / aspectRatio;
-
-                if (newHeight > vh) {
-                    newHeight = vh;
-                    newWidth = newHeight * aspectRatio;
-                }
-
-                canvas.style.width = `${newWidth}px`;
-                canvas.style.height = `${newHeight}px`;
+                const aspectRatio = 16 / 9; const vh = window.innerHeight; const vw = window.innerWidth;
+                canvas.width = 800; canvas.height = 400; let newWidth, newHeight;
+                if (vw / vh > aspectRatio) { newHeight = vh * 0.8; newWidth = newHeight * aspectRatio; }
+                else { newWidth = vw * 0.95; newHeight = newWidth / aspectRatio; }
+                canvas.style.width = `${newWidth}px`; canvas.style.height = `${newHeight}px`;
             }
-
-            window.addEventListener('resize', resizeCanvas);
-            resizeCanvas(); // Initial size
-
+            window.addEventListener('resize', resizeCanvas); resizeCanvas();
             const game = new Game(canvas, canvas.width, canvas.height);
+            game.input = new InputHandler(game, jumpButton, dashButton);
+            fullscreenButton.addEventListener('click', () => { game.toggleFullscreen(); });
             let lastTime = 0;
-            
             function animate(timeStamp) {
-                const deltaTime = timeStamp - lastTime;
-                lastTime = timeStamp;
-
-                game.update(deltaTime);
-                game.draw(ctx);
+                const deltaTime = timeStamp - lastTime; lastTime = timeStamp;
+                game.update(deltaTime); game.draw(ctx);
                 requestAnimationFrame(animate);
             }
-
             animate(0);
         });
     </script>
