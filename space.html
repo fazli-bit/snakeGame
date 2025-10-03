@@ -20,6 +20,7 @@
             align-items: center;
             width: 100%;
             height: 100vh;
+            box-sizing: border-box;
         }
         .main-menu-wrapper {
             padding: 20px;
@@ -28,7 +29,6 @@
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 255, 0, 0.2);
             text-align: center;
-            /* PENAMBAHBAIKAN: Had lebar dikurangkan */
             max-width: 640px;
             width: 90%;
         }
@@ -37,8 +37,7 @@
             flex-direction: column;
             justify-content: flex-start;
             align-items: center;
-            padding: 0;
-            /* PENAMBAHBAIKAN: Had lebar dikurangkan */
+            padding: 20px 0;
             max-width: 640px; 
             margin: 0 auto;
         }
@@ -50,17 +49,22 @@
             justify-content: center;
             align-items: center;
             width: 100%;
+            border-left: 2px solid #00ff00;
+            border-right: 2px solid #00ff00;
+            border-top: 2px solid #00ff00;
+            box-sizing: border-box;
         }
         #gamepad-area {
             flex: 1; 
             background-color: #111;
-            border-top: 4px solid #00ff00;
-            display: none; /* Disembunyikan secara lalai, dikawal oleh JS */
+            display: none;
             justify-content: space-between;
             align-items: center;
             padding: 10px 30px;
             box-sizing: border-box;
             width: 100%;
+            border: 2px solid #00ff00;
+            border-top: none; 
         }
         
         #game-board-wrapper {
@@ -68,19 +72,11 @@
             overflow: hidden;
             width: 100%;
             height: 100%;
+            background-color: #000;
         }
         #game-canvas {
             width: 100%;
             height: 100%;
-            background-color: #000;
-            background-image: radial-gradient(white 0.5px, transparent 0.5px), radial-gradient(white 0.5px, transparent 0.5px);
-            background-size: 20px 20px;
-            background-position: 0 0, 10px 10px;
-            animation: scroll-background 20s linear infinite;
-        }
-        @keyframes scroll-background {
-            from { background-position-y: 0px; }
-            to { background-position-y: 100%; }
         }
         
         h1, h2, h3 { color: #00ff00; font-family: 'Press Start 2P', cursive; }
@@ -96,7 +92,6 @@
         #ui-layer { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; font-size: 1rem; z-index: 10; pointer-events: none; text-shadow: 2px 2px #000; }
         #player-stats { display: flex; gap: 20px; }
         
-        #game-board-wrapper.boss-active-bg #game-canvas { animation-duration: 5s; }
         #game-board-wrapper.boss-active-bg::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(ellipse at center, rgba(255,0,0,0.4) 0%,rgba(255,0,0,0) 70%); z-index: 5; pointer-events: none; animation: pulse-red 2s infinite; }
         @keyframes pulse-red { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
@@ -109,12 +104,18 @@
         #highscore-container { text-align: center; width: 100%; font-size: 0.7rem; margin-top: 20px;}
         #highscore-container h3 { margin-top: 0; margin-bottom: 15px; color: #ffff00; display: inline-block; margin-right: 10px;}
         #refresh-scores-button { background: none; border: none; font-size: 1rem; cursor: pointer; color: #fff; }
-        .highscore-list ol, .highscore-columns-shared ol { list-style-type: none; padding-left: 0; margin: 0; text-align: left; }
-        .highscore-list ol { min-width: 250px; }
+        .highscore-list ol, .highscore-columns-shared ol { list-style-type: none; padding-left: 0; margin: 0 auto; text-align: left; max-width: 350px; }
         .highscore-columns-shared { display: flex; justify-content: center; gap: 40px; }
-        .highscore-columns-shared ol { min-width: 170px; }
-        .highscore-list li, .highscore-columns-shared li { margin-bottom: 8px; color: #f0f0f0; }
-        .highscore-list li span, .highscore-columns-shared li span { color: #ffff00; float: right; }
+        
+        .highscore-list li, .highscore-columns-shared li { 
+            margin-bottom: 8px; 
+            color: #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .highscore-list li span, .highscore-columns-shared li span { 
+            color: #ffff00; 
+        }
 
         #joystick-area { width: 120px; height: 120px; background-color: rgba(255, 255, 255, 0.1); border-radius: 50%; position: relative; }
         #joystick-handle { width: 60px; height: 60px; background-color: rgba(255, 255, 255, 0.3); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 50%; position: absolute; top: 30px; left: 30px; }
@@ -123,33 +124,42 @@
         #fire-button { background-color: rgba(255, 0, 0, 0.3); border-color: rgba(255, 0, 0, 0.6); }
         #special-attack-button { background-color: rgba(0, 100, 255, 0.3); border-color: rgba(0, 100, 255, 0.6); }
         
-        /* Menu Arahan */
-        #toggle-instructions-button {
-            background-color: transparent;
-            border: 2px solid #555;
-            color: #ccc;
-            padding: 8px 15px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 0.7rem;
-            cursor: pointer;
-            border-radius: 4px;
-            margin-top: 30px;
-        }
+        #toggle-instructions-button { background-color: transparent; border: 2px solid #555; color: #ccc; padding: 8px 15px; font-family: 'Press Start 2P', cursive; font-size: 0.7rem; cursor: pointer; border-radius: 4px; margin-top: 30px; }
         #toggle-instructions-button:hover { background-color: #333; }
-        #instructions {
+        #instructions { border: 2px solid #555; border-radius: 8px; padding: 15px; margin-top: 10px; text-align: left; font-size: 0.7rem; line-height: 1.5; max-width: 400px; margin-left: auto; margin-right: auto; }
+        #instructions h3 { margin-top: 0; text-align: center;}
+        #instructions span { color: #ffff00; }
+
+        #ship-stats-display {
             border: 2px solid #555;
             border-radius: 8px;
             padding: 15px;
-            margin-top: 10px;
+            margin-top: 20px;
             text-align: left;
             font-size: 0.7rem;
-            line-height: 1.5;
-            max-width: 400px;
+            line-height: 1.6;
+            max-width: 300px;
             margin-left: auto;
             margin-right: auto;
+            color: #ccc;
         }
-        #instructions h3 { margin-top: 0; text-align: center;}
-        #instructions span { color: #ffff00; }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stat-bar-container {
+            width: 100px;
+            height: 10px;
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .stat-bar {
+            height: 100%;
+            background-color: #00ff00;
+        }
 
     </style>
 </head>
@@ -161,6 +171,7 @@
             <p id="game-version"></p>
             <h2>PILIH KAPAL</h2>
             <div id="ship-selection"></div>
+            <div id="ship-stats-display"></div>
             <button id="start-game-button">MULA</button>
             <button id="toggle-instructions-button">TUNJUK ARAHAN</button>
             <div id="instructions" style="display: none;">
@@ -175,7 +186,7 @@
                 <span>Butang Biru:</span> Serangan Istimewa
             </div>
             <div id="highscore-container">
-                <h3>MARKAH TERTINGGI</h3><button id="refresh-scores-button" disabled>🔄</button>
+                <h3>MARKAH TERTINGGI</h3><button id="refresh-scores-button">🔄</button>
                 <div class="highscore-list">
                     <ol id="highscore-list"></ol>
                 </div>
@@ -226,12 +237,18 @@
     </div>
     
     <script type="module">
-       window.firebase = {};
+       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+       import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+       import { getFirestore, collection, doc, setDoc, getDocs, getDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+       
+       window.firebase = {
+           initializeApp, getAuth, signInAnonymously, getFirestore, collection, doc, setDoc, getDocs, getDoc, query, orderBy, limit
+       };
     </script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const GAME_VERSION = "1.1.1";
+    const GAME_VERSION = "1.2.0";
     
     // --- KONFIGURASI ASET ---
     const interceptorConfig = { "id": "interceptor", "name": "Interceptor", "type": "Pemain", "drawOrder": [ "engineFlame", "body", "cockpit", "wings" ], "parts": { "body": { "shape": "polygon", "color": "#c0c0c0", "x": 0, "y": 0, "rotation": 0, "points": [ 0, -25, -15, 20, 0, 10, 15, 20 ], "scaleX": 100, "scaleY": 100 }, "cockpit": { "shape": "polygon", "color": "#4d94ff", "x": 0, "y": -5, "rotation": 0, "points": [ 0, -15, -8, 5, 8, 5 ], "scaleX": 67, "scaleY": 100 }, "wings": { "shape": "polygon", "color": "#a0a0a0", "x": 0, "y": 13, "rotation": 0, "points": [ -25, 0, 25, 0, 0, -10 ], "scaleX": 126, "scaleY": 118 }, "engineFlame": { "shape": "polygon", "color": "#ffcc00", "x": 0, "y": 16, "rotation": 0, "points": [ -7, 0, 7, 0, 0, 15 ], "scaleX": 100, "scaleY": 100, "animation": { "property": "opacity", "speed": 10, "amplitude": 0.5 } } } };
@@ -242,8 +259,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const cruiserConfig = { "id": "cruiser", "name": "Cruiser", "type": "Musuh", "hp": 5, "drawOrder": [ "lowerHull", "upperHull", "bridge" ], "parts": { "lowerHull": { "shape": "rect", "color": "#800000", "x": 0, "y": 0, "rotation": 0, "width": 50, "height": 25 }, "upperHull": { "shape": "rect", "color": "#a52a2a", "x": 0, "y": -2, "rotation": 0, "width": 30, "height": 40 }, "bridge": { "shape": "rect", "color": "#ffc0cb", "x": 0, "y": -12, "rotation": 0, "width": 10, "height": 15 } } };
     const scoutConfig = { "id": "scout", "name": "Scout", "type": "Musuh", "hp": 1, "drawOrder": [ "wings", "body" ], "parts": { "body": { "shape": "polygon", "color": "#00ff00", "x": 0, "y": 5, "rotation": 0, "points": [ 0, -15, -10, 10, 10, 10 ], "scaleX": 156, "scaleY": 81 }, "wings": { "shape": "polygon", "color": "#adff2f", "x": 0, "y": 0, "rotation": 0, "points": [ -20, 0, 0, -10, 20, 0, 0, 5 ], "scaleX": 140, "scaleY": 165 } } };
     const kamikazeConfig = { "id": "kamikaze", "name": "Kamikaze", "type": "Musuh", "hp": 1, "drawOrder": [ "body", "stripes" ], "parts": { "body": { "shape": "polygon", "color": "#444444", "x": 0, "y": 0, "rotation": 0, "points": [ 0, -25, -10, 25, 10, 25 ], "scaleX": 200, "scaleY": 130 }, "stripes": { "shape": "rect", "color": "#ffff00", "x": 0, "y": 17, "rotation": 0, "width": 14, "height": 22 } } };
-    const bossTitanConfig = { "id": "boss-titan", "name": "Boss Titan", "type": "Boss", "hp": 50, "drawOrder": [ "base", "armor", "bridge", "mainCannon", "sideCannons" ], "parts": { "base": { "shape": "rect", "color": "#696969", "x": 0, "y": 0, "rotation": 0, "width": 80, "height": 80 }, "armor": { "shape": "rect", "color": "#808080", "x": 0, "y": 0, "rotation": 0, "width": 100, "height": 36 }, "bridge": { "shape": "rect", "color": "#dcdcdc", "x": 0, "y": 16, "rotation": 0, "width": 51, "height": 21 }, "mainCannon": { "shape": "circle", "color": "#ff4500", "x": 0, "y": -9, "rotation": 0, "r": 12, "animation": { "property": "opacity", "speed": 1, "amplitude": 0.5 } }, "sideCannons": { "shape": "rect", "color": "#a9a9a9", "x": 0, "y": 2, "rotation": 0, "width": 27, "height": 32 } } };
     
+    // --- KONFIGURASI BOS ---
+    const bossTitanConfig = { "id": "boss-titan", "name": "Boss Titan", "type": "Boss", "hp": 200, "drawOrder": [ "base", "armor", "bridge", "mainCannon", "sideCannons" ], "parts": { "base": { "shape": "rect", "color": "#696969", "x": 0, "y": 0, "rotation": 0, "width": 80, "height": 80 }, "armor": { "shape": "rect", "color": "#808080", "x": 0, "y": 0, "rotation": 0, "width": 100, "height": 36 }, "bridge": { "shape": "rect", "color": "#dcdcdc", "x": 0, "y": 16, "rotation": 0, "width": 51, "height": 21 }, "mainCannon": { "shape": "circle", "color": "#ff4500", "x": 0, "y": -9, "rotation": 0, "r": 12, "animation": { "property": "opacity", "speed": 1, "amplitude": 0.5 } }, "sideCannons": { "shape": "rect", "color": "#a9a9a9", "x": 0, "y": 2, "rotation": 0, "width": 27, "height": 32 } } };
+    const bossViperConfig = { "id": "boss-viper", "name": "Boss Viper", "type": "Boss", "hp": 200, "drawOrder": ["Base", "armor", "mainCannon", "leftCannon", "rightCannon", "bridge"], "parts": { "Base": { "shape": "polygon", "color": "#284fc3", "x": 0, "y": 0, "rotation": 36, "points": [0, -25, 24, -8, 15, 20, -15, 20, -24, -8], "scaleX": 145, "scaleY": 145 }, "armor": { "shape": "polygon", "color": "#27396d", "x": 0, "y": 17, "rotation": 0, "points": [0, -50, 50, -29, 0, 20, 0, 20, -50, -29], "scaleX": 100, "scaleY": 100 }, "bridge": { "shape": "circle", "color": "#e09c0b", "x": 0, "y": -17, "rotation": 0, "r": 20, "animation": { "property": "opacity", "speed": 15.5, "amplitude": 0.5 } }, "mainCannon": { "shape": "polygon", "color": "#721196", "x": 0, "y": 43, "rotation": 180, "points": [-15, 15, 15, 15, 0, -15] }, "leftCannon": { "shape": "rect", "color": "#186472", "x": -44, "y": 13, "rotation": 0, "width": 12, "height": 56 }, "rightCannon": { "shape": "rect", "color": "#186472", "x": 44, "y": 13, "rotation": 0, "width": 12, "height": 56 } } };
+    const bossSerpentConfig = { "id": "boss-serpent", "name": "Boss Serpent", "type": "Boss", "hp": 200, "drawOrder": ["head", "body1", "body2", "body3", "body4"], "parts": { "head": { "shape": "polygon", "color": "#006400", "x": 0, "y": -40, "rotation": 0, "points": [0, -20, 15, 15, -15, 15] }, "body1": { "shape": "circle", "color": "#556b2f", "x": 10, "y": -15, "rotation": 0, "r": 18 }, "body2": { "shape": "circle", "color": "#6B8E23", "x": -10, "y": 15, "rotation": 0, "r": 15 }, "body3": { "shape": "circle", "color": "#808000", "x": 10, "y": 40, "rotation": 0, "r": 12 }, "body4": { "shape": "polygon", "color": "#ADFF2F", "x": 0, "y": 60, "rotation": 0, "points": [0, 20, 10, -10, -10, -10] } } };
+
+    const bossConfigs = [bossTitanConfig, bossViperConfig, bossSerpentConfig];
+
+    // Konfigurasi Firebase
+    const firebaseConfig = { apiKey: "AIzaSyBDuQgpyrVT-hOYucH51AATLxDRLaKWgpQ", authDomain: "retro-game-6d9c7.firebaseapp.com", projectId: "retro-game-6d9c7", storageBucket: "retro-game-6d9c7.firebasestorage.app", messagingSenderId: "258289584699", appId: "1:258289584699:web:d9228a2a2e3cbc0b41aa1e", measurementId: "G-G16BRQJB7D" };
+
     const playerConfigs = { interceptor: interceptorConfig, assault: assaultConfig, bomber: bomberConfig };
     const enemyTypes = { drone: droneConfig, fighter: fighterConfig, cruiser: cruiserConfig, scout: scoutConfig, kamikaze: kamikazeConfig };
     
@@ -254,9 +280,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const shipStats = {
-        interceptor: { hp: 1, maxHp: 2, startingBombs: 1, bombPickupAmount: 1, fireRate: 150 },
-        assault: { hp: 2, maxHp: 3, startingBombs: 1, bombPickupAmount: 1, fireRate: 300 },
-        bomber: { hp: 1, maxHp: 2, startingBombs: 2, bombPickupAmount: 2, fireRate: 200 }
+        interceptor: { hp: 1, maxHp: 2, startingBombs: 1, bombPickupAmount: 1, fireRate: 150, bulletCount: 1, maxBulletCount: 3 },
+        assault: { hp: 2, maxHp: 3, startingBombs: 1, bombPickupAmount: 1, fireRate: 300, bulletCount: 1, maxBulletCount: 2 },
+        bomber: { hp: 1, maxHp: 2, startingBombs: 2, bombPickupAmount: 2, fireRate: 200, bulletCount: 1, maxBulletCount: 2 }
     };
     
     // --- KELAS-KELAS PERMAINAN ---
@@ -297,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.fill();
                     break;
                 case 'rect': ctx.fillRect(-(part.width / 2) * s, -(part.height / 2) * s, part.width * s, part.height * s); break;
-                case 'circle': ctx.beginPath(); ctx.arc(0, 0, part.r * s, 0, Math.PI * 2); ctx.fill(); break;
+                case 'circle': ctx.beginPath(); ctx.arc(0, 0, (part.r || part.radius) * s, 0, Math.PI * 2); ctx.fill(); break;
             }
             ctx.restore();
         }
@@ -315,6 +341,8 @@ document.addEventListener('DOMContentLoaded', () => {
             this.bombs = stats.startingBombs;
             this.bombPickupAmount = stats.bombPickupAmount;
             this.shootCooldown = stats.fireRate;
+            this.bulletCount = stats.bulletCount;
+            this.maxBulletCount = stats.maxBulletCount;
         }
         update(keys, touchDx, touchDy) {
             let dx = 0; 
@@ -341,7 +369,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.canShoot) {
                 this.canShoot = false;
                 setTimeout(() => { this.canShoot = true; }, this.shootCooldown);
-                return new Projectile(this.x, this.y - 20, 'player');
+                
+                const projectiles = [];
+                const spread = 10;
+                const startX = this.x - (spread * (this.bulletCount - 1)) / 2;
+                
+                for (let i = 0; i < this.bulletCount; i++) {
+                    projectiles.push(new Projectile(startX + (i * spread), this.y - 20, 'player'));
+                }
+                return projectiles;
             }
             return null;
         }
@@ -358,6 +394,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         addBombs() {
             this.bombs += this.bombPickupAmount;
+        }
+        addBullet() {
+            if (this.bulletCount < this.maxBulletCount) {
+                this.bulletCount++;
+            }
         }
         useBomb(game) {
             if (this.bombs > 0) {
@@ -387,13 +428,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     class Enemy extends GameObject {
-        constructor(config, x, y) {
+        constructor(config, x, y, game) {
             super(config, x, y, 50);
             this.hp = config.hp || 1;
+            if (!(this instanceof Boss)) {
+                const extraHp = Math.floor((game.stage - 1) / 2);
+                this.hp += extraHp;
+            }
             this.pattern = null; 
             this.initialX = x; this.initialY = y; this.age = 0;
             this.canShoot = true;
             this.shootCooldown = 2000 + Math.random() * 2000;
+            this.squadId = null;
         }
         update(player, game) { 
             if (this.pattern) this.pattern(this, player);
@@ -410,11 +456,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     class Boss extends Enemy {
-        constructor(config, x, y) {
-            super(config, x, y);
+        constructor(config, x, y, game) {
+            super(config, x, y, game);
             this.size = 150;
             this.shootCooldown = 800;
             this.attackPatternCounter = 0;
+            this.spiralAngle = 0;
         }
         update(player, game) {
              if (this.pattern) this.pattern(this, player);
@@ -425,14 +472,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         shoot(game) {
             this.canShoot = false;
-            setTimeout(() => { this.canShoot = true; }, this.shootCooldown);
+            const stageCooldownReduction = Math.min(game.stage * 50, 300);
+            setTimeout(() => { this.canShoot = true; }, this.shootCooldown - stageCooldownReduction);
             this.attackPatternCounter++;
-            if (this.attackPatternCounter % 4 === 0) {
-                game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', -2, 4));
-                game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', 0, 5));
-                game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', 2, 4));
-            } else {
-                game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', 0, 6));
+
+            // --- PENAMBAHBAIKAN: Corak serangan berbeza untuk setiap bos ---
+            if (this.config.id === 'boss-viper') {
+                if (this.attackPatternCounter % 5 === 0) { // Laser Beam Attack
+                    const laser = new Laser(this.x, this.y + this.size / 2, game.canvas.width, 120);
+                    game.lasers.push(laser);
+                } else { // Normal Shot
+                    game.projectiles.push(new Projectile(this.x - 40, this.y + this.size / 3, 'enemy', -1, 5));
+                    game.projectiles.push(new Projectile(this.x + 40, this.y + this.size / 3, 'enemy', 1, 5));
+                }
+            } else if (this.config.id === 'boss-serpent') {
+                if (this.attackPatternCounter % 3 === 0) { // Spiral Shot
+                    const bulletsPerSpiral = 10;
+                    for (let i = 0; i < bulletsPerSpiral; i++) {
+                        const angle = this.spiralAngle + (i * (2 * Math.PI / bulletsPerSpiral));
+                        const speed = 3;
+                        const dx = Math.cos(angle) * speed;
+                        const dy = Math.sin(angle) * speed;
+                        game.projectiles.push(new Projectile(this.x, this.y, 'enemy', dx, dy));
+                    }
+                    this.spiralAngle += 0.5;
+                } else { // Normal shot
+                     game.projectiles.push(new Projectile(this.x, this.y, 'enemy', 0, 5));
+                }
+            } else { // Default: Boss Titan
+                if (this.attackPatternCounter % 4 === 0) { 
+                    const bulletCount = game.stage >= 3 ? 5 : 3;
+                    const speed = 4 + (game.stage >= 3 ? 1 : 0);
+                    const spread = 2;
+                    if (bulletCount % 2 !== 0) { game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', 0, speed + 1)); }
+                    for (let i = 1; i <= Math.floor(bulletCount / 2); i++) {
+                        game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', -spread * i, speed));
+                        game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', spread * i, speed));
+                    }
+                } else {
+                    const bulletCount = game.stage >= 2 ? 2 : 1;
+                    const spread = 40;
+                    if (bulletCount === 1) { game.projectiles.push(new Projectile(this.x, this.y + this.size / 2, 'enemy', 0, 6)); } 
+                    else {
+                        game.projectiles.push(new Projectile(this.x - spread, this.y + this.size / 2, 'enemy', 0, 6));
+                        game.projectiles.push(new Projectile(this.x + spread, this.y + this.size / 2, 'enemy', 0, 6));
+                    }
+                }
             }
         }
     }
@@ -446,6 +531,36 @@ document.addEventListener('DOMContentLoaded', () => {
         draw(ctx) {
             ctx.fillStyle = this.owner === 'player' ? '#00ff00' : '#ff0000';
             ctx.fillRect(this.x - this.width/2, this.y, this.width, this.height);
+        }
+    }
+    class Laser {
+        constructor(x, y, canvasWidth, lifespan) {
+            this.x = x;
+            this.y = y;
+            this.width = 10;
+            this.lifespan = lifespan;
+            this.isAlive = true;
+            this.initialLifespan = lifespan;
+            this.laserX = 0; // Position relative to boss
+            this.laserDirection = Math.random() < 0.5 ? 1 : -1;
+            this.laserSpeed = canvasWidth / lifespan;
+        }
+
+        update() {
+            this.lifespan--;
+            this.laserX += this.laserDirection * this.laserSpeed;
+            if(this.lifespan <= 0) this.isAlive = false;
+        }
+
+        draw(ctx, bossX) {
+            const alpha = Math.min(1, (this.initialLifespan - this.lifespan) / 30);
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = '#ff5555';
+            ctx.shadowColor = '#ff0000';
+            ctx.shadowBlur = 15;
+            ctx.fillRect(bossX + this.laserX - (this.width / 2), this.y, this.width, 1000);
+            ctx.restore();
         }
     }
     class Particle {
@@ -468,11 +583,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    class FloatingText {
+        constructor(x, y, text, color = '#ffff00') {
+            this.x = x;
+            this.y = y;
+            this.text = text;
+            this.color = color;
+            this.lifespan = 60; // 60 frames, approx 1 second
+            this.opacity = 1;
+            this.speedY = -1;
+        }
+
+        update() {
+            this.y += this.speedY;
+            this.lifespan--;
+            if (this.lifespan < 30) {
+                this.opacity = this.lifespan / 30;
+            }
+        }
+
+        draw(ctx) {
+            ctx.save();
+            ctx.globalAlpha = this.opacity;
+            ctx.fillStyle = this.color;
+            ctx.font = "0.8rem 'Press Start 2P'";
+            ctx.textAlign = 'center';
+            ctx.fillText(this.text, this.x, this.y);
+            ctx.restore();
+        }
+    }
+
     class PowerUp {
         constructor(x, y, type) {
             this.x = x;
             this.y = y;
-            this.type = type; // 'shield' atau 'bomb'
+            this.type = type; // 'shield', 'bomb', atau 'bullet'
             this.size = 25;
             this.speedY = 2;
             this.isAlive = true;
@@ -484,7 +629,18 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.save();
             ctx.translate(this.x, this.y);
             
-            ctx.fillStyle = this.type === 'shield' ? 'rgba(0, 150, 255, 0.8)' : 'rgba(255, 200, 0, 0.8)';
+            let text = '';
+            if (this.type === 'shield') {
+                ctx.fillStyle = 'rgba(0, 150, 255, 0.8)';
+                text = 'S';
+            } else if (this.type === 'bomb') {
+                ctx.fillStyle = 'rgba(255, 200, 0, 0.8)';
+                text = 'B';
+            } else if (this.type === 'bullet') {
+                ctx.fillStyle = 'rgba(255, 100, 0, 0.8)';
+                text = 'P'; // Peluru
+            }
+
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 2;
 
@@ -497,13 +653,93 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.font = `${this.size * 0.6}px 'Press Start 2P'`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            const text = this.type === 'shield' ? 'S' : 'B';
             ctx.fillText(text, 0, 2);
 
             ctx.restore();
         }
     }
     
+    class BackgroundManager {
+        constructor(canvasWidth, canvasHeight) {
+            this.canvasWidth = canvasWidth;
+            this.canvasHeight = canvasHeight;
+            this.stars = [];
+            this.planets = [];
+            this.asteroids = [];
+            this.planetColors = ['#1A0E2A', '#2C183E', '#3D2252', '#361A29', '#52283E', '#1A2233', '#292E47'];
+            this.init();
+        }
+
+        init() {
+            for (let i = 0; i < 100; i++) {
+                this.stars.push({
+                    x: Math.random() * this.canvasWidth,
+                    y: Math.random() * this.canvasHeight,
+                    size: Math.random() * 1.5 + 0.5,
+                    speed: Math.random() * 0.2 + 0.1
+                });
+            }
+
+            for (let i = 0; i < 3; i++) {
+                this.planets.push({
+                    x: Math.random() * this.canvasWidth,
+                    y: Math.random() * (this.canvasHeight - 100),
+                    size: Math.random() * 40 + 20,
+                    color: this.planetColors[Math.floor(Math.random() * this.planetColors.length)],
+                    speed: Math.random() * 0.2 + 0.1
+                });
+            }
+            for (let i = 0; i < 20; i++) {
+                this.asteroids.push({
+                    x: Math.random() * this.canvasWidth,
+                    y: Math.random() * this.canvasHeight,
+                    size: Math.random() * 4 + 1,
+                    color: '#444',
+                    speed: Math.random() * 0.6 + 0.4
+                });
+            }
+        }
+
+        update() {
+            const updateLayer = (layer) => {
+                layer.forEach(item => {
+                    item.y += item.speed;
+                    if (item.y > this.canvasHeight + item.size) {
+                        item.y = -item.size;
+                        item.x = Math.random() * this.canvasWidth;
+                    }
+                });
+            };
+            updateLayer(this.stars);
+            updateLayer(this.planets);
+            updateLayer(this.asteroids);
+        }
+
+        draw(ctx) {
+            ctx.fillStyle = '#fff';
+            this.stars.forEach(s => {
+                ctx.globalAlpha = s.size / 2;
+                ctx.fillRect(s.x, s.y, s.size, s.size);
+            });
+            ctx.globalAlpha = 1;
+
+            this.planets.forEach(p => {
+                ctx.save();
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = p.color;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+            this.asteroids.forEach(a => {
+                ctx.fillStyle = a.color;
+                ctx.fillRect(a.x, a.y, a.size, a.size);
+            });
+        }
+    }
+
     class WaveManager {
         constructor(game) {
             this.game = game;
@@ -513,43 +749,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         update(deltaTime) {
-            if (this.game.isBossActive) return;
+            if (this.game.isBossActive && this.game.stage < 4) return;
             this.waveTimer -= deltaTime;
             if (this.waveTimer <= 0) {
-                const pattern = this.patterns[Math.floor(Math.random() * this.patterns.length)];
-                pattern.call(this, this.game);
-                this.waveTimer = Math.max(1000, this.waveCooldown - (this.game.stage * 200));
+                const dualSpawnChance = Math.min(0.05 + 0.05 * this.game.stage, 0.5); 
+                if (Math.random() < dualSpawnChance) {
+                    let pattern1Index = Math.floor(Math.random() * this.patterns.length);
+                    let pattern2Index = Math.floor(Math.random() * this.patterns.length);
+                    if (this.patterns.length > 1) {
+                        while (pattern2Index === pattern1Index) {
+                            pattern2Index = Math.floor(Math.random() * this.patterns.length);
+                        }
+                    }
+                    this.patterns[pattern1Index].call(this, this.game);
+                    setTimeout(() => {
+                        this.patterns[pattern2Index].call(this, this.game);
+                    }, 500);
+                    this.waveTimer = Math.max(1500, (this.waveCooldown * 1.5) - (this.game.stage * 200));
+                } else {
+                    const pattern = this.patterns[Math.floor(Math.random() * this.patterns.length)];
+                    pattern.call(this, this.game);
+                    this.waveTimer = Math.max(1000, this.waveCooldown - (this.game.stage * 200));
+                }
+            }
+        }
+        
+        spawnSquad(game, enemyType, count, patternLogic) {
+            game.squadCounter++;
+            const squadId = game.squadCounter;
+            for (let i = 0; i < count; i++) {
+                const enemy = new Enemy(enemyTypes[enemyType], 0, 0, game); 
+                enemy.squadId = squadId;
+                patternLogic(enemy, i, count, game);
+                game.enemies.push(enemy);
             }
         }
 
         spawnLine(game) {
             const enemyType = Math.random() < 0.7 ? 'drone' : 'fighter';
             const count = 5 + Math.floor(game.stage / 2);
-            for (let i = 0; i < count; i++) {
-                const enemy = new Enemy(enemyTypes[enemyType], (game.canvas.width / 10) + i * (game.canvas.width * 0.8 / (count-1)), -50);
+            this.spawnSquad(game, enemyType, count, (enemy, i, count, game) => {
+                enemy.x = (game.canvas.width / 10) + i * (game.canvas.width * 0.8 / (count-1));
+                enemy.y = -50;
                 enemy.pattern = (e) => { e.y += 2 * (1 + game.stage * 0.15); };
-                game.enemies.push(enemy);
-            }
+            });
         }
 
         spawnV(game) {
             const enemyType = 'fighter';
-            for (let i = -2; i <= 2; i++) {
-                const enemy = new Enemy(enemyTypes[enemyType], game.canvas.width / 2 + i * 40, -50 - Math.abs(i) * 30);
+            const count = 5;
+            this.spawnSquad(game, enemyType, count, (enemy, i, count, game) => {
+                const index = i - 2;
+                enemy.x = game.canvas.width / 2 + index * 40;
+                enemy.y = -50 - Math.abs(index) * 30;
                 enemy.pattern = (e) => { e.y += 2.5 * (1 + game.stage * 0.15); };
-                game.enemies.push(enemy);
-            }
+            });
         }
 
         spawnSides(game) {
             const enemyType = 'scout';
+            const count = 3;
             const startX = Math.random() < 0.5 ? -30 : game.canvas.width + 30;
             const speedX = (startX < 0 ? 3 : -3) * (1 + game.stage * 0.15);
-            for (let i = 0; i < 3; i++) {
-                const enemy = new Enemy(enemyTypes[enemyType], startX, 100 + i * 50);
+            this.spawnSquad(game, enemyType, count, (enemy, i, count, game) => {
+                enemy.x = startX;
+                enemy.y = 100 + i * 50;
                 enemy.pattern = (e) => { e.x += speedX; e.y += 0.5; };
-                game.enemies.push(enemy);
-            }
+            });
         }
     }
 
@@ -593,17 +859,17 @@ document.addEventListener('DOMContentLoaded', () => {
         displayHighScores(scores, { list1, list2 = null, limit = 3, showMedals = false }) {
             const medals = ['🥇', '🥈', '🥉'];
             if(scores.length === 0){
-                list1.innerHTML = '<li>Tiada markah</li>';
+                list1.innerHTML = '<li>Memuatkan...</li>';
                 if(list2) list2.innerHTML = '';
                 return;
             }
             if (list2) {
-                list1.innerHTML = scores.slice(0, 5).map((s, i) => `<li>${i + 1}. ${s.name} <span>${s.score}</span></li>`).join('');
-                list2.innerHTML = scores.slice(5, 10).map((s, i) => `<li>${i + 6}. ${s.name} <span>${s.score}</span></li>`).join('');
+                list1.innerHTML = scores.slice(0, 5).map((s, i) => `<li><div>${i + 1}. ${s.name}</div><span>${s.score}</span></li>`).join('');
+                list2.innerHTML = scores.slice(5, 10).map((s, i) => `<li><div>${i + 6}. ${s.name}</div><span>${s.score}</span></li>`).join('');
             } else {
                 list1.innerHTML = scores.slice(0, limit).map((s, i) => {
                     const medal = showMedals ? medals[i] || '' : '';
-                    return `<li>${medal} ${s.name} <span>${s.score}</span></li>`;
+                    return `<li><div>${medal} ${s.name}</div><span>${s.score}</span></li>`;
                 }).join('');
             }
         }
@@ -612,8 +878,31 @@ document.addEventListener('DOMContentLoaded', () => {
     class ScoreManager {
         constructor() { this.scores = []; }
         getScores() { return this.scores; }
-        async saveUserScore() { return; }
-        async loadGlobalScores() { this.scores = []; return; }
+        async saveUserScore(db, userId, name, score) {
+            if (!db || !userId) return;
+            try {
+                const scoreRef = window.firebase.doc(db, 'games/galaga/highscores', userId);
+                const docSnap = await window.firebase.getDoc(scoreRef);
+                if (docSnap.exists() && docSnap.data().score >= score) return;
+                await window.firebase.setDoc(scoreRef, { name, score, timestamp: new Date() });
+            } catch (error) { console.error("Ralat menyimpan markah:", error); }
+        }
+        async loadGlobalScores(db) {
+            if (!db) {
+                this.scores = [];
+                return;
+            }
+            try {
+                const q = window.firebase.query(window.firebase.collection(db, "games/galaga/highscores"), window.firebase.orderBy("score", "desc"), window.firebase.limit(10));
+                const querySnapshot = await window.firebase.getDocs(q);
+                const firebaseScores = [];
+                querySnapshot.forEach((doc) => firebaseScores.push(doc.data()));
+                this.scores = firebaseScores;
+            } catch (error) { 
+                console.error("Ralat memuatkan markah:", error); 
+                this.scores = [];
+            }
+        }
         isHighScore(score) {
             if (score <= 0) return false;
             if (this.scores.length < 10) return true;
@@ -627,14 +916,18 @@ document.addEventListener('DOMContentLoaded', () => {
             this.ctx = this.canvas.getContext('2d');
             this.uiManager = new UIManager();
             this.scoreManager = new ScoreManager();
+            this.backgroundManager = null; 
             document.getElementById('game-version').textContent = `v${GAME_VERSION}`;
             this.gameState = 'menu'; 
             this.keys = {}; 
             this.player = null; 
             this.enemies = []; 
             this.projectiles = []; 
+            this.lasers = [];
             this.particles = [];
             this.powerUps = [];
+            this.floatingTexts = [];
+            this.squadCounter = 0;
             this.stage = 1; 
             this.score = 0; 
             this.scoreAtStageStart = 0;
@@ -649,18 +942,49 @@ document.addEventListener('DOMContentLoaded', () => {
             this.isSpecialAttackPressed = false;
             this.screenShakeIntensity = 0;
             this.screenFlashAlpha = 0;
-            
-            this.bombPowerUpDroppedThisStage = false;
-            this.shieldPowerUpDroppedThisStage = false;
+            this.db = null;
+            this.auth = null;
+            this.userId = null;
 
             this.setupShipSelection(); 
             this.setupEventListeners();
-            this.refreshHighScores();
+            this.initializeFirebase();
         }
         
         setupShipSelection() {
             const container = this.uiManager.shipSelection;
+            const statsDisplay = document.getElementById('ship-stats-display');
             container.innerHTML = '';
+            
+            const updateStats = (shipId) => {
+                const stats = shipStats[shipId];
+                const fireRateValue = (400 - stats.fireRate) / 250; 
+                const bulletValue = (stats.bulletCount - 1) / (stats.maxBulletCount - 1);
+
+                statsDisplay.innerHTML = `
+                    <div class="stat-item">
+                        <span>Perisai:</span>
+                        <span>${'❤️'.repeat(stats.hp)}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Bom:</span>
+                        <span>${'💣'.repeat(stats.startingBombs)}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Tembakan:</span>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar" style="width: ${fireRateValue * 100}%"></div>
+                        </div>
+                    </div>
+                     <div class="stat-item">
+                        <span>Peluru:</span>
+                         <div class="stat-bar-container">
+                            <div class="stat-bar" style="width: ${bulletValue * 100}%"></div>
+                        </div>
+                    </div>
+                `;
+            };
+
             let isFirst = true;
             for (const configId in playerConfigs) {
                 const config = playerConfigs[configId];
@@ -675,18 +999,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.appendChild(nameLabel);
                 if (isFirst) {
                     button.classList.add('active');
+                    updateStats(configId);
                     isFirst = false;
                 }
                 button.addEventListener('click', () => {
                     container.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
                     button.classList.add('active');
+                    updateStats(configId);
                 });
                 container.appendChild(button);
             }
         }
         
+        async initializeFirebase() {
+            try {
+                const app = window.firebase.initializeApp(firebaseConfig);
+                this.db = window.firebase.getFirestore(app);
+                this.auth = window.firebase.getAuth(app);
+                await window.firebase.signInAnonymously(this.auth);
+                this.userId = this.auth.currentUser.uid;
+                this.refreshHighScores();
+            } catch (error) {
+                console.error("Gagal memulakan Firebase:", error);
+                this.uiManager.displayHighScores([], { list1: this.uiManager.highscoreList, limit: 3, showMedals: true });
+            }
+        }
+        
         setupEventListeners() {
-            // PEPEJAT DIBETULKAN: Gunakan e.key tanpa toLowerCase()
             window.addEventListener('keydown', (e) => this.keys[e.key] = true);
             window.addEventListener('keyup', (e) => this.keys[e.key] = false);
 
@@ -698,14 +1037,13 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('continue-button').addEventListener('click', () => this.continueGame());
             document.getElementById('save-score-button').addEventListener('click', async () => {
                 const name = document.getElementById('player-name').value.trim().toUpperCase() || 'PLAYER';
-                await this.scoreManager.saveUserScore();
+                await this.scoreManager.saveUserScore(this.db, this.userId, name, this.score);
                 this.uiManager.newHighscoreEntry.style.display = 'none';
                 this.uiManager.gameOverScores.style.display = 'block';
                 await this.refreshHighScores(true); 
             });
             document.getElementById('refresh-scores-button').addEventListener('click', () => this.refreshHighScores());
             
-            // PENAMBAHBAIKAN: Butang untuk tunjuk/sembunyi arahan
             document.getElementById('toggle-instructions-button').addEventListener('click', () => {
                 const instructions = document.getElementById('instructions');
                 const button = document.getElementById('toggle-instructions-button');
@@ -765,7 +1103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         async refreshHighScores(isGameOver = false) {
-            await this.scoreManager.loadGlobalScores();
+            await this.scoreManager.loadGlobalScores(this.db);
             const scores = this.scoreManager.getScores();
             if (isGameOver) {
                 this.uiManager.displayHighScores(scores, { list1: this.uiManager.gosList1, list2: this.uiManager.gosList2, limit: 10 });
@@ -776,12 +1114,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         start(isContinuing = false) {
             this.gameState = 'playing';
-            // PEPEJAT DIBETULKAN: Logik untuk tunjuk/sembunyi gamepad
             const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
             this.uiManager.showGame(isTouchDevice);
             
             this.canvas.width = this.canvas.offsetWidth;
             this.canvas.height = this.canvas.offsetHeight;
+
+            this.backgroundManager = new BackgroundManager(this.canvas.width, this.canvas.height);
 
             if (!isContinuing) {
                 this.stage = 1;
@@ -792,10 +1131,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedConfigId = this.uiManager.shipSelection.querySelector('button.active').dataset.configId;
             const stats = shipStats[selectedConfigId];
             this.player = new Player(playerConfigs[selectedConfigId], stats, this.canvas.width, this.canvas.height);
-            this.enemies = []; this.projectiles = []; this.particles = []; this.powerUps = [];
-            
-            this.bombPowerUpDroppedThisStage = false;
-            this.shieldPowerUpDroppedThisStage = false;
+            this.enemies = []; this.projectiles = []; this.particles = []; this.powerUps = []; this.floatingTexts = []; this.lasers = [];
+            this.squadCounter = 0;
+
             this.scoreAtStageStart = this.score;
             this.isBossActive = false;
             this.stageTimer = 45000;
@@ -853,7 +1191,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 e.isAlive = false;
                                 this.score += (e instanceof Boss) ? 1000 : 100;
                                 this.createExplosion(e.x, e.y, 15);
-                                this.tryDropPowerUp(e.x, e.y);
+                                this.checkSquadWiped(e.squadId, e.x, e.y);
                                 if (e instanceof Boss) { setTimeout(() => this.nextStage(), 2000); }
                             } else { this.createExplosion(p.x, p.y, 5); }
                         }
@@ -865,6 +1203,30 @@ document.addEventListener('DOMContentLoaded', () => {
                             p.isAlive = false; 
                             this.player.takeDamage();
                         }
+                    }
+                }
+            });
+            this.lasers.forEach(laser => {
+                if (!laser.isAlive || !this.player.isAlive) return;
+                const boss = this.enemies.find(e => e instanceof Boss);
+                if (boss) {
+                    const laserRect = {
+                        x: boss.x + laser.laserX - laser.width / 2,
+                        y: laser.y,
+                        width: laser.width,
+                        height: this.canvas.height - laser.y
+                    };
+                    const playerRect = {
+                        x: this.player.x - this.player.size / 3,
+                        y: this.player.y - this.player.size / 3,
+                        width: this.player.size * 2/3,
+                        height: this.player.size * 2/3
+                    };
+                    if (laserRect.x < playerRect.x + playerRect.width &&
+                        laserRect.x + laserRect.width > playerRect.x &&
+                        laserRect.y < playerRect.y + playerRect.height &&
+                        laserRect.y + laserRect.height > playerRect.y) {
+                            this.player.takeDamage();
                     }
                 }
             });
@@ -881,11 +1243,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(!pu.isAlive || !this.player.isAlive) return;
                 const dist = Math.hypot(this.player.x - pu.x, this.player.y - pu.y);
                 if (dist < this.player.size / 2 + pu.size / 2) {
-                    if(pu.type === 'shield') {
-                        this.player.addShield();
-                    } else if (pu.type === 'bomb') {
-                        this.player.addBombs();
-                    }
+                    if(pu.type === 'shield') this.player.addShield();
+                    else if (pu.type === 'bomb') this.player.addBombs();
+                    else if (pu.type === 'bullet') this.player.addBullet();
                     pu.isAlive = false;
                 }
             });
@@ -895,18 +1255,21 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let i = 0; i < count; i++) { this.particles.push(new Particle(x, y)); }
         }
         
-        tryDropPowerUp(x, y) {
-            const dropChance = 0.2; // 20%
-            if (Math.random() > dropChance) return;
-            
-            const dropType = Math.random() < 0.5 ? 'shield' : 'bomb';
-            if (dropType === 'shield' && !this.shieldPowerUpDroppedThisStage) {
-                this.powerUps.push(new PowerUp(x, y, 'shield'));
-                this.shieldPowerUpDroppedThisStage = true;
-            } else if (dropType === 'bomb' && !this.bombPowerUpDroppedThisStage) {
-                this.powerUps.push(new PowerUp(x, y, 'bomb'));
-                this.bombPowerUpDroppedThisStage = true;
+        checkSquadWiped(squadId, x, y) {
+            if (squadId === null || squadId === undefined) return;
+            const squadMatesAlive = this.enemies.some(enemy => enemy.squadId === squadId && enemy.isAlive);
+            if (!squadMatesAlive) {
+                const bonusScore = 500;
+                this.score += bonusScore;
+                this.floatingTexts.push(new FloatingText(x, y, `+${bonusScore}`));
+                this.tryDropPowerUp(x, y);
             }
+        }
+
+        tryDropPowerUp(x, y) {
+            const dropTypes = ['shield', 'bomb', 'bullet'];
+            const dropType = dropTypes[Math.floor(Math.random() * dropTypes.length)];
+            this.powerUps.push(new PowerUp(x, y, dropType));
         }
         
         triggerSpecialAttack() {
@@ -928,8 +1291,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.player && this.gameState === 'playing') {
                 this.player.update(this.keys, this.touchDx, this.touchDy);
                 if (this.keys[' '] || this.isTouchFiring) {
-                    const p = this.player.shoot();
-                    if (p) this.projectiles.push(p);
+                    const newProjectiles = this.player.shoot();
+                    if (newProjectiles) {
+                        this.projectiles.push(...newProjectiles);
+                    }
                 }
                 if(this.keys['b'] || this.isSpecialAttackPressed) {
                     if(this.player.useBomb(this)) {
@@ -939,8 +1304,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             this.projectiles.forEach(p => p.update());
+            this.lasers.forEach(l => l.update());
             this.particles.forEach(p => p.update());
             this.powerUps.forEach(p => p.update());
+            this.floatingTexts.forEach(ft => ft.update());
+            if (this.backgroundManager) this.backgroundManager.update();
             
             if (this.gameState === 'playing' && !this.isBossActive && deltaTime > 0) {
                 this.stageTimer -= deltaTime;
@@ -958,8 +1326,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.enemies = this.enemies.filter(e => e.isAlive && e.y < this.canvas.height + e.size && e.x > -e.size && e.x < this.canvas.width + e.size);
             this.projectiles = this.projectiles.filter(p => p.isAlive && p.y > -p.height && p.y < this.canvas.height);
+            this.lasers = this.lasers.filter(l => l.isAlive);
             this.particles = this.particles.filter(p => p.lifespan > 0);
             this.powerUps = this.powerUps.filter(p => p.isAlive && p.y < this.canvas.height + p.size);
+            this.floatingTexts = this.floatingTexts.filter(ft => ft.lifespan > 0);
             
             this.uiManager.score.textContent = `SKOR: ${this.score}`;
             this.uiManager.stage.textContent = `PERINGKAT: ${this.stage}`;
@@ -979,14 +1349,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             
+            if (this.backgroundManager) this.backgroundManager.draw(this.ctx);
+
             if(this.player && this.player.isAlive) {
                 this.player.drawShield(this.ctx);
                 this.player.draw(this.ctx, timestamp / 100);
             }
             this.projectiles.forEach(p => p.draw(this.ctx));
+            const boss = this.enemies.find(e => e instanceof Boss);
+            this.lasers.forEach(l => l.draw(this.ctx, boss ? boss.x : 0));
             this.enemies.forEach(e => e.draw(this.ctx, timestamp / 100));
             this.particles.forEach(p => p.draw(this.ctx));
             this.powerUps.forEach(p => p.draw(this.ctx));
+            this.floatingTexts.forEach(ft => ft.draw(this.ctx));
 
             if (this.screenFlashAlpha > 0) {
                 this.ctx.fillStyle = `rgba(255, 255, 255, ${this.screenFlashAlpha})`;
@@ -1000,17 +1375,40 @@ document.addEventListener('DOMContentLoaded', () => {
             this.isBossActive = true;
             document.getElementById('game-board-wrapper').classList.add('boss-active-bg');
             this.screenShakeIntensity = 3;
-            this.enemies = this.enemies.filter(e => !e.isAlive);
-            const boss = new Boss(bossTitanConfig, this.canvas.width / 2, -100);
-            boss.entryCompleteTime = null; 
-            boss.pattern = (e, player) => { 
-                if (e.y < 100) { e.y += 1; } 
-                else {
-                    if (e.entryCompleteTime === null) { e.entryCompleteTime = e.age; }
-                    const timeSinceEntry = e.age - e.entryCompleteTime;
-                    e.x = e.initialX + Math.sin(timeSinceEntry / 80) * (this.canvas.width / 2 - e.size / 2 - 20);
-                }
-            };
+            
+            const bossConfig = bossConfigs[(this.stage - 1) % bossConfigs.length];
+            const boss = new Boss(bossConfig, this.canvas.width / 2, -100, this);
+            
+            const baseHp = 200;
+            const additionalHp = (this.stage - 1) * 100;
+            boss.hp = baseHp + additionalHp;
+            
+            if (bossConfig.id === 'boss-titan') {
+                boss.entryCompleteTime = null; 
+                boss.pattern = (e) => { 
+                    if (e.y < 100) { e.y += 1; } 
+                    else {
+                        if (e.entryCompleteTime === null) { e.entryCompleteTime = e.age; }
+                        const timeSinceEntry = e.age - e.entryCompleteTime;
+                        e.x = e.initialX + Math.sin(timeSinceEntry / 80) * (this.canvas.width / 2 - e.size / 2 - 20);
+                    }
+                };
+            } else if (bossConfig.id === 'boss-viper') {
+                 boss.pattern = (e) => { 
+                    if (e.y < 120) { e.y += 1.5; } 
+                    else {
+                        e.x = e.initialX + Math.cos(e.age / 50) * (this.canvas.width / 2 - e.size / 2 - 10);
+                    }
+                };
+            } else if (bossConfig.id === 'boss-serpent') {
+                boss.pattern = (e) => { 
+                    if (e.y < 80) { e.y += 0.5; } 
+                    e.x = e.initialX + Math.sin(e.age / 40) * 100;
+                    e.config.parts.body1.y = -15 + Math.sin(e.age / 10) * 5;
+                    e.config.parts.body2.y = 15 + Math.cos(e.age / 10) * 5;
+                    e.config.parts.body3.y = 40 + Math.sin(e.age / 10) * 5;
+                };
+            }
             this.enemies.push(boss);
         }
 
@@ -1024,8 +1422,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('game-board-wrapper').classList.remove('boss-active-bg');
             this.stageTimer = 45000;
             this.waveManager.waveTimer = 3000;
-            this.bombPowerUpDroppedThisStage = false;
-            this.shieldPowerUpDroppedThisStage = false;
         }
     }
     
