@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keluarga App: Sudoku Klasik</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+        
+        :root {
+            --board-gap: 3px; --border-thick: 2px; --border-thin: 1px;
+            --primary-color: #4CAF50; --error-color: #ffdddd;
+            --font-family-default: 'Nunito', Arial, sans-serif;
+        }
+        body {
+            font-family: var(--font-family-default); display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; background-color: #f0f2f5; padding: 10px; box-sizing: border-box;
+            transition: background-color 0.5s ease;
+        }
+        h1, h2 { color: #333; margin-top: 0; }
+        #app-container { width: 100%; max-width: 600px; text-align: center; }
+        
+        #level-selection button {
+            display: block; width: 80%; max-width: 300px; padding: 15px; font-size: 18px; margin: 10px auto;
+            cursor: pointer; border: 2px solid var(--primary-color); background-color: white; color: var(--primary-color);
+            border-radius: 12px; font-weight: 700; transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #level-selection button:hover { background-color: var(--primary-color); color: white; transform: translateY(-2px); }
+        
+        #game-container { display: none; width: 100%; }
+
+        #game-stats {
+            display: flex;
+            /* --- PERUBAHAN V1.6.1: Menengahkan item tunggal --- */
+            justify-content: center;
+            width: 90%;
+            max-width: 400px;
+            margin: 0 auto 15px auto;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .stat-item {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+        .stat-item span:first-child {
+            color: #666;
+            margin-right: 8px;
+        }
+
+        #sudoku-board {
+            display: grid; border: var(--board-gap) solid #333; margin: 20px auto;
+            width: 90vw; max-width: 500px; aspect-ratio: 1 / 1;
+            border-radius: 8px; overflow: hidden; box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .cell {
+            display: flex; justify-content: center; align-items: center; box-sizing: border-box; cursor: pointer;
+            border: var(--border-thin) solid #ccc; background-color: white; font-size: clamp(16px, 4vw, 28px);
+            font-weight: 700; transition: background-color 0.2s;
+        }
+        .cell.filled { background-color: #e9ecef; color: #343a40; cursor: not-allowed; }
+        .cell.selected { background-color: #a8d1ff; }
+        .cell.error { background-color: var(--error-color); }
+        .cell.hint { color: #1a73e8; font-weight: bold; animation: pop-in 0.3s ease; }
+        @keyframes pop-in { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .grid-9x9 { grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(9, 1fr); }
+        .grid-9x9 .cell:nth-child(3n) { border-right: var(--border-thick) solid #333; }
+        .grid-9x9 .cell:nth-child(9n) { border-right: var(--border-thin) solid #ccc; }
+        .grid-9x9 > .cell:nth-child(n+19):nth-child(-n+27),
+        .grid-9x9 > .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: var(--border-thick) solid #333; }
+        .grid-4x4 { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); }
+        .grid-4x4 .cell:nth-child(2n) { border-right: var(--border-thick) solid #333; }
+        .grid-4x4 .cell:nth-child(4n) { border-right: var(--border-thin) solid #ccc; }
+        .grid-4x4 > .cell:nth-child(n+5):nth-child(-n+8) { border-bottom: var(--border-thick) solid #333; }
+        
+        #digits { display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+        .digit {
+            width: 45px; height: 45px; border: 1px solid #666; margin: 5px; display: flex;
+            justify-content: center; align-items: center; font-size: 22px; cursor: pointer;
+            background-color: #fff; border-radius: 8px; font-weight: 700;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease;
+        }
+        .digit:hover { transform: translateY(-2px); }
+        .digit.eraser { font-weight: bold; }
+        .digit.selected { background-color: var(--primary-color); color: white; transform: scale(1.1); }
+
+        .game-options { margin-bottom: 20px; }
+        .controls { display: flex; flex-wrap: wrap; justify-content: center; }
+        .controls button {
+            padding: 12px 20px; font-size: 16px; cursor: pointer; font-weight: 700;
+            margin: 5px; border-radius: 8px; border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease;
+        }
+        .controls button:hover { transform: translateY(-2px); }
+        #check-button { background-color: #2196F3; color: white; }
+        #reset-button { background-color: #ff9800; color: white; }
+        #hint-button { background-color: #9c27b0; color: white; }
+        #back-button { background-color: #f44336; color: white; }
+        #hint-button:disabled { background-color: #ccc; cursor: not-allowed; }
+        #message { margin-top: 15px; font-size: 18px; font-weight: bold; min-height: 25px; }
+
+        body.kids-theme { background-color: #f0faff; }
+        .kids-theme h1, .kids-theme h2 { color: #0077c2; }
+        .kids-theme #level-selection button { border-color: #ff9800; color: #ff9800; }
+        .kids-theme #level-selection button:hover { background-color: #ff9800; }
+        .kids-theme #game-stats { background-color: #e0f7fa; border: 2px solid #00aaff; }
+        .kids-theme .stat-item { font-size: 20px; }
+        .kids-theme #sudoku-board { border-color: #00aaff; }
+        .kids-theme .cell { border-radius: 8px; font-size: clamp(24px, 6vw, 40px); }
+        .kids-theme .cell.filled { background-color: #e0f7fa; color: #0077c2; }
+        .kids-theme .digit { width: 50px; height: 50px; font-size: 28px; border-radius: 12px; }
+        .kids-theme .digit.selected { background-color: #ff9800; }
+        .kids-theme #check-button { background-color: #00c853; }
+        .kids-theme #reset-button { background-color: #ffc107; }
+        .kids-theme #hint-button { background-color: #651fff; }
+        .kids-theme #back-button { background-color: #ff5252; }
+
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <h1>Sudoku Klasik (V1.6.1)</h1>
+        <div id="level-selection">
+            <h2>Pilih Tahap</h2>
+            <button data-level="kids">Entry Level (4x4)</button>
+            <button data-level="easy">Mudah (9x9)</button>
+            <button data-level="medium">Sederhana (9x9)</button>
+            <button data-level="master">Master (9x9)</button>
+        </div>
+        <div id="game-container">
+            <div id="game-stats">
+                <div class="stat-item">
+                    <span>Masa:</span>
+                    <span id="timer">00:00</span>
+                </div>
+                <!-- --- PERUBAHAN V1.6.1: Paparan Kesilapan dibuang dari sini --- -->
+            </div>
+            <div id="sudoku-board"></div>
+            <div id="digits"></div>
+            <div class="game-options">
+                <label><input type="checkbox" id="live-validation-toggle"> Semak Ralat Semasa Bermain</label>
+            </div>
+            <div class="controls">
+                <button id="check-button">Semak</button>
+                <button id="reset-button">Puzzle Baru</button>
+                <button id="hint-button">Petunjuk (<span id="hint-count">3</span>)</button>
+                <button id="back-button">Kembali</button>
+            </div>
+            <p id="message"></p>
+        </div>
+    </div>
+
+    <script>
+        class SudokuGame {
+            constructor() {
+                this.body = document.body;
+                this.levelSelectionEl = document.getElementById('level-selection');
+                this.gameContainerEl = document.getElementById('game-container');
+                this.boardElement = document.getElementById('sudoku-board');
+                this.digitsElement = document.getElementById('digits');
+                this.checkButton = document.getElementById('check-button');
+                this.resetButton = document.getElementById('reset-button');
+                this.backButton = document.getElementById('back-button');
+                this.messageElement = document.getElementById('message');
+                this.hintButton = document.getElementById('hint-button');
+                this.hintCountSpan = document.getElementById('hint-count');
+                this.liveValidationToggle = document.getElementById('live-validation-toggle');
+                this.timerEl = document.getElementById('timer');
+                // --- PERUBAHAN V1.6.1: Rujukan elemen kesilapan dibuang ---
+                // this.mistakesEl = document.getElementById('mistake-counter');
+
+                this.puzzles = { /* Data teka-teki tidak berubah */ 
+                    'kids':{gridSize:4,puzzles:[{puzzle:[[1,0,4,0],[0,2,0,3],[2,0,3,0],[0,4,0,1]],solution:[[1,3,4,2],[4,2,1,3],[2,1,3,4],[3,4,2,1]]},{puzzle:[[0,0,3,1],[4,0,0,0],[0,0,0,2],[3,4,0,0]],solution:[[2,1,3,4],[4,3,2,1],[1,2,4,3],[3,4,1,2]]},{puzzle:[[4,1,0,0],[0,0,1,4],[0,0,2,3],[2,3,0,0]],solution:[[4,1,3,2],[3,2,1,4],[1,4,2,3],[2,3,4,1]]}]},'easy':{gridSize:9,puzzles:[{puzzle:[[5,3,0,0,7,0,0,0,0],[6,0,0,1,9,5,0,0,0],[0,9,8,0,0,0,0,6,0],[8,0,0,0,6,0,0,0,3],[4,0,0,8,0,3,0,0,1],[7,0,0,0,2,0,0,0,6],[0,6,0,0,0,0,2,8,0],[0,0,0,4,1,9,0,0,5],[0,0,0,0,8,0,0,7,9]],solution:[[5,3,4,6,7,8,9,1,2],[6,7,2,1,9,5,3,4,8],[1,9,8,3,4,2,5,6,7],[8,5,9,7,6,1,4,2,3],[4,2,6,8,5,3,7,9,1],[7,1,3,9,2,4,8,5,6],[9,6,1,5,3,7,2,8,4],[2,8,7,4,1,9,6,3,5],[3,4,5,2,8,6,1,7,9]]},{puzzle:[[0,0,0,2,6,0,7,0,1],[6,8,0,0,7,0,0,9,0],[1,9,0,0,0,4,5,0,0],[8,2,0,1,0,0,0,4,0],[0,0,4,6,0,2,9,0,0],[0,5,0,0,0,3,0,2,8],[0,0,9,3,0,0,0,7,4],[0,4,0,0,5,0,0,3,6],[7,0,3,0,1,8,0,0,0]],solution:[[4,3,5,2,6,9,7,8,1],[6,8,2,5,7,1,4,9,3],[1,9,7,8,3,4,5,6,2],[8,2,6,1,9,7,3,4,5],[3,7,4,6,8,2,9,1,0],[9,5,1,4,0,3,6,2,8],[5,1,9,3,2,6,8,7,4],[2,4,8,9,5,7,1,3,6],[7,6,3,0,1,8,2,5,9]]},{puzzle:[[1,0,0,4,8,9,0,0,6],[7,3,0,0,0,0,0,4,0],[0,0,0,0,0,1,2,9,5],[0,0,7,1,2,0,6,0,0],[5,0,0,7,0,3,0,0,8],[0,0,6,0,9,5,7,0,0],[9,1,4,6,0,0,0,0,0],[0,2,0,0,0,0,0,3,7],[8,0,0,5,1,2,0,0,4]],solution:[[1,5,2,4,8,9,3,7,6],[7,3,9,2,5,6,8,4,1],[4,6,8,3,7,1,2,9,5],[3,8,7,1,2,4,6,5,9],[5,9,1,7,6,3,4,2,8],[2,4,6,8,9,5,7,1,3],[9,1,4,6,3,7,5,8,2],[6,2,5,9,4,8,1,3,7],[8,7,3,5,1,2,9,6,4]]}]},'medium':{gridSize:9,puzzles:[{puzzle:[[0,2,0,0,0,0,0,0,0],[0,0,0,6,0,0,0,0,3],[0,7,4,0,8,0,0,0,0],[0,0,0,0,0,3,0,0,2],[0,8,0,0,4,0,0,1,0],[6,0,0,5,0,0,0,0,0],[0,0,0,0,1,0,7,8,0],[5,0,0,0,0,9,0,0,0],[0,0,0,0,0,0,0,4,0]],solution:[[1,2,6,4,3,7,9,5,8],[8,9,5,6,2,1,4,7,3],[3,7,4,9,8,5,1,2,6],[4,5,7,1,9,3,8,6,2],[9,8,3,2,4,6,5,1,7],[6,1,2,5,7,8,3,9,4],[2,6,9,3,1,4,7,8,5],[5,4,8,7,6,9,2,3,1],[7,3,1,8,5,2,6,4,9]]},{puzzle:[[0,0,0,6,0,0,4,0,0],[7,0,0,0,0,3,6,0,0],[0,0,1,0,9,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,5,0,1,8,0,0,0,3],[0,0,0,3,0,6,0,4,5],[0,4,0,2,0,0,0,6,0],[9,0,3,0,0,0,0,0,0],[0,2,0,0,0,0,1,0,0]],solution:[[5,8,2,6,1,7,4,3,9],[7,9,4,8,2,3,6,5,1],[3,6,1,5,9,4,8,7,2],[4,3,8,9,5,2,7,1,6],[2,5,6,1,8,7,9,4,3],[1,7,9,3,4,6,2,8,5],[8,4,5,2,7,1,3,6,9],[9,1,3,4,6,8,5,2,7],[6,2,7,9,3,5,1,8,4]]},{puzzle:[[2,0,0,8,0,4,0,0,6],[0,0,6,0,0,0,5,0,0],[0,7,4,0,0,0,9,2,0],[0,0,0,0,0,6,0,0,1],[0,0,0,0,5,0,0,0,0],[9,0,0,4,0,0,0,0,0],[0,1,2,0,0,0,8,6,0],[0,0,8,0,0,0,2,0,0],[3,0,0,2,0,1,0,0,9]],solution:[[2,5,1,8,9,4,7,3,6],[8,3,6,7,2,9,5,1,4],[9,7,4,1,6,3,9,2,8],[7,2,5,9,8,6,3,4,1],[1,8,3,0,5,2,6,9,7],[9,6,0,4,1,7,0,8,2],[4,1,2,3,7,5,8,6,0],[6,9,8,0,4,0,2,7,3],[3,0,7,2,0,1,4,5,9]]}]},'master':{gridSize:9,puzzles:[{puzzle:[[8,0,0,0,0,0,0,0,0],[0,0,3,6,0,0,0,0,0],[0,7,0,0,9,0,2,0,0],[0,5,0,0,0,7,0,0,0],[0,0,0,0,4,5,7,0,0],[0,0,0,1,0,0,0,3,0],[0,0,1,0,0,0,0,6,8],[0,0,8,5,0,0,0,1,0],[0,9,0,0,0,0,4,0,0]],solution:[[8,1,2,7,5,3,6,4,9],[9,4,3,6,8,2,1,7,5],[6,7,5,4,9,1,2,8,3],[1,5,4,2,3,7,8,9,6],[3,6,9,8,4,5,7,2,1],[2,8,7,1,6,9,5,3,4],[5,2,1,9,7,4,3,6,8],[4,3,8,5,2,6,9,1,7],[7,9,6,3,1,8,4,5,2]]},{puzzle:[[0,2,0,0,0,0,0,0,0],[0,0,0,0,0,3,0,7,0],[4,0,0,0,0,0,0,0,0],[0,0,0,5,0,0,0,0,8],[0,0,1,0,2,0,0,0,0],[0,0,0,0,0,0,0,6,0],[3,0,0,4,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,9,0,0,0,0,2,0,0]],solution:[[1,2,6,8,7,4,9,5,3],[9,5,8,2,1,3,6,7,4],[4,3,7,9,5,6,8,1,2],[6,7,2,5,3,1,4,9,8],[8,4,1,6,2,9,3,0,0],[5,0,9,7,4,8,1,6,0],[3,1,5,4,0,2,7,8,6],[2,8,4,0,6,7,5,3,1],[7,9,0,3,8,5,2,4,0]]},{puzzle:[[0,0,0,0,0,0,0,1,2],[0,0,0,0,3,5,0,0,0],[0,0,0,6,0,0,0,7,0],[0,0,5,0,0,0,0,0,0],[0,4,0,0,0,0,0,0,0],[1,0,0,0,0,0,6,0,0],[0,0,0,0,0,0,0,0,0],[3,0,0,0,0,0,8,0,0],[0,0,0,1,0,0,0,0,0]],solution:[[6,7,3,8,9,4,5,1,2],[2,1,8,7,3,5,9,4,6],[5,9,4,6,1,2,3,7,8],[7,3,5,2,6,8,1,9,4],[8,4,6,9,5,1,2,3,7],[1,2,9,3,4,7,6,8,5],[4,5,1,0,8,6,7,2,3],[3,6,2,5,7,9,8,0,1],[9,8,7,1,2,3,4,6,0]]}]}
+                };
+                
+                this.gridSize = 0; this.currentPuzzle = null; this.currentSolution = null;
+                this.userBoard = []; this.selectedCell = null; this.selectedDigit = null;
+                this.currentLevel = null; this.lastPuzzleIndex = {};
+                this.hintsRemaining = 3; this.liveValidationEnabled = false;
+                this.timerInterval = null; this.secondsElapsed = 0; this.mistakeCount = 0;
+                
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() { 
+                const levelButtons = this.levelSelectionEl.querySelectorAll('button');
+                levelButtons.forEach(button => { button.addEventListener('click', () => this.startGame(button.dataset.level)); });
+                this.checkButton.addEventListener('click', () => this.checkSolution());
+                this.resetButton.addEventListener('click', () => this.startGame(this.currentLevel));
+                this.backButton.addEventListener('click', () => this.showLevelSelection());
+                this.hintButton.addEventListener('click', () => this.useHint());
+                this.liveValidationToggle.addEventListener('change', (e) => this.toggleLiveValidation(e.target.checked));
+            }
+
+            getNewPuzzle(level) {
+                const levelData = this.puzzles[level]; const puzzlePool = levelData.puzzles;
+                if (!puzzlePool || puzzlePool.length === 0) return null;
+                let newIndex; const lastIndex = this.lastPuzzleIndex[level];
+                if (puzzlePool.length > 1) { do { newIndex = Math.floor(Math.random() * puzzlePool.length); } while (newIndex === lastIndex);
+                } else { newIndex = 0; }
+                this.lastPuzzleIndex[level] = newIndex;
+                return { ...puzzlePool[newIndex], gridSize: levelData.gridSize };
+            }
+            
+            startGame(level) {
+                const newGameData = this.getNewPuzzle(level);
+                if (!newGameData) return;
+                
+                if (level === 'kids') { this.body.classList.add('kids-theme'); } else { this.body.classList.remove('kids-theme'); }
+
+                this.currentLevel = level;
+                this.gridSize = newGameData.gridSize;
+                this.currentPuzzle = newGameData.puzzle;
+                this.currentSolution = newGameData.solution;
+                this.userBoard = this.currentPuzzle.map(row => [...row]);
+                
+                this.hintsRemaining = 3; this.updateHintButton();
+                this.mistakeCount = 0;
+                // --- PERUBAHAN V1.6.1: Panggilan untuk mengemas kini paparan kesilapan dibuang ---
+                // this.updateMistakesDisplay();
+                this.startTimer();
+
+                this.levelSelectionEl.style.display = 'none';
+                this.gameContainerEl.style.display = 'block';
+                this.messageElement.textContent = '';
+                this.setupBoard();
+                this.setupControls();
+                this.validateBoard();
+            }
+
+            showLevelSelection() {
+                this.body.classList.remove('kids-theme');
+                this.gameContainerEl.style.display = 'none';
+                this.levelSelectionEl.style.display = 'block';
+                clearInterval(this.timerInterval);
+            }
+
+            setupBoard() { 
+                 this.boardElement.innerHTML = ''; this.boardElement.className = '';
+                this.boardElement.classList.add(`grid-${this.gridSize}x${this.gridSize}`);
+                for (let r = 0; r < this.gridSize; r++) { for (let c = 0; c < this.gridSize; c++) {
+                    const cell = document.createElement('div'); cell.classList.add('cell');
+                    cell.dataset.row = r; cell.dataset.col = c;
+                    const num = this.currentPuzzle[r][c];
+                    if (num !== 0) { cell.textContent = num; cell.classList.add('filled'); }
+                    else { cell.addEventListener('click', (e) => this.handleCellClick(e.target)); }
+                    this.boardElement.appendChild(cell);
+                }}
+            }
+            setupControls() {
+                this.digitsElement.innerHTML = '';
+                for (let i = 1; i <= this.gridSize; i++) {
+                    const digit = document.createElement('div'); digit.classList.add('digit');
+                    digit.textContent = i; digit.addEventListener('click', (e) => this.handleDigitClick(e.target));
+                    this.digitsElement.appendChild(digit);
+                }
+                const eraser = document.createElement('div'); eraser.classList.add('digit', 'eraser');
+                eraser.textContent = 'X'; eraser.addEventListener('click', (e) => this.handleDigitClick(e.target, true));
+                this.digitsElement.appendChild(eraser);
+            }
+
+            recordMove(row, col, value) {
+                const numValue = value === '' ? 0 : parseInt(value);
+                const previousValue = this.userBoard[row][col];
+                
+                if (previousValue !== this.currentSolution[row][col]) {
+                     if (numValue !== 0 && numValue !== this.currentSolution[row][col]) {
+                        this.mistakeCount++;
+                        // --- PERUBAHAN V1.6.1: Panggilan untuk mengemas kini paparan kesilapan dibuang ---
+                        // this.updateMistakesDisplay();
+                    }
+                }
+                this.userBoard[row][col] = numValue;
+            }
+
+            handleCellClick(cellElement) {
+                if (this.selectedDigit) {
+                    const value = this.selectedDigit.classList.contains('eraser') ? '' : this.selectedDigit.textContent;
+                    cellElement.textContent = value;
+                    this.recordMove(cellElement.dataset.row, cellElement.dataset.col, value);
+                    this.selectedDigit.classList.remove('selected');
+                    this.selectedDigit = null;
+                    this.validateBoard();
+                } else {
+                    if (this.selectedCell) this.selectedCell.classList.remove('selected');
+                    this.selectedCell = cellElement;
+                    this.selectedCell.classList.add('selected');
+                }
+            }
+
+            handleDigitClick(digitElement, isEraser = false) {
+                if (this.selectedCell) {
+                    const value = isEraser ? '' : digitElement.textContent;
+                    this.selectedCell.textContent = value;
+                    this.recordMove(this.selectedCell.dataset.row, this.selectedCell.dataset.col, value);
+                    this.selectedCell.classList.remove('selected');
+                    this.selectedCell = null;
+                    this.validateBoard();
+                } else {
+                    if (this.selectedDigit) this.selectedDigit.classList.remove('selected');
+                    this.selectedDigit = digitElement;
+                    this.selectedDigit.classList.add('selected');
+                }
+            }
+            
+            startTimer() {
+                clearInterval(this.timerInterval);
+                this.secondsElapsed = 0;
+                this.timerEl.textContent = '00:00';
+                this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+            }
+
+            updateTimer() {
+                this.secondsElapsed++;
+                const minutes = Math.floor(this.secondsElapsed / 60).toString().padStart(2, '0');
+                const seconds = (this.secondsElapsed % 60).toString().padStart(2, '0');
+                this.timerEl.textContent = `${minutes}:${seconds}`;
+            }
+
+            // --- PERUBAHAN V1.6.1: Fungsi ini tidak lagi diperlukan ---
+            // updateMistakesDisplay() {
+            //     this.mistakesEl.textContent = this.mistakeCount;
+            // }
+
+            useHint() { 
+                if (this.hintsRemaining > 0 && this.selectedCell && this.selectedCell.textContent === '') {
+                    const row = this.selectedCell.dataset.row; const col = this.selectedCell.dataset.col;
+                    const solutionNum = this.currentSolution[row][col];
+                    this.selectedCell.textContent = solutionNum; this.selectedCell.classList.add('hint');
+                    this.userBoard[row][col] = solutionNum; this.hintsRemaining--;
+                    this.updateHintButton(); this.validateBoard();
+                }
+            }
+            updateHintButton() { 
+                this.hintCountSpan.textContent = this.hintsRemaining;
+                this.hintButton.disabled = this.hintsRemaining === 0;
+            }
+            toggleLiveValidation(isEnabled) { 
+                this.liveValidationEnabled = isEnabled; this.validateBoard();
+            }
+            validateBoard() { 
+                this.boardElement.querySelectorAll('.cell').forEach(c => c.classList.remove('error'));
+                if (!this.liveValidationEnabled) return;
+                for (let r = 0; r < this.gridSize; r++) { for (let c = 0; c < this.gridSize; c++) {
+                    const num = this.userBoard[r][c];
+                    if (num === 0 || this.currentPuzzle[r][c] !== 0) continue;
+                    if (!this.isNumberValid(num, r, c)) {
+                        const cell = this.boardElement.querySelector(`[data-row='${r}'][data-col='${c}']`);
+                        if (cell) cell.classList.add('error');
+                    }
+                }}
+            }
+            isNumberValid(num, row, col) { 
+                for (let i = 0; i < this.gridSize; i++) { if ((this.userBoard[row][i] == num && i != col) || (this.userBoard[i][col] == num && i != row)) return false; }
+                const boxSize = Math.sqrt(this.gridSize);
+                const startRow = row - row % boxSize; const startCol = col - col % boxSize;
+                for (let r = 0; r < boxSize; r++) { for (let c = 0; c < boxSize; c++) {
+                    if (this.userBoard[r + startRow][c + startCol] == num && (r + startRow != row || c + startCol != col)) return false;
+                }}
+                return true;
+            }
+            checkSolution() {
+                let isCorrect = true;
+                for (let r = 0; r < this.gridSize; r++) {
+                    for (let c = 0; c < this.gridSize; c++) {
+                        if (this.userBoard[r][c] != this.currentSolution[r][c]) {
+                            isCorrect = false; break;
+                        }
+                    }
+                    if (!isCorrect) break;
+                }
+
+                if (isCorrect) {
+                    clearInterval(this.timerInterval);
+                    // Mesej kemenangan masih memaparkan jumlah kesilapan
+                    this.messageElement.textContent = `Tahniah! Selesai dalam ${this.timerEl.textContent} dengan ${this.mistakeCount} kesilapan.`;
+                    this.messageElement.style.color = 'green';
+                } else {
+                    this.messageElement.textContent = 'Maaf, ada kesilapan. Cuba lagi!';
+                    this.messageElement.style.color = 'red';
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => { new SudokuGame(); });
+    </script>
+</body>
+</html>
