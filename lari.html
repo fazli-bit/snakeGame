@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pecutan Cyberpunk v0.8.3</title>
+    <title>Pecutan Cyberpunk v0.9.0</title>
     <style>
         body {
             margin: 0;
@@ -22,13 +22,13 @@
             background-color: #0a0a0a;
             max-width: 100%;
             max-height: 100%;
-            flex-shrink: 0; /* BUG FIX: Prevent canvas from shrinking */
+            flex-shrink: 0;
         }
         #container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* BUG FIX: Center content vertically */
+            justify-content: center;
             text-align: center;
             height: 100vh;
             width: 100%;
@@ -61,13 +61,11 @@
             font-family: 'Courier New', Courier, monospace;
             -webkit-tap-highlight-color: transparent;
         }
-        /* Show HTML buttons only in portrait on mobile */
         @media screen and (orientation: portrait) and (hover: none) and (pointer: coarse) {
             #mobile-controls {
                 display: flex;
             }
         }
-        /* Hide HTML buttons in landscape */
          @media screen and (orientation: landscape) {
             #mobile-controls {
                 display: none;
@@ -77,7 +75,7 @@
 </head>
 <body>
     <div id="container">
-        <h1>Pecutan Cyberpunk - Versi Pembangunan 0.8.3</h1>
+        <h1>Pecutan Cyberpunk - Versi Pembangunan 0.9.0</h1>
         <button id="fullscreenButton">Skrin Penuh</button>
         <canvas id="gameCanvas"></canvas>
         <div id="mobile-controls">
@@ -89,10 +87,11 @@
     <script>
         // ... (Sejarah versi sebelumnya) ...
         
-        // --- VERSI 0.8.3: PEMBETULAN UI & KAWALAN SENTUHAN ---
-        // 1. Membetulkan semua butang menu & UI yang tidak berfungsi disebabkan isu penskalaan.
-        // 2. Mengembalikan kawalan sentuhan di atas kanvas untuk mod landskap.
-        // 3. Memperbaiki susun atur CSS untuk mengelakkan paparan terpotong.
+        // --- VERSI 0.9.0: PENAMBAHBAIKAN GRAFIK PEMAIN & MUSUH ---
+        // 1. Menggantikan bentuk segi empat pemain dengan sprite ringkas.
+        // 2. Menambah animasi larian 2-bingkai untuk pemain.
+        // 3. Menggantikan bentuk segi empat dron dengan reka bentuk robotik.
+        // 4. Menambah pergerakan 'bobbing' pada dron.
 
         class InputHandler {
             constructor(game, jumpButton, dashButton) {
@@ -113,18 +112,15 @@
                 this.game.canvas.addEventListener('mousedown', e => this.handlePointerDown(e.offsetX, e.offsetY));
                 this.game.canvas.addEventListener('touchstart', e => {
                     e.preventDefault();
-                    // Handle multiple touches, just use the first one
                     const touch = e.touches[0];
                     this.handlePointerDown(touch.clientX - this.game.canvas.getBoundingClientRect().left, touch.clientY - this.game.canvas.getBoundingClientRect().top);
                 }, { passive: false });
                 
-                // Clear keys on touch end for all mobile controls
                 window.addEventListener('touchend', e => {
                     e.preventDefault();
                     this.keys = [];
                 }, { passive: false });
 
-                // Handle HTML buttons for portrait mode
                 if (game.isMobile) {
                     jumpButton.addEventListener('touchstart', e => { e.preventDefault(); this.keys.push(' '); }, { passive: false });
                     dashButton.addEventListener('touchstart', e => { e.preventDefault(); this.keys.push('Shift'); }, { passive: false });
@@ -132,7 +128,6 @@
             }
 
             handlePointerDown(x, y) {
-                // BUG FIX: Scale click/touch coordinates to match canvas internal resolution
                 const rect = this.game.canvas.getBoundingClientRect();
                 const scaleX = this.game.canvas.width / rect.width;
                 const scaleY = this.game.canvas.height / rect.height;
@@ -149,7 +144,6 @@
                     if (this.isButtonClicked(scaledX, scaledY, this.game.ui.restartButton)) this.game.reset();
                 }
 
-                // BUG FIX: Handle on-canvas controls for landscape mobile
                 if (this.game.isMobile && this.game.gameState === 'PLAYING' && window.innerWidth > window.innerHeight) {
                     const distDash = Math.hypot(scaledX - this.game.ui.landscapeDashButton.x, scaledY - this.game.ui.landscapeDashButton.y);
                     const distJump = Math.hypot(scaledX - this.game.ui.landscapeJumpButton.x, scaledY - this.game.ui.landscapeJumpButton.y);
@@ -189,6 +183,11 @@
                 this.jumpStrength = 15; this.shield = 0; this.maxStamina = 5; this.stamina = this.maxStamina;
                 this.staminaRegenTimer = 0; this.staminaRegenInterval = 2000; this.dashCost = 3;
                 this.dashBoost = 0; this.maxDashBoost = 80; this.dashReturnSpeed = 1.0; this.wasOnGround = false;
+                // NEW: Animation properties
+                this.frameTimer = 0;
+                this.frameInterval = 150; // Slower animation
+                this.currentFrame = 0;
+                this.maxFrame = 1; // 2 frames for running
             }
 
             update(input, deltaTime) {
@@ -234,9 +233,21 @@
                 if (this.vy < 0 && !input.keys.includes(' ')) {
                     this.vy = Math.max(this.vy, -(this.jumpStrength * 0.5)); 
                 }
+
+                // NEW: Animation update logic
+                if(currentlyOnGround){
+                    this.frameTimer += deltaTime;
+                    if(this.frameTimer > this.frameInterval){
+                        this.frameTimer = 0;
+                        this.currentFrame = (this.currentFrame + 1) % (this.maxFrame + 1);
+                    }
+                } else {
+                    this.currentFrame = 1; // Use jump frame when in air
+                }
             }
 
             draw(context) {
+                // Shield effect
                 if (this.shield > 0) {
                     context.fillStyle = 'rgba(0, 255, 255, 0.3)';
                     context.fillRect(this.x + this.dashBoost - 5, this.y - 5, this.width + 10, this.height + 10);
@@ -244,8 +255,27 @@
                          context.fillRect(this.x + this.dashBoost - 10, this.y - 10, this.width + 20, this.height + 20);
                     }
                 }
+                
+                // NEW: Drawing player sprite
+                const bodyX = this.x + this.dashBoost;
+                // Body
+                context.fillStyle = '#ccc';
+                context.fillRect(bodyX + 5, this.y + 15, 20, 25);
+                // Head
+                context.fillStyle = '#888';
+                context.fillRect(bodyX, this.y, 30, 20);
+                // Visor
                 context.fillStyle = '#0f0';
-                context.fillRect(this.x + this.dashBoost, this.y, this.width, this.height);
+                context.fillRect(bodyX + 2, this.y + 8, 26, 5);
+                // Legs (animation)
+                context.fillStyle = '#aaa';
+                if(this.currentFrame === 0){
+                    context.fillRect(bodyX + 5, this.y + 40, 10, 10); // Leg 1
+                    context.fillRect(bodyX + 15, this.y + 35, 10, 15); // Leg 2
+                } else {
+                    context.fillRect(bodyX + 5, this.y + 35, 10, 15); // Leg 1
+                    context.fillRect(bodyX + 15, this.y + 40, 10, 10); // Leg 2
+                }
             }
 
             onGround() {
@@ -295,7 +325,34 @@
         }
 
         class Drone extends Enemy {
-            constructor(game, x, y) { super(game, x, y); }
+             constructor(game, x, y) {
+                super(game, x, y);
+                // NEW: Bobbing properties
+                this.angle = 0;
+                this.bobSpeed = 0.05;
+                this.bobAmplitude = 3;
+            }
+            update(){
+                super.update();
+                // NEW: Update bobbing motion
+                this.angle += this.bobSpeed;
+            }
+            draw(context){
+                // NEW: Drawing drone sprite
+                const bobY = Math.sin(this.angle) * this.bobAmplitude;
+                const currentY = this.y + bobY;
+
+                // Propellers
+                context.fillStyle = '#666';
+                context.fillRect(this.x, currentY - 2, 8, 2);
+                context.fillRect(this.x + this.width - 8, currentY - 2, 8, 2);
+                // Main Body
+                context.fillStyle = '#888';
+                context.fillRect(this.x, currentY, this.width, this.height - 5);
+                // Red Eye
+                context.fillStyle = '#f00';
+                context.fillRect(this.x + 5, currentY + 5, this.width - 10, 10);
+            }
         }
 
         class PowerUp {
@@ -367,7 +424,6 @@
                 this.instructionsBackButton = { x: this.game.width / 2 - 100, y: 330, w: 200, h: 50 };
                 this.restartButton = { x: this.game.width / 2 - 155, y: 200, w: 150, h: 50 };
                 this.gameOverMenuButton = { x: this.game.width / 2 + 5, y: 200, w: 150, h: 50 };
-                // NEW: Landscape on-canvas button definitions
                 this.landscapeDashButton = { x: 80, y: this.game.height - 80, r: 50 };
                 this.landscapeJumpButton = { x: this.game.width - 80, y: this.game.height - 80, r: 50 };
             }
