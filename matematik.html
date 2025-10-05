@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keluarga App: Latihan Matematik</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700&display=swap');
+
+        :root {
+            --bg-color: #f0faff;
+            --primary-color: #ffc107;
+            --correct-color: #4CAF50;
+            --wrong-color: #f44336;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --line-color: #333;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--bg-color);
+        }
+
+        #app-container {
+            width: 90%;
+            max-width: 400px;
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Fredoka One', cursive;
+            color: var(--primary-color);
+            margin-top: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px #fff, 4px 4px rgba(0,0,0,0.1);
+        }
+        
+        #selection-screen h2 {
+            font-family: 'Fredoka One', cursive;
+            color: var(--text-color);
+        }
+        .selection-group { margin-bottom: 20px; }
+
+        /* --- PERUBAHAN V2.1.1: Saiz butang tahap dikecilkan --- */
+        .selection-group button {
+            display: inline-block;
+            padding: 10px 15px;
+            font-size: 1em;
+            margin: 5px;
+            cursor: pointer;
+            border: 2px solid var(--primary-color);
+            background-color: white;
+            color: var(--primary-color);
+            border-radius: 12px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        .selection-group button.selected, .selection-group button:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        #operator-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        /* --- PERUBAHAN V2.1.1: Saiz butang operasi dibesarkan --- */
+        .operator-btn {
+            padding: 20px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 3em;
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 5px 0 #a0a0a0;
+            transition: all 0.1s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .operator-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #a0a0a0;
+        }
+        #op-add { background-color: #2196F3; box-shadow: 0 5px 0 #0d47a1; }
+        #op-subtract { background-color: #f44336; box-shadow: 0 5px 0 #b71c1c; }
+        #op-multiply { background-color: #9c27b0; box-shadow: 0 5px 0 #4a148c; }
+        #op-divide { background-color: #4CAF50; box-shadow: 0 5px 0 #1b5e20; }
+
+        #game-screen, #final-score-screen { display: none; }
+        #game-screen { position: relative; }
+        
+        #score-display {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.5em;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        #lazim-table { width: 100%; margin: 20px 0; font-family: 'Fredoka One', cursive; font-size: 3em; border-collapse: collapse; }
+        #lazim-table td { text-align: center; width: 1.5em; height: 1.5em; padding: 5px; }
+        .digit-box { background-color: #e3f2fd; color: #0d47a1; border-radius: 12px; width: 1.5em; height: 1.5em; display: flex; justify-content: center; align-items: center; margin: auto; }
+        .operator-cell { font-size: 1.2em; }
+        .number-row-2 { border-bottom: 6px solid var(--line-color); }
+        
+        #answer-input { width: 100%; height: 100%; border: none; background: transparent; font-family: 'Fredoka One', cursive; font-size: 1em; text-align: right; padding: 0 10px; box-sizing: border-box; letter-spacing: 0.25em; border-bottom: 4px solid #bdbdbd; }
+        #answer-input:focus { outline: none; border-bottom-color: var(--primary-color); }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        #feedback-message { font-size: 2em; font-weight: 700; min-height: 50px; margin: 20px 0; transition: transform 0.2s ease; }
+        .button-container { margin-top: 20px; }
+        .action-button { padding: 15px 30px; font-size: 1.5em; font-weight: 700; cursor: pointer; border: none; border-radius: 15px; color: white; box-shadow: 0 5px 0 #a0a0a0; transition: all 0.1s ease; }
+        .action-button:active { transform: translateY(3px); box-shadow: 0 2px 0 #a0a0a0; }
+        #check-button { background-color: #2196F3; box-shadow: 0 5px 0 #0d47a1; }
+        #next-button { background-color: var(--primary-color); box-shadow: 0 5px 0 #c79100; display: none; }
+        
+        #back-button { position: absolute; top: 0; right: 0; padding: 8px 15px; font-size: 1em; background-color: #757575; box-shadow: 0 4px 0 #424242; }
+        #back-button:active { transform: translateY(2px); box-shadow: 0 2px 0 #424242; }
+
+        .correct { color: var(--correct-color); transform: scale(1.1); }
+        .wrong { color: var(--wrong-color); animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <h1>Latihan Matematik!</h1>
+        
+        <div id="selection-screen">
+            <div class="selection-group">
+                <h2>Pilih Tahap</h2>
+                <button data-selection="difficulty" data-value="very_easy" class="selected">Sangat Mudah</button>
+                <button data-selection="difficulty" data-value="easy">Mudah</button>
+                <button data-selection="difficulty" data-value="normal">Biasa</button>
+            </div>
+             <div class="selection-group">
+                <h2>Pilih Latihan</h2>
+                <div id="operator-buttons">
+                    <button id="op-add" class="operator-btn" data-op="+">+</button>
+                    <button id="op-subtract" class="operator-btn" data-op="-">-</button>
+                    <button id="op-multiply" class="operator-btn" data-op="*">×</button>
+                    <button id="op-divide" class="operator-btn" data-op="/">÷</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-screen">
+            <button id="back-button" class="action-button">Menu</button>
+            <div id="score-display"></div>
+            <table id="lazim-table"></table>
+            <div id="feedback-message"></div>
+            <div class="button-container">
+                <button id="check-button" class="action-button">Semak</button>
+                <button id="next-button" class="action-button">Seterusnya</button>
+            </div>
+        </div>
+
+        <div id="final-score-screen">
+             <h2>Latihan Selesai!</h2>
+             <p style="font-size: 1.5em; margin: 20px 0;">Skor Anda:</p>
+             <p id="final-score" style="font-family: 'Fredoka One', cursive; font-size: 4em; color: var(--correct-color); margin: 10px 0;"></p>
+             <button id="play-again-menu" class="action-button" style="background-color: var(--primary-color); box-shadow: 0 5px 0 #c79100;">Main Lagi</button>
+        </div>
+    </div>
+
+    <script>
+        class MathGame {
+            constructor() {
+                this.selectionScreen = document.getElementById('selection-screen');
+                this.gameScreen = document.getElementById('game-screen');
+                this.scoreDisplay = document.getElementById('score-display');
+                this.lazimTable = document.getElementById('lazim-table');
+                this.feedbackMessage = document.getElementById('feedback-message');
+                this.checkButton = document.getElementById('check-button');
+                this.nextButton = document.getElementById('next-button');
+                this.backButton = document.getElementById('back-button');
+                this.finalScoreScreen = document.getElementById('final-score-screen');
+                this.finalScoreEl = document.getElementById('final-score');
+                this.playAgainMenuButton = document.getElementById('play-again-menu');
+
+                this.correctAnswer = 0;
+                this.answerInput = null;
+                
+                this.currentDifficulty = 'very_easy';
+                this.difficultySettings = {
+                    'very_easy': { add: 10, subtract: 10, multiply: 5, divide: { d: 5, q: 5 } },
+                    'easy':      { add: 50, subtract: 50, multiply: 10, divide: { d: 10, q: 10 } },
+                    'normal':    { add: 100, subtract: 100, multiply: 12, divide: { d: 12, q: 12 } }
+                };
+                this.currentOperation = '+';
+                this.score = 0;
+                this.questionCount = 0;
+                this.totalQuestions = 10;
+
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.querySelectorAll('button[data-selection="difficulty"]').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        this.currentDifficulty = e.target.dataset.value;
+                        document.querySelectorAll('button[data-selection="difficulty"]').forEach(btn => btn.classList.remove('selected'));
+                        e.target.classList.add('selected');
+                    });
+                });
+                document.querySelectorAll('.operator-btn').forEach(button => {
+                    button.addEventListener('click', () => this.startGame(button.dataset.op));
+                });
+                this.checkButton.addEventListener('click', () => this.checkAnswer());
+                this.nextButton.addEventListener('click', () => this.nextQuestion());
+                this.backButton.addEventListener('click', () => this.showMenu());
+                this.playAgainMenuButton.addEventListener('click', () => this.showMenu());
+            }
+
+            showMenu() {
+                this.gameScreen.style.display = 'none';
+                this.finalScoreScreen.style.display = 'none';
+                this.selectionScreen.style.display = 'block';
+            }
+
+            startGame(operation) {
+                this.currentOperation = operation;
+                this.score = 0;
+                this.questionCount = 0;
+                this.selectionScreen.style.display = 'none';
+                this.finalScoreScreen.style.display = 'none';
+                this.gameScreen.style.display = 'block';
+                this.nextQuestion();
+            }
+
+            generateQuestion() {
+                let num1, num2;
+                const settings = this.difficultySettings[this.currentDifficulty];
+                const operatorSymbol = this.currentOperation === '*' ? '×' : (this.currentOperation === '/' ? '÷' : this.currentOperation);
+
+                switch(this.currentOperation) {
+                    case '+':
+                        num1 = Math.floor(Math.random() * (settings.add + 1));
+                        num2 = Math.floor(Math.random() * (settings.add + 1));
+                        this.correctAnswer = num1 + num2;
+                        break;
+                    case '-':
+                        num1 = Math.floor(Math.random() * (settings.subtract + 1));
+                        num2 = Math.floor(Math.random() * (num1 + 1));
+                        this.correctAnswer = num1 - num2;
+                        break;
+                    case '*':
+                        num1 = Math.floor(Math.random() * (settings.multiply + 1));
+                        num2 = Math.floor(Math.random() * (settings.multiply + 1));
+                        this.correctAnswer = num1 * num2;
+                        break;
+                    case '/':
+                        const divisor = Math.floor(Math.random() * (settings.divide.d - 1)) + 2;
+                        const quotient = Math.floor(Math.random() * settings.divide.q) + 1;
+                        num1 = divisor * quotient;
+                        num2 = divisor;
+                        this.correctAnswer = quotient;
+                        break;
+                }
+                this.buildLazimTable(num1, num2, operatorSymbol);
+            }
+            
+            buildLazimTable(num1, num2, operator) { this.lazimTable.innerHTML = ''; const num1Str = String(num1).padStart(3, ' '); const num2Str = String(num2).padStart(3, ' '); const row1 = this.lazimTable.insertRow(); row1.insertCell(); for (const char of num1Str) { if (char !== ' ') { row1.insertCell().innerHTML = `<div class="digit-box">${char}</div>`; } else { row1.insertCell(); } } const row2 = this.lazimTable.insertRow(); row2.classList.add('number-row-2'); row2.insertCell().textContent = operator; row2.cells[0].classList.add('operator-cell'); for (const char of num2Str) { if (char !== ' ') { row2.insertCell().innerHTML = `<div class="digit-box">${char}</div>`; } else { row2.insertCell(); } } const answerRow = this.lazimTable.insertRow(); answerRow.classList.add('answer-row'); answerRow.insertCell(); const answerCell = answerRow.insertCell(); answerCell.colSpan = 3; this.answerInput = document.createElement('input'); this.answerInput.type = 'number'; this.answerInput.id = 'answer-input'; this.answerInput.autofocus = true; answerCell.appendChild(this.answerInput); this.answerInput.addEventListener('keyup', (event) => { if (event.key === 'Enter') { if(this.checkButton.style.display !== 'none') this.checkAnswer(); else this.nextQuestion(); } }); }
+            checkAnswer() { const userAnswer = parseInt(this.answerInput.value); this.feedbackMessage.classList.remove('correct', 'wrong'); this.questionCount++; if (isNaN(userAnswer)) { this.feedbackMessage.textContent = 'Sila masukkan nombor!'; this.feedbackMessage.classList.add('wrong'); } else if (userAnswer === this.correctAnswer) { this.feedbackMessage.textContent = 'Bijak! Betul!'; this.feedbackMessage.classList.add('correct'); this.score++; } else { this.feedbackMessage.textContent = `Hampir Tepat! Jawapannya ${this.correctAnswer}`; this.feedbackMessage.classList.add('wrong'); } this.updateScore(); this.toggleButtons(true); }
+            nextQuestion() { if (this.questionCount >= this.totalQuestions) { this.showFinalScore(); return; } this.generateQuestion(); this.feedbackMessage.textContent = ''; this.feedbackMessage.classList.remove('correct', 'wrong'); this.toggleButtons(false); this.updateScore(); if(this.answerInput) this.answerInput.focus(); }
+            showFinalScore() { this.gameScreen.style.display = 'none'; this.finalScoreScreen.style.display = 'block'; this.finalScoreEl.textContent = `${this.score} / ${this.totalQuestions}`; }
+            updateScore() { this.scoreDisplay.textContent = `Skor: ${this.score} | Soalan: ${this.questionCount + 1} / ${this.totalQuestions}`; }
+            toggleButtons(isAnswered) { if (isAnswered) { this.checkButton.style.display = 'none'; this.nextButton.style.display = 'inline-block'; if(this.answerInput) this.answerInput.disabled = true; this.nextButton.focus(); } else { this.checkButton.style.display = 'inline-block'; this.nextButton.style.display = 'none'; if(this.answerInput) this.answerInput.disabled = false; } }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => new MathGame());
+    </script>
+</body>
+</html>
+
