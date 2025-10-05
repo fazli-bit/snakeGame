@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Keluarga App: Lukisan Kreatif (V3.0.0)</title>
+    <title>Keluarga App: Lukisan Kreatif (V3.0.1)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700&display=swap');
 
@@ -36,9 +36,42 @@
             justify-content: center;
             align-items: center;
             gap: 10px;
-            z-index: 10;
+            z-index: 1000; /* Pastikan di atas segalanya */
             box-sizing: border-box;
+            position: relative; /* Diubah untuk transisi */
+            transition: transform 0.3s ease;
         }
+        
+        /* --- PERUBAHAN V3.0.1: Toolbar Boleh Disembunyikan --- */
+        #toolbar.hidden {
+            transform: translateY(-100%);
+        }
+
+        #toolbar-toggle {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 30px;
+            background: var(--toolbar-bg);
+            border: none;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            box-shadow: 0 4px 8px var(--shadow-color);
+            cursor: pointer;
+            z-index: 999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #toolbar-toggle svg {
+            transition: transform 0.3s ease;
+        }
+        #toolbar.hidden + #main-content #toolbar-toggle svg {
+            transform: rotate(180deg);
+        }
+
 
         .tool-group { display: flex; align-items: center; gap: 8px; }
         .tool-group label { font-weight: 700; font-size: 0.9em; }
@@ -55,9 +88,20 @@
         #brush-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNwbGF0Ij48cGF0aCBkPSJNMTYgMTEuMyBjLjQtMS4zIDEuMy0yLjMgMi44LTIuMyAxLjggMCAzLjIgMS4zIDMgMy4yIDAgMi4zLTMgNS4zLTUgNS4zcy01LTMtNS01LjMgMS4yLTMuMiAzLTMuMiBjMS41IDAgMi40IDEgMi44IDIuMyIvPjxwYXRoIGQ9Ik0xOCAyLjVsMiAydi0yWiIvPjxwYXRoIGQ9Ik0xMyAxMy41bDEgMSIvPjxwYXRoIGQ9Ik0yMSAzbDItMiIvPjxwYXRoIGQ9Ik0zIDZIMW00LTIgMi0yIiIvPjxwYXRoIGQ9Ik0zIDIxaMiIvPjxwYXRoIGQ9Ik0xMiAxM2MtLjMgMS4zLTEuNSAyLjQtMi41IDIgLTEuNSAwLTMtMS44LTMtNC41cyEuNS00LjUgMy00LjUgMS4zIDEuMSA0IDMuNSIvPjwvc3ZnPg=='); }
         #pan-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWhhbmQiPjxwYXRoIGQ9Im0xOCAxNS02LTZoNi02Ii8+PHBhdGggZD0iTTUgMTUtMiAydi00bDIgMiIvPjxwYXRoIGQ9Im0yIDEyIDMtMyA0IDQiLz48cGF0aCBkPSJtMSAxIDYgNiIvPjxwYXRoIGQ9Ik0xMiAyMiY5LTkgOS05Ii8+PC9zdmc+'); }
         #eraser-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWVyYXNlciI+PHBhdGggZD0iTTIxIDExSDYubDUtNS03IDciLz48cGF0aCBkPSJNMjEgMTFIMTEuMThjLS45MiAwLTEuNzEuNTQtMi4wNiAxLjM3bC0zIDcuMjNjLS4zNi44My0xLjEgMS40LTIuMDIgMS40SDEuNSIvPjwvc3ZnPg=='); }
+        #undo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXVuZG8tMiI+PHBhdGggZD0iTTMgNyBjMC0yLjUgMi4xLTYgNy02IDUgMCA3IDQtNyA4LTEuNyAwLTMuMi0uNi00LjItMS40Ii8+PHBhdGggZD0iTTcgMk41IDdsMi41LTIuNSIvPjwvc3ZnPg=='); }
+        #redo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlZG8tMiI+PHBhdGggZD0iTTIxIDdjMC0yLjUtMi4xLTYtNy02LTUgMC03IDQtNyA4IDEuNyAwIDMuMi0uNiA0LjItMS40Ii8+PHBhdGggZD0iTTE3IDJsMi41IDUgMi41LTIuNSIvPjwvc3ZnPg=='); }
+        #save-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWRvd25sb2FkIj48cGF0aCBkPSJNMjEgMTV2NGMwIDEuMS0uOSAyLTIgMkg1Yy0xLjEgMC0yLS45LTItMlYxNSIvPjxwYXRoIGQ9Ik03IDEwbDUgNSA1LTUiLz48cGF0aCBkPSJNMTIgMTVWM20wIDAiLz48L3N2Zz4='); background-color: var(--primary-color); }
+        #clear-btn { background-color: #f44336; color: white; border-radius: 8px; width: auto; padding: 0 15px; font-weight: 700; height: 38px; }
         
         #zoom-in-btn, #zoom-out-btn { font-size: 1.2em; font-weight: bold; }
         
+        #color-picker { width: 38px; height: 38px; border: none; padding: 0; border-radius: 50%; overflow: hidden; }
+        #color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+        #color-picker::-webkit-color-swatch { border: none; }
+        
+        #size-slider { width: 80px; }
+        #size-display { font-weight: 700; min-width: 25px; text-align: right; }
+
         #main-content { display: flex; width: 100%; flex-grow: 1; overflow: hidden; }
 
         #canvas-container { 
@@ -69,13 +113,14 @@
             position: relative; 
             background-color: var(--bg-color);
             overflow: hidden;
-            cursor: crosshair;
         }
         #canvas-container.panning { cursor: grab; }
+        #canvas-container.drawing { cursor: crosshair; }
 
         #canvas-wrapper {
             position: relative;
             box-shadow: 0 0 15px var(--shadow-color);
+            background-color: white;
         }
         
         .canvas-layer, #preview-canvas { 
@@ -98,6 +143,11 @@
             <button id="eraser-btn" class="tool-btn" data-tool="eraser"></button>
         </div>
         <div class="tool-group">
+            <label>Sejarah:</label>
+            <button id="undo-btn" class="tool-btn"></button>
+            <button id="redo-btn" class="tool-btn"></button>
+        </div>
+        <div class="tool-group">
             <label>Zum:</label>
             <button id="zoom-out-btn" class="tool-btn">-</button>
             <button id="zoom-in-btn" class="tool-btn">+</button>
@@ -111,12 +161,18 @@
             <input type="range" id="size-slider" min="1" max="100" value="15">
             <span id="size-display">15</span>
         </div>
+        <div class="tool-group">
+            <button id="clear-btn">Kosongkan</button>
+            <button id="save-btn" class="tool-btn"></button>
+        </div>
+        <button id="toolbar-toggle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+        </button>
     </div>
 
     <div id="main-content">
         <div id="canvas-container">
             <div id="canvas-wrapper">
-                <!-- Kanvas lapisan akan dijana oleh JS di sini -->
                 <canvas id="preview-canvas"></canvas>
             </div>
         </div>
@@ -137,11 +193,10 @@
                 this.brushColor = '#000000';
                 this.currentTool = 'brush';
 
-                // --- PERUBAHAN BESAR V3.0.0: State untuk Pan & Zum ---
                 this.zoom = 1;
                 this.panOffset = { x: 0, y: 0 };
                 this.startPanPoint = { x: 0, y: 0 };
-                this.canvasSize = { width: 1920, height: 1080 }; // Saiz kanvas maya
+                this.canvasSize = { width: 1920, height: 1080 };
 
                 this.layers = [];
                 this.activeLayerIndex = 0;
@@ -154,6 +209,7 @@
                 this.setupEventListeners();
                 this.addLayer();
                 this.centerCanvas();
+                this.updateCursor();
             }
 
             setupCanvasSize() {
@@ -172,7 +228,7 @@
                 const canvas = document.createElement('canvas');
                 canvas.className = 'canvas-layer';
                 this.canvasWrapper.insertBefore(canvas, this.previewCanvas);
-                const layer = { canvas: canvas, ctx: canvas.getContext('2d') };
+                const layer = { canvas: canvas, ctx: canvas.getContext('2d'), history: [], historyIndex: -1 };
                 this.layers.push(layer);
                 this.setupCanvasSize();
             }
@@ -182,14 +238,23 @@
                 this.previewCanvas.addEventListener('mousemove', (e) => this.moveAction(e));
                 this.previewCanvas.addEventListener('mouseup', (e) => this.endAction(e));
                 this.previewCanvas.addEventListener('mouseleave', (e) => this.endAction(e));
-                this.canvasContainer.addEventListener('wheel', (e) => this.handleZoom(e));
+                this.canvasContainer.addEventListener('wheel', (e) => this.handleZoom(e), { passive: false });
 
                 this.toolbar.addEventListener('click', (e) => this.handleToolbarClick(e));
-                // ... listener untuk warna dan saiz ...
+                document.getElementById('color-picker').addEventListener('input', (e) => {
+                    this.brushColor = e.target.value;
+                    if (this.currentTool !== 'pan') this.currentTool = 'brush';
+                    this.setActiveButton(document.getElementById('brush-btn'), '.tool-btn[data-tool]');
+                });
+                document.getElementById('size-slider').addEventListener('input', (e) => {
+                    this.brushSize = e.target.value;
+                    document.getElementById('size-display').textContent = e.target.value;
+                });
+                document.getElementById('toolbar-toggle').addEventListener('click', () => {
+                    this.toolbar.classList.toggle('hidden');
+                });
             }
             
-            // ... (Fungsi-fungsi lain yang telah diubah suai atau baharu)
-
             getEventPosition(e) {
                 const rect = this.canvasContainer.getBoundingClientRect();
                 return { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -250,22 +315,19 @@
                 e.preventDefault();
                 const zoomIntensity = 0.1;
                 const wheel = e.deltaY < 0 ? 1 : -1;
-                const zoom = Math.exp(wheel * zoomIntensity);
+                const zoomMultiplier = Math.exp(wheel * zoomIntensity);
                 const pos = this.getEventPosition(e);
 
-                this.panOffset.x -= pos.x;
-                this.panOffset.y -= pos.y;
-                this.panOffset.x *= zoom;
-                this.panOffset.y *= zoom;
-                this.panOffset.x += pos.x;
-                this.panOffset.y += pos.y;
+                this.panOffset.x = pos.x - (pos.x - this.panOffset.x) * zoomMultiplier;
+                this.panOffset.y = pos.y - (pos.y - this.panOffset.y) * zoomMultiplier;
                 
-                this.zoom *= zoom;
+                this.zoom *= zoomMultiplier;
                 this.updateTransform();
             }
 
             centerCanvas() {
                 const containerRect = this.canvasContainer.getBoundingClientRect();
+                this.zoom = Math.min(containerRect.width / this.canvasSize.width, containerRect.height / this.canvasSize.height) * 0.9;
                 this.panOffset.x = (containerRect.width - this.canvasSize.width * this.zoom) / 2;
                 this.panOffset.y = (containerRect.height - this.canvasSize.height * this.zoom) / 2;
                 this.updateTransform();
@@ -282,30 +344,28 @@
                 if (target.dataset.tool) {
                     this.setActiveButton(target, '.tool-btn[data-tool]');
                     this.currentTool = target.dataset.tool;
+                    this.updateCursor();
                 }
 
-                if (target.id === 'zoom-in-btn') {
-                    this.zoomAtCenter(1.2);
-                }
-                if (target.id === 'zoom-out-btn') {
-                    this.zoomAtCenter(1 / 1.2);
-                }
-                // ... (logik butang lain)
+                if (target.id === 'zoom-in-btn') this.zoomAtCenter(1.2);
+                if (target.id === 'zoom-out-btn') this.zoomAtCenter(1 / 1.2);
             }
             
             zoomAtCenter(zoomMultiplier) {
                 const containerRect = this.canvasContainer.getBoundingClientRect();
                 const center = { x: containerRect.width / 2, y: containerRect.height / 2 };
-                
-                this.panOffset.x -= center.x;
-                this.panOffset.y -= center.y;
-                this.panOffset.x *= zoomMultiplier;
-                this.panOffset.y *= zoomMultiplier;
-                this.panOffset.x += center.x;
-                this.panOffset.y += center.y;
-                
+                this.panOffset.x = center.x - (center.x - this.panOffset.x) * zoomMultiplier;
+                this.panOffset.y = center.y - (center.y - this.panOffset.y) * zoomMultiplier;
                 this.zoom *= zoomMultiplier;
                 this.updateTransform();
+            }
+
+            updateCursor() {
+                if (this.currentTool === 'pan') {
+                    this.canvasContainer.style.cursor = 'grab';
+                } else {
+                    this.canvasContainer.style.cursor = 'crosshair';
+                }
             }
 
             setActiveButton(button, selector) {
