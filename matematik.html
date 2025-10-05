@@ -17,16 +17,15 @@
             --line-color: #333;
         }
 
-        /* --- PEMBETULAN V2.2.1: Membetulkan susun atur untuk skrin kecil --- */
         body {
             font-family: 'Nunito', sans-serif;
             display: flex;
             justify-content: center;
-            /* align-items: center; Dibuang untuk membenarkan skrol */
+            align-items: center;
             min-height: 100vh;
             margin: 0;
             background-color: var(--bg-color);
-            padding: 20px 10px; /* Tambah padding atas dan bawah */
+            padding: 10px; /* Kurangkan padding */
             box-sizing: border-box;
         }
 
@@ -34,7 +33,7 @@
             width: 90%;
             max-width: 400px;
             background-color: var(--card-bg);
-            padding: 30px;
+            padding: 20px; /* Kurangkan padding */
             border-radius: 24px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             text-align: center;
@@ -44,20 +43,22 @@
             font-family: 'Fredoka One', cursive;
             color: var(--primary-color);
             margin-top: 0;
-            font-size: 2.5em;
+            margin-bottom: 15px; /* Kurangkan margin */
+            font-size: 2.2em; /* Kecilkan sedikit */
             text-shadow: 2px 2px #fff, 4px 4px rgba(0,0,0,0.1);
         }
         
         #selection-screen h2 {
             font-family: 'Fredoka One', cursive;
             color: var(--text-color);
+            font-size: 1.5em; /* Kecilkan sedikit */
+            margin-bottom: 10px;
         }
-        .selection-group { margin-bottom: 20px; }
+        .selection-group { margin-bottom: 15px; }
 
         .selection-group button {
-            display: inline-block;
-            padding: 10px 15px;
-            font-size: 1em;
+            padding: 8px 12px; /* Kecilkan sedikit */
+            font-size: 0.9em;
             margin: 5px;
             cursor: pointer;
             border: 2px solid var(--primary-color);
@@ -75,13 +76,13 @@
         #operator-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
+            gap: 10px; /* Kurangkan gap */
+            margin-top: 10px;
         }
         .operator-btn {
-            padding: 20px;
+            padding: 15px; /* Kurangkan padding */
             font-family: 'Fredoka One', cursive;
-            font-size: 3em;
+            font-size: 2.5em; /* Kecilkan sedikit */
             border-radius: 15px;
             color: white;
             box-shadow: 0 5px 0 #a0a0a0;
@@ -103,39 +104,31 @@
         
         #score-display {
             font-family: 'Fredoka One', cursive;
-            font-size: 1.5em;
+            font-size: 1.2em;
             color: #888;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
-        #lazim-table { width: 100%; margin: 20px 0; font-family: 'Fredoka One', cursive; font-size: 3em; border-collapse: collapse; }
-        #lazim-table td { text-align: center; width: 1.5em; height: 1.5em; padding: 5px; }
+        #lazim-table { width: 100%; margin: 10px 0; font-family: 'Fredoka One', cursive; font-size: clamp(2.2em, 10vw, 3em); border-collapse: collapse; }
+        #lazim-table td { text-align: center; width: 1.5em; height: 1.5em; padding: 2px; }
         .digit-box { background-color: #e3f2fd; color: #0d47a1; border-radius: 12px; width: 1.5em; height: 1.5em; display: flex; justify-content: center; align-items: center; margin: auto; }
         .operator-cell { font-size: 1.2em; }
         .number-row-2 { border-bottom: 6px solid var(--line-color); }
         
         #answer-display { 
-            width: 100%; 
-            height: 1.5em; 
-            font-family: 'Fredoka One', cursive; 
-            font-size: 1em; 
-            text-align: right; 
-            padding: 0 10px; 
-            box-sizing: border-box; 
-            letter-spacing: 0.25em; 
-            border-bottom: 4px solid #bdbdbd; 
-            color: var(--text-color);
-            min-height: 1.5em;
+            width: 100%; height: 1.5em; font-family: 'Fredoka One', cursive; font-size: 1em; text-align: right; 
+            padding: 0 5px; box-sizing: border-box; letter-spacing: 0.25em; border-bottom: 4px solid #bdbdbd; 
+            color: var(--text-color); min-height: 1.5em;
         }
 
-        #feedback-message { font-size: 2em; font-weight: 700; min-height: 50px; margin-top: 10px; transition: transform 0.2s ease; }
-        .button-container { margin-top: 10px; margin-bottom: 20px; }
-        .action-button { padding: 15px 30px; font-size: 1.5em; font-weight: 700; cursor: pointer; border: none; border-radius: 15px; color: white; box-shadow: 0 5px 0 #a0a0a0; transition: all 0.1s ease; }
+        #feedback-message { font-size: 1.5em; font-weight: 700; min-height: 40px; margin-top: 10px; transition: transform 0.2s ease; }
+        .button-container { margin-top: 10px; margin-bottom: 15px; }
+        .action-button { padding: 12px 25px; font-size: 1.2em; font-weight: 700; cursor: pointer; border: none; border-radius: 15px; color: white; box-shadow: 0 5px 0 #a0a0a0; transition: all 0.1s ease; }
         .action-button:active { transform: translateY(3px); box-shadow: 0 2px 0 #a0a0a0; }
         #check-button { background-color: #2196F3; box-shadow: 0 5px 0 #0d47a1; }
         #next-button { background-color: var(--primary-color); box-shadow: 0 5px 0 #c79100; display: none; }
         
-        #back-button { position: absolute; top: 0; right: 0; padding: 8px 15px; font-size: 1em; background-color: #757575; box-shadow: 0 4px 0 #424242; }
+        #back-button { position: absolute; top: -10px; right: -10px; padding: 8px 15px; font-size: 1em; background-color: #757575; box-shadow: 0 4px 0 #424242; }
         #back-button:active { transform: translateY(2px); box-shadow: 0 2px 0 #424242; }
 
         #numpad {
@@ -145,8 +138,8 @@
         }
         .numpad-btn {
             font-family: 'Fredoka One', cursive;
-            font-size: 2em;
-            padding: 15px;
+            font-size: 1.5em; /* Kecilkan sedikit */
+            padding: 10px; /* Kurangkan padding */
             border: none;
             border-radius: 15px;
             background-color: #f5f5f5;
@@ -203,6 +196,7 @@
     </div>
 
     <script>
+        // ... (JavaScript tidak berubah dari versi sebelumnya) ...
         class MathGame {
             constructor() {
                 this.selectionScreen = document.getElementById('selection-screen');
@@ -217,21 +211,17 @@
                 this.finalScoreEl = document.getElementById('final-score');
                 this.playAgainMenuButton = document.getElementById('play-again-menu');
                 this.numpad = document.getElementById('numpad');
-
                 this.correctAnswer = 0;
                 this.answerDisplay = null;
-                
                 this.currentDifficulty = 'very_easy';
                 this.difficultySettings = { 'very_easy': { add: 10, subtract: 10, multiply: 5, divide: { d: 5, q: 5 } }, 'easy': { add: 50, subtract: 50, multiply: 10, divide: { d: 10, q: 10 } }, 'normal': { add: 100, subtract: 100, multiply: 12, divide: { d: 12, q: 12 } } };
                 this.currentOperation = '+';
                 this.score = 0;
                 this.questionCount = 0;
                 this.totalQuestions = 10;
-
                 this.buildNumpad();
                 this.setupEventListeners();
             }
-
             setupEventListeners() {
                 document.querySelectorAll('button[data-selection="difficulty"]').forEach(b => { b.addEventListener('click', (e) => { this.currentDifficulty = e.target.dataset.value; document.querySelectorAll('button[data-selection="difficulty"]').forEach(btn => btn.classList.remove('selected')); e.target.classList.add('selected'); }); });
                 document.querySelectorAll('.operator-btn').forEach(b => { b.addEventListener('click', () => this.startGame(b.dataset.op)); });
@@ -240,7 +230,6 @@
                 this.backButton.addEventListener('click', () => this.showMenu());
                 this.playAgainMenuButton.addEventListener('click', () => this.showMenu());
             }
-            
             buildNumpad() {
                 const buttons = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Padam', '0' ];
                 buttons.forEach(val => {
@@ -255,9 +244,8 @@
                     this.numpad.appendChild(btn);
                 });
             }
-            appendNumber(num) { if (this.answerDisplay && !this.checkButton.hidden) this.answerDisplay.textContent += num; }
+            appendNumber(num) { if (this.answerDisplay && this.checkButton.style.display !== 'none') this.answerDisplay.textContent += num; }
             deleteNumber() { if (this.answerDisplay) this.answerDisplay.textContent = this.answerDisplay.textContent.slice(0, -1); }
-            
             showMenu() { this.gameScreen.style.display = 'none'; this.finalScoreScreen.style.display = 'none'; this.selectionScreen.style.display = 'block'; }
             startGame(operation) { this.currentOperation = operation; this.score = 0; this.questionCount = 0; this.selectionScreen.style.display = 'none'; this.finalScoreScreen.style.display = 'none'; this.gameScreen.style.display = 'block'; this.nextQuestion(); }
             generateQuestion() {
