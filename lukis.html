@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Keluarga App: Lukisan Kreatif (V2.1.2)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700&display=swap');
+
+        :root {
+            --bg-color: #f0f2f5;
+            --toolbar-bg: #ffffff;
+            --canvas-bg: #ffffff;
+            --primary-color: #2196F3;
+            --shadow-color: rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: var(--bg-color);
+            overflow: hidden;
+        }
+        
+        h1 {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        #toolbar {
+            width: 100%;
+            background-color: var(--toolbar-bg);
+            box-shadow: 0 4px 8px var(--shadow-color);
+            padding: 5px 10px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        .tool-group { display: flex; align-items: center; gap: 8px; }
+        .tool-group label { font-weight: 700; font-size: 0.9em; }
+
+        .tool-btn {
+            width: 38px; height: 38px; border-radius: 50%; border: 3px solid transparent;
+            cursor: pointer; transition: all 0.2s ease;
+            background-color: #eee; background-size: 55%; background-repeat: no-repeat; background-position: center;
+        }
+        .tool-btn:hover { transform: scale(1.1); }
+        .tool-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .tool-btn.active { border-color: var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
+        
+        #brush-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNwbGF0Ij48cGF0aCBkPSJNMTYgMTEuMyBjLjQtMS4zIDEuMy0yLjMgMi44LTIuMyAxLjggMCAzLjIgMS4zIDMgMy4yIDAgMi4zLTMgNS4zLTUgNS4zcy01LTMtNS01LjMgMS4yLTMuMiAzLTMuMiBjMS41IDAgMi40IDEgMi44IDIuMyIvPjxwYXRoIGQ9Ik0xOCAyLjVsMiAydi0yWiIvPjxwYXRoIGQ9Ik0xMyAxMy41bDEgMSIvPjxwYXRoIGQ9Ik0yMSAzbDItMiIvPjxwYXRoIGQ9Ik0zIDZIMW00LTIgMi0yIiIvPjxwYXRoIGQ9Ik0zIDIxaMiIvPjxwYXRoIGQ9Ik0xMiAxM2MtLjMgMS4zLTEuNSAyLjQtMi41IDIgLTEuNSAwLTMtMS44LTMtNC41cyEuNS00LjUgMy00LjUgMS4zIDEuMSA0IDMuNSIvPjwvc3ZnPg=='); }
+        #eraser-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWVyYXNlciI+PHBhdGggZD0iTTIxIDExSDYubDUtNS03IDciLz48cGF0aCBkPSJNMjEgMTFIMTEuMThjLS45MiAwLTEuNzEuNTQtMi4wNiAxLjM3bC0zIDcuMjNjLS4zNi44My0xLjEgMS40LTIuMDIgMS40SDEuNSIvPjwvc3ZnPg=='); }
+        #line-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWxpbmUiPjxwYXRoIGQ9Ik01IDEyLjc1bDE0LTMuNSIvPjxjaXJjbGUgY3g9IjQuNUMiIGN5PSIxNS41IiByPSIyLjUiLz48Y2lyY2xlIGN4PSIxOS41IiBjeT0iOC41IiByPSIyLjUiLz48L3N2Zz4='); }
+        #rect-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlY3RhbmdsZS1ob3Jpem9udGFsIj48cGF0aCBkPSJNMjEgN0gyYy0xLjEgMC0yIC45LTIgMnY2YzAgMS4xLjkgMiAyIDJoMTljMS4xIDAgMi0uOSAyLTJWOWMwLTEuMS0uOS0yLTItMloiLz48L3N2Zz4='); }
+        #circle-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNpcmNsZSI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiLz48L3N2Zz4='); }
+        #undo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXVuZG8tMiI+PHBhdGggZD0iTTMgNyBjMC0yLjUgMi4xLTYgNy02IDUgMCA3IDQtNyA4LTEuNyAwLTMuMi0uNi00LjItMS40Ii8+PHBhdGggZD0iTTcgMk41IDdsMi41LTIuNSIvPjwvc3ZnPg=='); }
+        #redo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlZG8tMiI+PHBhdGggZD0iTTIxIDdjMC0yLjUtMi4xLTYtNy02LTUgMC03IDQtNyA4IDEuNyAwIDMuMi0uNiA0LjItMS40Ii8+PHBhdGggZD0iTTE3IDJsMi41IDUgMi41LTIuNSIvPjwvc3ZnPg=='); }
+        #save-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWRvd25sb2FkIj48cGF0aCBkPSJNMjEgMTV2NGMwIDEuMS0uOSAyLTIgMkg1Yy0xLjEgMC0yLS45LTItMlYxNSIvPjxwYXRoIGQ9Ik03IDEwbDUgNSA1LTUiLz48cGF0aCBkPSJNMTIgMTVWM20wIDAiLz48L3N2Zz4='); background-color: var(--primary-color); }
+        #clear-btn { background-color: #f44336; color: white; border-radius: 8px; width: auto; padding: 0 15px; font-weight: 700; height: 38px; }
+        
+        #color-picker { width: 38px; height: 38px; border: none; padding: 0; border-radius: 50%; overflow: hidden; }
+        #color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+        #color-picker::-webkit-color-swatch { border: none; }
+        
+        .size-btn { background-color: #333; display: flex; justify-content: center; align-items: center; border-radius: 50%; width: 38px; height: 38px; border: 3px solid transparent; cursor: pointer; }
+        .size-btn.active { border-color: var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
+        .size-dot { background-color: white; border-radius: 50%; }
+        #size-small .size-dot { width: 5px; height: 5px; }
+        #size-medium .size-dot { width: 10px; height: 10px; }
+        #size-large .size-dot { width: 20px; height: 20px; }
+        #size-slider { width: 80px; }
+        #size-display { font-weight: 700; min-width: 25px; text-align: right; }
+
+        #main-content { display: flex; width: 100%; flex-grow: 1; overflow: hidden; }
+
+        #canvas-container { 
+            flex-grow: 1; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 10px; 
+            box-sizing: border-box; 
+            position: relative; 
+            background-color: var(--canvas-bg);
+        }
+        .canvas-layer, #preview-canvas { 
+            position: absolute; 
+            cursor: none; 
+            pointer-events: none; 
+            background-color: transparent;
+        }
+        #preview-canvas { pointer-events: auto; z-index: 100; }
+        
+        #custom-cursor { position: absolute; border: 1px solid #333; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); display: none; }
+        
+        #layers-dropdown { height: 38px; border-radius: 5px; border: 2px solid #ccc; font-weight: 700; }
+        .layer-control-btn {
+            width: 32px; height: 32px; border: none;
+            background-color: #eee; border-radius: 5px; cursor: pointer; font-size: 1.2em;
+        }
+        #layers-dropdown option.hidden-layer { color: #999; }
+
+        #confirm-dialog-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 200; animation: fade-in 0.3s ease; }
+        #confirm-box { background-color: white; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 8px 16px rgba(0,0,0,0.2); max-width: 300px; }
+        #confirm-message { font-size: 1.2em; margin-bottom: 20px; }
+        .confirm-btn { padding: 10px 20px; font-size: 1em; font-weight: 700; cursor: pointer; border: none; border-radius: 8px; color: white; margin: 0 10px; }
+        #confirm-yes { background-color: #f44336; }
+        #confirm-no { background-color: #757575; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <h1 id="app-title">Lukisan Kreatif</h1>
+        <div class="tool-group">
+            <label>Alat:</label>
+            <button id="brush-btn" class="tool-btn active" data-tool="brush"></button>
+            <button id="eraser-btn" class="tool-btn" data-tool="eraser"></button>
+            <button id="line-btn" class="tool-btn" data-tool="line"></button>
+            <button id="rect-btn" class="tool-btn" data-tool="rect"></button>
+            <button id="circle-btn" class="tool-btn" data-tool="circle"></button>
+        </div>
+        <div class="tool-group">
+            <label>Sejarah:</label>
+            <button id="undo-btn" class="tool-btn"></button>
+            <button id="redo-btn" class="tool-btn"></button>
+        </div>
+        <div class="tool-group">
+            <label>Warna:</label>
+            <input type="color" id="color-picker" value="#000000">
+        </div>
+        <div class="tool-group">
+            <label>Saiz:</label>
+            <button id="size-small" class="size-btn" data-size="5"><div class="size-dot"></div></button>
+            <button id="size-medium" class="size-btn active" data-size="15"><div class="size-dot"></div></button>
+            <button id="size-large" class="size-btn" data-size="30"><div class="size-dot"></div></button>
+            <input type="range" id="size-slider" min="1" max="100" value="15">
+            <span id="size-display">15</span>
+        </div>
+        <div class="tool-group">
+            <label>Lapisan:</label>
+            <select id="layers-dropdown"></select>
+            <button id="add-layer-btn" class="layer-control-btn" title="Tambah Lapisan">+</button>
+            <button id="delete-layer-btn" class="layer-control-btn" title="Padam Lapisan">-</button>
+            <button id="visibility-btn" class="layer-control-btn" title="Tukar Keterlihatan">👁️</button>
+        </div>
+        <div class="tool-group">
+            <button id="clear-btn">Kosongkan</button>
+            <button id="save-btn" class="tool-btn"></button>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div id="canvas-container">
+            <!-- Kanvas lapisan akan dijana oleh JS di sini -->
+            <canvas id="preview-canvas"></canvas>
+            <div id="custom-cursor"></div>
+        </div>
+    </div>
+    
+    <div id="confirm-dialog-overlay">
+        <div id="confirm-box">
+            <p id="confirm-message"></p>
+            <div>
+                <button id="confirm-yes" class="confirm-btn">Ya</button>
+                <button id="confirm-no" class="confirm-btn">Tidak</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class CustomConfirm { constructor() { this.overlay = document.getElementById('confirm-dialog-overlay'); this.messageEl = document.getElementById('confirm-message'); this.yesBtn = document.getElementById('confirm-yes'); this.noBtn = document.getElementById('confirm-no'); } show(message) { return new Promise((resolve) => { this.messageEl.textContent = message; this.overlay.style.display = 'flex'; const yesHandler = () => { this.overlay.style.display = 'none'; resolve(true); this.yesBtn.removeEventListener('click', yesHandler); this.noBtn.removeEventListener('click', noHandler); }; const noHandler = () => { this.overlay.style.display = 'none'; resolve(false); this.yesBtn.removeEventListener('click', yesHandler); this.noBtn.removeEventListener('click', noHandler); }; this.yesBtn.addEventListener('click', yesHandler); this.noBtn.addEventListener('click', noHandler); }); } }
+
+        class DrawingApp {
+            constructor() {
+                this.appTitle = document.getElementById('app-title');
+                this.canvasContainer = document.getElementById('canvas-container');
+                this.previewCanvas = document.getElementById('preview-canvas');
+                this.previewCtx = this.previewCanvas.getContext('2d');
+                this.toolbar = document.getElementById('toolbar');
+                this.customCursor = document.getElementById('custom-cursor');
+                this.confirmDialog = new CustomConfirm();
+                this.sizeSlider = document.getElementById('size-slider');
+                this.sizeDisplay = document.getElementById('size-display');
+                this.undoBtn = document.getElementById('undo-btn');
+                this.redoBtn = document.getElementById('redo-btn');
+                this.layersDropdown = document.getElementById('layers-dropdown');
+                this.addLayerBtn = document.getElementById('add-layer-btn');
+                this.deleteLayerBtn = document.getElementById('delete-layer-btn');
+                this.visibilityBtn = document.getElementById('visibility-btn');
+                
+                this.isDrawing = false;
+                this.brushSize = 15;
+                this.brushColor = '#000000';
+                this.currentTool = 'brush';
+                this.startPos = { x: 0, y: 0 };
+                
+                this.layers = [];
+                this.activeLayerIndex = -1;
+                this.layerCounter = 0;
+                
+                this.appTitle.textContent += ' (V2.1.2)';
+
+                window.addEventListener('load', () => this.initApp());
+            }
+            
+            initApp() {
+                this.setupEventListeners();
+                this.addLayer();
+                this.resizeAllCanvases();
+                this.updateCursor(); // Panggil di sini
+                window.addEventListener('resize', () => this.resizeAllCanvases());
+            }
+
+            addLayer() {
+                this.layerCounter++;
+                const layerId = this.layers.length;
+                const canvas = document.createElement('canvas');
+                canvas.id = `canvas-${layerId}`;
+                canvas.className = 'canvas-layer';
+                this.canvasContainer.insertBefore(canvas, this.previewCanvas);
+
+                const layer = {
+                    id: layerId, name: `Lapisan ${this.layerCounter}`, canvas: canvas, ctx: canvas.getContext('2d'),
+                    visible: true, history: [], historyIndex: -1
+                };
+
+                this.layers.push(layer);
+                this.resizeCanvas(layer);
+                this.setActiveLayer(layerId);
+                this.saveState();
+            }
+
+            async deleteLayer() {
+                if (this.layers.length <= 1) return;
+                const confirmed = await this.confirmDialog.show('Anda pasti mahu memadam lapisan ini?');
+                if (confirmed) {
+                    const layerToRemove = this.layers[this.activeLayerIndex];
+                    layerToRemove.canvas.remove();
+                    this.layers.splice(this.activeLayerIndex, 1);
+                    this.layers.forEach((layer, index) => layer.id = index);
+                    this.setActiveLayer(Math.max(0, this.activeLayerIndex - 1));
+                }
+            }
+
+            setActiveLayer(index) {
+                this.activeLayerIndex = index;
+                this.renderLayersList();
+                this.updateHistoryButtons();
+            }
+
+            toggleVisibility() {
+                const layer = this.getActiveLayer();
+                if (!layer) return;
+                layer.visible = !layer.visible;
+                layer.canvas.style.display = layer.visible ? 'block' : 'none';
+                this.renderLayersList();
+            }
+            
+            renderLayersList() {
+                this.layersDropdown.innerHTML = '';
+                [...this.layers].reverse().forEach((layer) => {
+                    const option = document.createElement('option');
+                    option.value = layer.id;
+                    option.textContent = layer.name;
+                    if (!layer.visible) { option.classList.add('hidden-layer'); }
+                    this.layersDropdown.appendChild(option);
+                });
+                this.layersDropdown.value = this.activeLayerIndex;
+                const activeLayer = this.getActiveLayer();
+                if (activeLayer) {
+                     this.visibilityBtn.innerHTML = activeLayer.visible ? '👁️' : '➖';
+                     this.deleteLayerBtn.disabled = this.layers.length <= 1;
+                }
+            }
+
+            getActiveLayer() { return this.layers.find(l => l.id === this.activeLayerIndex); }
+
+            resizeCanvas(layer) {
+                const rect = this.canvasContainer.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                const canvas = layer.canvas; 
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                canvas.style.width = `${rect.width}px`;
+                canvas.style.height = `${rect.height}px`;
+                const ctx = canvas.getContext('2d');
+                ctx.scale(dpr, dpr);
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+            }
+            
+            resizeAllCanvases() {
+                this.resizeCanvas({ canvas: this.previewCanvas });
+                this.layers.forEach(layer => {
+                    const imgData = layer.history[layer.historyIndex];
+                    this.resizeCanvas(layer);
+                    if (imgData) {
+                        const tempCanvas = document.createElement('canvas');
+                        const tempCtx = tempCanvas.getContext('2d');
+                        tempCanvas.width = imgData.width;
+                        tempCanvas.height = imgData.height;
+                        tempCtx.putImageData(imgData, 0, 0);
+                        layer.ctx.drawImage(tempCanvas, 0, 0, layer.canvas.clientWidth, layer.canvas.clientHeight);
+                    }
+                });
+            }
+
+            setupEventListeners() {
+                this.previewCanvas.addEventListener('mousedown', (e) => this.startDrawing(e));
+                this.previewCanvas.addEventListener('mousemove', (e) => this.draw(e));
+                this.previewCanvas.addEventListener('mouseup', (e) => this.stopDrawing(e));
+                this.previewCanvas.addEventListener('mouseenter', () => { this.customCursor.style.display = 'block'; });
+                this.previewCanvas.addEventListener('mouseleave', () => { this.customCursor.style.display = 'none'; if(this.isDrawing) this.stopDrawing(event); });
+                this.previewCanvas.addEventListener('touchstart', (e) => { this.startDrawing(e); this.customCursor.style.display = 'none'; }, false);
+                this.previewCanvas.addEventListener('touchmove', (e) => this.draw(e), false);
+                this.previewCanvas.addEventListener('touchend', (e) => this.stopDrawing(e), false);
+                this.toolbar.addEventListener('click', (e) => this.handleToolbarClick(e));
+                document.getElementById('color-picker').addEventListener('input', (e) => { this.brushColor = e.target.value; this.currentTool = 'brush'; this.setActiveButton(document.getElementById('brush-btn'), '.tool-btn[data-tool]'); this.updateCursor(); });
+                this.sizeSlider.addEventListener('input', (e) => {
+                    this.brushSize = e.target.value;
+                    this.sizeDisplay.textContent = e.target.value;
+                    this.toolbar.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+                    this.updateCursor();
+                });
+                this.addLayerBtn.addEventListener('click', () => this.addLayer());
+                this.deleteLayerBtn.addEventListener('click', () => this.deleteLayer());
+                this.layersDropdown.addEventListener('change', (e) => this.setActiveLayer(parseInt(e.target.value)));
+                this.visibilityBtn.addEventListener('click', () => this.toggleVisibility());
+            }
+            
+            getEventPosition(e) { e.preventDefault(); const rect = this.previewCanvas.getBoundingClientRect(); let clientX, clientY; if (e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; } else { clientX = e.clientX; clientY = e.clientY; } return { x: clientX - rect.left, y: clientY - rect.top }; }
+
+            startDrawing(e) {
+                const activeLayer = this.getActiveLayer();
+                if (!activeLayer || !activeLayer.visible) return;
+                this.isDrawing = true;
+                const { x, y } = this.getEventPosition(e);
+                this.startPos = { x, y };
+                const ctx = activeLayer.ctx;
+                
+                if (this.currentTool === 'brush' || this.currentTool === 'eraser') {
+                    ctx.lineWidth = this.brushSize;
+                    ctx.strokeStyle = this.currentTool === 'eraser' ? 'white' : this.brushColor;
+                    if(this.currentTool === 'eraser') ctx.globalCompositeOperation="destination-out";
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                }
+            }
+
+            draw(e) {
+                this.updateCursorPosition(e);
+                const activeLayer = this.getActiveLayer();
+                if (!this.isDrawing || !activeLayer || !activeLayer.visible) return;
+                const { x, y } = this.getEventPosition(e);
+                const ctx = activeLayer.ctx;
+                
+                if (this.currentTool === 'brush' || this.currentTool === 'eraser') {
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                } else {
+                    this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+                    this.previewCtx.strokeStyle = this.brushColor;
+                    this.previewCtx.lineWidth = this.brushSize;
+                    switch (this.currentTool) {
+                        case 'line': this.drawLine(this.previewCtx, this.startPos.x, this.startPos.y, x, y); break;
+                        case 'rect': this.drawRect(this.previewCtx, this.startPos.x, this.startPos.y, x, y); break;
+                        case 'circle': this.drawCircle(this.previewCtx, this.startPos.x, this.startPos.y, x, y); break;
+                    }
+                }
+            }
+
+            stopDrawing(e) {
+                if (!this.isDrawing) return;
+                this.isDrawing = false;
+                const ctx = this.getActiveLayer().ctx;
+                ctx.globalCompositeOperation="source-over"; // Reset composite operation
+                const { x, y } = this.getEventPosition(e);
+                
+                if (this.startPos.x === x && this.startPos.y === y && (this.currentTool === 'brush' || this.currentTool === 'eraser')) {
+                    if (this.currentTool === 'eraser') ctx.globalCompositeOperation="destination-out";
+                    ctx.fillStyle = this.currentTool === 'eraser' ? 'white' : this.brushColor;
+                    ctx.beginPath(); ctx.arc(x, y, this.brushSize / 2, 0, 2 * Math.PI); ctx.fill();
+                    ctx.globalCompositeOperation="source-over";
+                } else if (this.currentTool !== 'brush' && this.currentTool !== 'eraser') {
+                    this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+                    ctx.strokeStyle = this.brushColor; ctx.lineWidth = this.brushSize;
+                     switch (this.currentTool) {
+                        case 'line': this.drawLine(ctx, this.startPos.x, this.startPos.y, x, y); break;
+                        case 'rect': this.drawRect(ctx, this.startPos.x, this.startPos.y, x, y); break;
+                        case 'circle': this.drawCircle(ctx, this.startPos.x, this.startPos.y, x, y); break;
+                    }
+                }
+                ctx.closePath();
+                this.saveState();
+            }
+
+            saveState() {
+                const layer = this.getActiveLayer();
+                if (!layer) return;
+                layer.history = layer.history.slice(0, layer.historyIndex + 1);
+                const rect = this.canvasContainer.getBoundingClientRect(); 
+                layer.history.push(layer.ctx.getImageData(0, 0, rect.width * (window.devicePixelRatio||1), rect.height * (window.devicePixelRatio||1)));
+                layer.historyIndex++;
+                this.updateHistoryButtons();
+            }
+
+            undo() { const layer = this.getActiveLayer(); if (layer && layer.historyIndex > 0) { layer.historyIndex--; this.redrawCanvasFromHistory(layer); this.updateHistoryButtons(); } }
+            redo() { const layer = this.getActiveLayer(); if (layer && layer.historyIndex < layer.history.length - 1) { layer.historyIndex++; this.redrawCanvasFromHistory(layer); this.updateHistoryButtons(); } }
+            
+            redrawCanvasFromHistory(layer) {
+                const rect = this.canvasContainer.getBoundingClientRect();
+                layer.ctx.clearRect(0, 0, rect.width, rect.height);
+                const imgData = layer.history[layer.historyIndex];
+                if (imgData) {
+                    const tempCanvas = document.createElement('canvas');
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCanvas.width = imgData.width;
+                    tempCanvas.height = imgData.height;
+                    tempCtx.putImageData(imgData, 0, 0);
+                    layer.ctx.drawImage(tempCanvas, 0, 0, layer.canvas.clientWidth, layer.canvas.clientHeight);
+                }
+            }
+            
+            updateHistoryButtons() {
+                const layer = this.getActiveLayer();
+                if (layer) {
+                    this.undoBtn.disabled = layer.historyIndex <= 0;
+                    this.redoBtn.disabled = layer.historyIndex >= layer.history.length - 1;
+                } else {
+                    this.undoBtn.disabled = true; this.redoBtn.disabled = true;
+                }
+            }
+
+            saveDrawing() {
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                const rect = this.canvasContainer.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                tempCanvas.width = rect.width * dpr;
+                tempCanvas.height = rect.height * dpr;
+                tempCtx.scale(dpr, dpr);
+                
+                tempCtx.fillStyle = "white";
+                tempCtx.fillRect(0,0, rect.width, rect.height);
+
+                [...this.layers].reverse().forEach(layer => { 
+                    if (layer.visible) {
+                        tempCtx.drawImage(layer.canvas, 0, 0, rect.width, rect.height);
+                    }
+                });
+
+                const link = document.createElement('a');
+                link.download = 'lukisan-kreatif.png';
+                link.href = tempCanvas.toDataURL('image/png');
+                link.click();
+            }
+
+            drawLine(ctx, x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+            drawRect(ctx, x1, y1, x2, y2) { ctx.strokeRect(x1, y1, x2 - x1, y2 - y1); }
+            drawCircle(ctx, x1, y1, x2, y2) { const r = Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2)); ctx.beginPath(); ctx.arc(x1, y1, r, 0, 2*Math.PI); ctx.stroke(); }
+            updateCursor() { this.customCursor.style.width = `${this.brushSize}px`; this.customCursor.style.height = `${this.brushSize}px`; this.customCursor.style.borderColor = '#000'; this.customCursor.style.backgroundColor = (this.currentTool === 'eraser') ? 'rgba(255, 255, 255, 0.5)' : 'transparent'; }
+            updateCursorPosition(e) { const cRect = this.canvasContainer.getBoundingClientRect(); let cX = e.touches ? e.touches[0].clientX : e.clientX; let cY = e.touches ? e.touches[0].clientY : e.clientY; this.customCursor.style.left = `${cX - cRect.left}px`; this.customCursor.style.top = `${cY - cRect.top}px`; }
+
+            async handleToolbarClick(e) {
+                const target = e.target.closest('button');
+                if (!target) return;
+                
+                if (target.dataset.tool) {
+                    this.setActiveButton(target, '.tool-btn[data-tool]');
+                    this.currentTool = target.dataset.tool;
+                } else if (target.classList.contains('size-btn')) {
+                    this.setActiveButton(target, '.size-btn');
+                    const newSize = parseInt(target.dataset.size);
+                    this.brushSize = newSize;
+                    this.sizeSlider.value = newSize;
+                    this.sizeDisplay.textContent = newSize;
+                }
+
+                switch(target.id) {
+                    case 'clear-btn':
+                        const confirmed = await this.confirmDialog.show('Anda pasti mahu memadam lapisan ini?');
+                        if (confirmed) {
+                            const layer = this.getActiveLayer();
+                            const rect = this.canvasContainer.getBoundingClientRect();
+                            layer.ctx.clearRect(0, 0, rect.width, rect.height);
+                            this.saveState();
+                        }
+                        break;
+                    case 'undo-btn': this.undo(); break;
+                    case 'redo-btn': this.redo(); break;
+                    case 'save-btn': this.saveDrawing(); break;
+                }
+                
+                this.updateCursor();
+            }
+
+            setActiveButton(button, selector) { this.toolbar.querySelectorAll(selector).forEach(btn => btn.classList.remove('active')); button.classList.add('active'); }
+        }
+        
+        new DrawingApp();
+    </script>
+</body>
+</html>
+
