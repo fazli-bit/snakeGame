@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keluarga App: Permainan Memori</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+
+        :root {
+            --primary-color: #ff9800;
+            --background-color: #fff3e0;
+            --card-color: #ffffff;
+            --card-matched-color: #c8e6c9;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--background-color);
+            transition: background-color 0.5s ease;
+        }
+        
+        body.theme-kids { --primary-color: #ff9800; --background-color: #fff3e0; --card-matched-color: #c8e6c9; }
+        body.theme-fruits { --primary-color: #f44336; --background-color: #ffebee; --card-matched-color: #ffcdd2; }
+        body.theme-veggies { --primary-color: #4CAF50; --background-color: #e8f5e9; --card-matched-color: #c8e6c9; }
+        body.theme-general { --primary-color: #2196F3; --background-color: #e3f2fd; --card-matched-color: #bbdefb; }
+
+        #app-container { width: 100%; max-width: 600px; text-align: center; padding: 20px; box-sizing: border-box; position: relative; }
+        h1, h2 { color: #333; }
+
+        #mute-toggle {
+            position: absolute; top: 10px; right: 10px; width: 40px; height: 40px;
+            background: #fff; border: 1px solid #ccc; border-radius: 50%;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10;
+        }
+        #mute-toggle svg { width: 24px; height: 24px; }
+
+        #selection-screen .selection-group { margin-bottom: 20px; }
+        #selection-screen button {
+            display: inline-block; width: 120px; padding: 12px; font-size: 16px; margin: 5px;
+            cursor: pointer; border: 2px solid var(--primary-color); background-color: white; color: var(--primary-color);
+            border-radius: 12px; font-weight: 700; transition: all 0.3s ease;
+        }
+        #selection-screen button:hover { background-color: var(--primary-color); color: white; }
+        #selection-screen button.selected { background-color: var(--primary-color); color: white; }
+        #start-game-button {
+            display: block; width: 80%; max-width: 300px; padding: 15px; font-size: 18px; margin: 20px auto 0;
+            border-radius: 12px; font-weight: 700; border: none; background-color: #4CAF50; color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s ease;
+        }
+        #start-game-button:hover { transform: translateY(-2px); }
+        
+        #game-screen { display: none; }
+
+        #theme-selector { margin-bottom: 20px; display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+        #theme-selector label { padding: 8px 15px; border-radius: 20px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s ease; font-weight: 700; }
+        #theme-selector input[type="radio"] { display: none; }
+        #theme-selector input[type="radio"]:checked + label { background-color: var(--primary-color); color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+
+        #game-stats { display: flex; justify-content: space-around; width: 90%; max-width: 400px; margin: 0 auto 15px auto; padding: 10px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .stat-item { font-size: 18px; font-weight: 700; color: #333; transition: all 0.3s ease; padding: 5px 10px; border-radius: 8px; }
+        /* --- PERUBAHAN V2.2.1: Penunjuk pemain aktif yang lebih jelas --- */
+        .stat-item.active-player {
+            background-color: var(--primary-color);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        .stat-item span:first-child { color: #666; margin-right: 8px; }
+        .stat-item.active-player span:first-child { color: white; }
+
+        #game-board { display: grid; grid-template-columns: repeat(var(--grid-cols, 4), 1fr); gap: 10px; width: 90vw; max-width: 500px; margin: 20px auto; }
+        .card { background-color: transparent; cursor: pointer; perspective: 1000px; aspect-ratio: 1/1; }
+        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: clamp(16px, 5vw, 40px); }
+        .card-back { background-color: var(--primary-color); color: white; font-size: clamp(24px, 7vw, 50px); }
+        .card-front { background-color: var(--card-color); transform: rotateY(180deg); }
+        .card.matched .card-inner { box-shadow: none; animation: match-pop 0.3s ease; }
+        .card.matched .card-front { background-color: var(--card-matched-color); }
+        @keyframes match-pop { 0% { transform: scale(1) rotateY(180deg); } 50% { transform: scale(1.1) rotateY(180deg); } 100% { transform: scale(1) rotateY(180deg); } }
+
+        #message-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 100; animation: fade-in 0.3s ease; }
+        #message-box { background-color: white; padding: 30px 40px; border-radius: 12px; text-align: center; box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
+        #final-stats { margin: 20px 0; font-size: 18px; }
+        #play-again-button, #back-to-menu-button { padding: 12px 25px; font-size: 18px; font-weight: 700; cursor: pointer; border: none; border-radius: 8px; color: white; transition: background-color 0.3s; margin: 5px; }
+        #play-again-button { background-color: var(--primary-color); }
+        #play-again-button:hover { background-color: #e65100; }
+        #back-to-menu-button { background-color: #757575; }
+        #back-to-menu-button:hover { background-color: #424242; }
+        .game-controls { margin-top: 20px; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <button id="mute-toggle"></button>
+        <h1>Permainan Memori (V2.2.0)</h1>
+
+        <div id="selection-screen">
+            <div class="selection-group">
+                <h2>Pilih Mod Pemain</h2>
+                <button data-selection="player-mode" data-value="1" class="selected">1 Pemain</button>
+                <button data-selection="player-mode" data-value="2">2 Pemain</button>
+            </div>
+            <div class="selection-group">
+                <h2>Pilih Saiz Papan</h2>
+                <button data-selection="difficulty" data-value="4x4" class="selected">Mudah (4x4)</button>
+                <button data-selection="difficulty" data-value="4x5">Sederhana (4x5)</button>
+                <button data-selection="difficulty" data-value="5x6">Sukar (5x6)</button>
+            </div>
+            <button id="start-game-button">Mula Main</button>
+        </div>
+
+        <div id="game-screen">
+            <div id="theme-selector"></div>
+            <div id="game-stats"></div>
+            <div id="game-board"></div>
+            <div class="game-controls"> <button id="back-to-menu-button">Menu Utama</button> </div>
+        </div>
+    </div>
+    <div id="message-overlay">
+        <div id="message-box">
+            <h2 id="win-title">Tahniah!</h2>
+            <div id="final-stats"></div>
+            <button id="play-again-button">Main Semula</button>
+        </div>
+    </div>
+
+    <script>
+        class MemoryGame {
+            constructor() {
+                this.selectionScreen = document.getElementById('selection-screen');
+                this.gameScreen = document.getElementById('game-screen');
+                this.gameBoardElement = document.getElementById('game-board');
+                this.themeSelector = document.getElementById('theme-selector');
+                this.gameStats = document.getElementById('game-stats');
+                this.messageOverlay = document.getElementById('message-overlay');
+                this.winTitle = document.getElementById('win-title');
+                this.finalStatsEl = document.getElementById('final-stats');
+                this.playAgainButton = document.getElementById('play-again-button');
+                this.backToMenuButton = document.getElementById('back-to-menu-button');
+                this.muteToggle = document.getElementById('mute-toggle');
+                this.startGameButton = document.getElementById('start-game-button');
+                
+                this.themes = {
+                    'kids': { name: 'Haiwan', cardSet: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵'] },
+                    'fruits': { name: 'Buah-buahan', cardSet: ['🍎', '🍌', '🍇', '🍓', '🍉', '🍍', '🍒', '🍑', '🥝', '🥭', '🥥', '🥑', '🍋', '🍊', '🍐'] },
+                    'veggies': { name: 'Sayuran', cardSet: ['🥕', '🥦', '🌽', '🌶️', '🍆', '🍅', '🥔', '🥬', '🥒', '🍄', '🧅', '🧄', ' Peas', '🎃', '🍠'] },
+                    'general': { name: 'Simbol', cardSet: ['★', '♦', '♥', '♠', '♣', '▲', '●', '■', '✚', '☀', '⚑', '✓', '⛟', '⚛', '⚜'] }
+                };
+
+                this.playerMode = 1;
+                this.difficulty = '4x4';
+                this.currentTheme = 'kids';
+                this.currentPlayer = 1;
+                this.playerScores = { 1: 0, 2: 0 };
+                
+                this.gameCards = []; this.flippedCards = []; this.matchedPairs = 0; this.canFlip = true;
+                this.moves = 0; this.secondsElapsed = 0; this.timerInterval = null;
+
+                this.soundEnabled = true; this.sounds = {};
+                this.speakerIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg>`;
+                this.muteIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"></path></svg>`;
+
+                this.initSounds();
+                this.setupEventListeners();
+                this.updateMuteIcon();
+            }
+            
+            initSounds() { /* ... (sama seperti V2.1.0) ... */ this.sounds.flip = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.1, sustain: 0.01, release: 0.1 } }).toDestination(); this.sounds.match = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination(); this.sounds.mismatch = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.3 } }).toDestination(); const winSynth = new Tone.Synth().toDestination(); this.sounds.win = new Tone.Sequence((time, note) => { winSynth.triggerAttackRelease(note, '16n', time); }, ['C5', 'E5', 'G5', 'C6'], '8n'); Tone.Transport.start(); }
+            playSound(soundName) { if (!this.soundEnabled || Tone.context.state !== 'running') return; try { switch(soundName) { case 'flip': this.sounds.flip.triggerAttackRelease('C5', '8n'); break; case 'match': this.sounds.match.triggerAttackRelease('G5', '8n'); break; case 'mismatch': this.sounds.mismatch.triggerAttackRelease('A2', '8n'); break; case 'win': this.sounds.win.start(0).stop(0.5); break; } } catch (e) { console.warn("Audio context not ready."); } }
+            toggleMute() { this.soundEnabled = !this.soundEnabled; this.updateMuteIcon(); if (this.soundEnabled && Tone.context.state !== 'running') { Tone.start(); } }
+            updateMuteIcon() { this.muteToggle.innerHTML = this.soundEnabled ? this.speakerIcon : this.muteIcon; }
+
+            setupEventListeners() {
+                this.selectionScreen.querySelectorAll('button[data-selection]').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const selectionType = e.currentTarget.dataset.selection;
+                        const value = e.currentTarget.dataset.value;
+
+                        // --- PEMBETULAN V2.2.1: Memadankan atribut data dengan pembolehubah kelas yang betul ---
+                        if (selectionType === 'player-mode') {
+                            this.playerMode = parseInt(value, 10);
+                        } else if (selectionType === 'difficulty') {
+                            this.difficulty = value;
+                        }
+
+                        this.selectionScreen.querySelectorAll(`button[data-selection="${selectionType}"]`).forEach(btn => btn.classList.remove('selected'));
+                        e.currentTarget.classList.add('selected');
+                    });
+                });
+                this.startGameButton.addEventListener('click', () => this.startGame());
+                this.playAgainButton.addEventListener('click', () => { this.playSound('flip'); this.resetGame(); });
+                this.backToMenuButton.addEventListener('click', () => { this.playSound('flip'); this.showMenu(); });
+                this.muteToggle.addEventListener('click', () => this.toggleMute());
+            }
+
+            startGame() {
+                const [rows, cols] = this.difficulty.split('x').map(Number);
+                const cardCount = rows * cols;
+                if (cardCount % 2 !== 0) { console.error("Saiz papan mesti genap."); return; }
+                this.numPairs = cardCount / 2;
+
+                document.body.className = `theme-${this.currentTheme}`;
+                this.gameBoardElement.style.setProperty('--grid-cols', cols);
+
+                this.selectionScreen.style.display = 'none';
+                this.gameScreen.style.display = 'block';
+                this.messageOverlay.style.display = 'none';
+                
+                this.buildThemeSelector();
+                this.resetGameStats();
+                this.shuffleAndDeal();
+            }
+            
+            buildThemeSelector() { /* ... (sama seperti V2.1.0) ... */ this.themeSelector.innerHTML = ''; for (const themeKey in this.themes) { const theme = this.themes[themeKey]; const radio = document.createElement('input'); radio.type = 'radio'; radio.id = `theme-${themeKey}`; radio.name = 'theme'; radio.value = themeKey; if (themeKey === this.currentTheme) radio.checked = true; const label = document.createElement('label'); label.htmlFor = `theme-${themeKey}`; label.textContent = theme.name; radio.addEventListener('change', () => this.changeTheme(themeKey)); this.themeSelector.appendChild(radio); this.themeSelector.appendChild(label); } }
+            shuffleAndDeal() { const availableIcons = this.themes[this.currentTheme].cardSet; const selectedIcons = availableIcons.slice(0, this.numPairs); const fullDeck = [...selectedIcons, ...selectedIcons]; for (let i = fullDeck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [fullDeck[i], fullDeck[j]] = [fullDeck[j], fullDeck[i]]; } this.gameCards = fullDeck; this.createBoard(); }
+            createBoard() {
+                this.gameBoardElement.innerHTML = '';
+                // --- PERUBAHAN V2.2.2: Simbol belakang kad kini mengikut tema ---
+                let backIcon;
+                switch(this.currentTheme) {
+                    case 'kids':
+                        backIcon = '🐾';
+                        break;
+                    case 'fruits':
+                        backIcon = '🍏';
+                        break;
+                    case 'veggies':
+                        backIcon = '🌱';
+                        break;
+                    default:
+                        backIcon = '⭐';
+                }
+                this.gameCards.forEach(icon => {
+                    const cardElement = document.createElement('div');
+                    cardElement.classList.add('card');
+                    cardElement.dataset.icon = icon;
+                    cardElement.innerHTML = `<div class="card-inner"><div class="card-face card-back">${backIcon}</div><div class="card-face card-front">${icon}</div></div>`;
+                    cardElement.addEventListener('click', (e) => this.handleCardClick(e.currentTarget));
+                    this.gameBoardElement.appendChild(cardElement);
+                });
+            }
+
+            handleCardClick(cardElement) {
+                if (!this.canFlip || cardElement.classList.contains('flipped') || this.flippedCards.length >= 2) return;
+                if (!this.timerInterval && this.playerMode == 1) this.startTimer();
+                
+                this.playSound('flip');
+                this.flipCard(cardElement);
+
+                if (this.flippedCards.length === 2) {
+                    this.canFlip = false;
+                    if (this.playerMode == 1) this.moves++;
+                    this.updateStatsDisplay();
+                    this.checkForMatch();
+                }
+            }
+            flipCard(cardElement) { cardElement.classList.add('flipped'); this.flippedCards.push(cardElement); }
+            checkForMatch() { setTimeout(() => { const [c1, c2] = this.flippedCards; (c1.dataset.icon === c2.dataset.icon) ? this.onMatch() : this.onMismatch(); }, 400); }
+            
+            onMatch() {
+                this.playSound('match');
+                if (this.playerMode == 2) {
+                    this.playerScores[this.currentPlayer]++;
+                }
+                this.updateStatsDisplay();
+                this.flippedCards.forEach(card => card.classList.add('matched'));
+                this.matchedPairs++;
+                this.flippedCards = [];
+                this.canFlip = true; // Pemain dapat giliran lagi
+                if (this.matchedPairs === this.numPairs) {
+                    clearInterval(this.timerInterval);
+                    setTimeout(() => this.showWinMessage(), 500);
+                }
+            }
+
+            onMismatch() {
+                this.playSound('mismatch');
+                setTimeout(() => {
+                    this.flippedCards.forEach(card => card.classList.remove('flipped'));
+                    this.flippedCards = [];
+                    if (this.playerMode == 2) {
+                        this.switchPlayer();
+                    }
+                    this.canFlip = true;
+                }, 800);
+            }
+
+            switchPlayer() {
+                this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
+                this.updateStatsDisplay();
+            }
+
+            showWinMessage() {
+                this.playSound('win');
+                if (this.playerMode == 1) {
+                    this.winTitle.textContent = "Tahniah!";
+                    this.finalStatsEl.innerHTML = `Anda berjaya dalam <strong>${this.moves}</strong> gerakan dan masa <strong>${this.timerEl.textContent}</strong>!`;
+                } else {
+                    const score1 = this.playerScores[1];
+                    const score2 = this.playerScores[2];
+                    if (score1 > score2) {
+                        this.winTitle.textContent = "Pemain 1 Menang!";
+                        this.finalStatsEl.innerHTML = `Skor Akhir: <strong>${score1}</strong> - ${score2}`;
+                    } else if (score2 > score1) {
+                        this.winTitle.textContent = "Pemain 2 Menang!";
+                        this.finalStatsEl.innerHTML = `Skor Akhir: ${score1} - <strong>${score2}</strong>`;
+                    } else {
+                        this.winTitle.textContent = "Seri!";
+                        this.finalStatsEl.innerHTML = `Skor Akhir: <strong>${score1}</strong> - <strong>${score2}</strong>`;
+                    }
+                }
+                this.messageOverlay.style.display = 'flex';
+            }
+
+            startTimer() { this.timerInterval = setInterval(() => { this.secondsElapsed++; this.updateStatsDisplay(); }, 1000); }
+
+            updateStatsDisplay() {
+                if (this.playerMode == 1) {
+                    const minutes = Math.floor(this.secondsElapsed / 60).toString().padStart(2, '0');
+                    const seconds = (this.secondsElapsed % 60).toString().padStart(2, '0');
+                    this.gameStats.innerHTML = `
+                        <div class="stat-item"><span>Masa:</span><span id="timer">${minutes}:${seconds}</span></div>
+                        <div class="stat-item"><span>Langkah:</span><span id="moves-counter">${this.moves}</span></div>`;
+                } else {
+                    // --- PERUBAHAN V2.2.1: Paparan skor yang lebih jelas ---
+                    this.gameStats.innerHTML = `
+                        <div class="stat-item ${this.currentPlayer === 1 ? 'active-player' : ''}"><span>Pemain 1:</span><span>${this.playerScores[1]}</span></div>
+                        <div class="stat-item ${this.currentPlayer === 2 ? 'active-player' : ''}"><span>Pemain 2:</span><span>${this.playerScores[2]}</span></div>`;
+                }
+            }
+
+            resetGameStats() {
+                this.matchedPairs = 0;
+                this.flippedCards = [];
+                this.moves = 0;
+                this.secondsElapsed = 0;
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+                this.playerScores = { 1: 0, 2: 0 };
+                this.currentPlayer = 1;
+                this.updateStatsDisplay();
+                this.canFlip = true;
+                this.messageOverlay.style.display = 'none';
+            }
+
+            resetGame() { this.resetGameStats(); this.shuffleAndDeal(); }
+            changeTheme(newTheme) { this.playSound('flip'); this.currentTheme = newTheme; document.body.className = `theme-${newTheme}`; this.resetGame(); }
+            showMenu() { this.gameScreen.style.display = 'none'; this.selectionScreen.style.display = 'block'; document.body.className = ''; clearInterval(this.timerInterval); }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { new MemoryGame(); });
+    </script>
+</body>
+</html>
+
+
+
