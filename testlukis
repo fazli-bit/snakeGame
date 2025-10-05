@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Keluarga App: Lukisan Kreatif (V3.0.0)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700&display=swap');
+
+        :root {
+            --bg-color: #f0f2f5;
+            --toolbar-bg: #ffffff;
+            --canvas-bg: #ffffff;
+            --primary-color: #2196F3;
+            --shadow-color: rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: var(--bg-color);
+            overflow: hidden;
+        }
+
+        #toolbar {
+            width: 100%;
+            background-color: var(--toolbar-bg);
+            box-shadow: 0 4px 8px var(--shadow-color);
+            padding: 5px 10px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        .tool-group { display: flex; align-items: center; gap: 8px; }
+        .tool-group label { font-weight: 700; font-size: 0.9em; }
+
+        .tool-btn {
+            width: 38px; height: 38px; border-radius: 50%; border: 3px solid transparent;
+            cursor: pointer; transition: all 0.2s ease;
+            background-color: #eee; background-size: 55%; background-repeat: no-repeat; background-position: center;
+        }
+        .tool-btn:hover { transform: scale(1.1); }
+        .tool-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .tool-btn.active { border-color: var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
+        
+        #brush-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNwbGF0Ij48cGF0aCBkPSJNMTYgMTEuMyBjLjQtMS4zIDEuMy0yLjMgMi44LTIuMyAxLjggMCAzLjIgMS4zIDMgMy4yIDAgMi4zLTMgNS4zLTUgNS4zcy01LTMtNS01LjMgMS4yLTMuMiAzLTMuMiBjMS41IDAgMi40IDEgMi44IDIuMyIvPjxwYXRoIGQ9Ik0xOCAyLjVsMiAydi0yWiIvPjxwYXRoIGQ9Ik0xMyAxMy41bDEgMSIvPjxwYXRoIGQ9Ik0yMSAzbDItMiIvPjxwYXRoIGQ9Ik0zIDZIMW00LTIgMi0yIiIvPjxwYXRoIGQ9Ik0zIDIxaMiIvPjxwYXRoIGQ9Ik0xMiAxM2MtLjMgMS4zLTEuNSAyLjQtMi41IDIgLTEuNSAwLTMtMS44LTMtNC41cyEuNS00LjUgMy00LjUgMS4zIDEuMSA0IDMuNSIvPjwvc3ZnPg=='); }
+        #pan-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWhhbmQiPjxwYXRoIGQ9Im0xOCAxNS02LTZoNi02Ii8+PHBhdGggZD0iTTUgMTUtMiAydi00bDIgMiIvPjxwYXRoIGQ9Im0yIDEyIDMtMyA0IDQiLz48cGF0aCBkPSJtMSAxIDYgNiIvPjxwYXRoIGQ9Ik0xMiAyMiY5LTkgOS05Ii8+PC9zdmc+'); }
+        #eraser-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWVyYXNlciI+PHBhdGggZD0iTTIxIDExSDYubDUtNS03IDciLz48cGF0aCBkPSJNMjEgMTFIMTEuMThjLS45MiAwLTEuNzEuNTQtMi4wNiAxLjM3bC0zIDcuMjNjLS4zNi44My0xLjEgMS40LTIuMDIgMS40SDEuNSIvPjwvc3ZnPg=='); }
+        
+        #zoom-in-btn, #zoom-out-btn { font-size: 1.2em; font-weight: bold; }
+        
+        #main-content { display: flex; width: 100%; flex-grow: 1; overflow: hidden; }
+
+        #canvas-container { 
+            flex-grow: 1; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            box-sizing: border-box; 
+            position: relative; 
+            background-color: var(--bg-color);
+            overflow: hidden;
+            cursor: crosshair;
+        }
+        #canvas-container.panning { cursor: grab; }
+
+        #canvas-wrapper {
+            position: relative;
+            box-shadow: 0 0 15px var(--shadow-color);
+        }
+        
+        .canvas-layer, #preview-canvas { 
+            position: absolute; 
+            top: 0;
+            left: 0;
+            pointer-events: none; 
+            background-color: transparent;
+        }
+        #preview-canvas { pointer-events: auto; z-index: 100; }
+        
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <div class="tool-group">
+            <label>Alat:</label>
+            <button id="brush-btn" class="tool-btn active" data-tool="brush"></button>
+            <button id="pan-btn" class="tool-btn" data-tool="pan"></button>
+            <button id="eraser-btn" class="tool-btn" data-tool="eraser"></button>
+        </div>
+        <div class="tool-group">
+            <label>Zum:</label>
+            <button id="zoom-out-btn" class="tool-btn">-</button>
+            <button id="zoom-in-btn" class="tool-btn">+</button>
+        </div>
+        <div class="tool-group">
+            <label>Warna:</label>
+            <input type="color" id="color-picker" value="#000000">
+        </div>
+        <div class="tool-group">
+            <label>Saiz:</label>
+            <input type="range" id="size-slider" min="1" max="100" value="15">
+            <span id="size-display">15</span>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div id="canvas-container">
+            <div id="canvas-wrapper">
+                <!-- Kanvas lapisan akan dijana oleh JS di sini -->
+                <canvas id="preview-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class DrawingApp {
+            constructor() {
+                this.canvasContainer = document.getElementById('canvas-container');
+                this.canvasWrapper = document.getElementById('canvas-wrapper');
+                this.previewCanvas = document.getElementById('preview-canvas');
+                this.previewCtx = this.previewCanvas.getContext('2d');
+                this.toolbar = document.getElementById('toolbar');
+                
+                this.isDrawing = false;
+                this.isPanning = false;
+                this.brushSize = 15;
+                this.brushColor = '#000000';
+                this.currentTool = 'brush';
+
+                // --- PERUBAHAN BESAR V3.0.0: State untuk Pan & Zum ---
+                this.zoom = 1;
+                this.panOffset = { x: 0, y: 0 };
+                this.startPanPoint = { x: 0, y: 0 };
+                this.canvasSize = { width: 1920, height: 1080 }; // Saiz kanvas maya
+
+                this.layers = [];
+                this.activeLayerIndex = 0;
+                
+                window.addEventListener('load', () => this.initApp());
+            }
+            
+            initApp() {
+                this.setupCanvasSize();
+                this.setupEventListeners();
+                this.addLayer();
+                this.centerCanvas();
+            }
+
+            setupCanvasSize() {
+                this.canvasWrapper.style.width = `${this.canvasSize.width}px`;
+                this.canvasWrapper.style.height = `${this.canvasSize.height}px`;
+                [...this.layers.map(l => l.canvas), this.previewCanvas].forEach(canvas => {
+                    canvas.width = this.canvasSize.width;
+                    canvas.height = this.canvasSize.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                });
+            }
+
+            addLayer() {
+                const canvas = document.createElement('canvas');
+                canvas.className = 'canvas-layer';
+                this.canvasWrapper.insertBefore(canvas, this.previewCanvas);
+                const layer = { canvas: canvas, ctx: canvas.getContext('2d') };
+                this.layers.push(layer);
+                this.setupCanvasSize();
+            }
+
+            setupEventListeners() {
+                this.previewCanvas.addEventListener('mousedown', (e) => this.startAction(e));
+                this.previewCanvas.addEventListener('mousemove', (e) => this.moveAction(e));
+                this.previewCanvas.addEventListener('mouseup', (e) => this.endAction(e));
+                this.previewCanvas.addEventListener('mouseleave', (e) => this.endAction(e));
+                this.canvasContainer.addEventListener('wheel', (e) => this.handleZoom(e));
+
+                this.toolbar.addEventListener('click', (e) => this.handleToolbarClick(e));
+                // ... listener untuk warna dan saiz ...
+            }
+            
+            // ... (Fungsi-fungsi lain yang telah diubah suai atau baharu)
+
+            getEventPosition(e) {
+                const rect = this.canvasContainer.getBoundingClientRect();
+                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            }
+
+            screenToCanvas(pos) {
+                return {
+                    x: (pos.x - this.panOffset.x) / this.zoom,
+                    y: (pos.y - this.panOffset.y) / this.zoom
+                };
+            }
+
+            startAction(e) {
+                const pos = this.getEventPosition(e);
+                if (this.currentTool === 'pan') {
+                    this.isPanning = true;
+                    this.startPanPoint = { x: pos.x - this.panOffset.x, y: pos.y - this.panOffset.y };
+                    this.canvasContainer.classList.add('panning');
+                } else {
+                    this.isDrawing = true;
+                    const canvasPos = this.screenToCanvas(pos);
+                    const ctx = this.layers[this.activeLayerIndex].ctx;
+                    ctx.beginPath();
+                    ctx.moveTo(canvasPos.x, canvasPos.y);
+                }
+            }
+
+            moveAction(e) {
+                const pos = this.getEventPosition(e);
+                if (this.isPanning) {
+                    this.panOffset.x = pos.x - this.startPanPoint.x;
+                    this.panOffset.y = pos.y - this.startPanPoint.y;
+                    this.updateTransform();
+                } else if (this.isDrawing) {
+                    const canvasPos = this.screenToCanvas(pos);
+                    const ctx = this.layers[this.activeLayerIndex].ctx;
+                    ctx.lineWidth = this.brushSize / this.zoom;
+                    ctx.strokeStyle = this.currentTool === 'eraser' ? 'white' : this.brushColor;
+                    if(this.currentTool === 'eraser') ctx.globalCompositeOperation="destination-out";
+                    else ctx.globalCompositeOperation="source-over";
+                    
+                    ctx.lineTo(canvasPos.x, canvasPos.y);
+                    ctx.stroke();
+                }
+            }
+
+            endAction(e) {
+                const ctx = this.layers[this.activeLayerIndex].ctx;
+                if (this.isDrawing) {
+                    ctx.closePath();
+                }
+                this.isDrawing = false;
+                this.isPanning = false;
+                this.canvasContainer.classList.remove('panning');
+            }
+
+            handleZoom(e) {
+                e.preventDefault();
+                const zoomIntensity = 0.1;
+                const wheel = e.deltaY < 0 ? 1 : -1;
+                const zoom = Math.exp(wheel * zoomIntensity);
+                const pos = this.getEventPosition(e);
+
+                this.panOffset.x -= pos.x;
+                this.panOffset.y -= pos.y;
+                this.panOffset.x *= zoom;
+                this.panOffset.y *= zoom;
+                this.panOffset.x += pos.x;
+                this.panOffset.y += pos.y;
+                
+                this.zoom *= zoom;
+                this.updateTransform();
+            }
+
+            centerCanvas() {
+                const containerRect = this.canvasContainer.getBoundingClientRect();
+                this.panOffset.x = (containerRect.width - this.canvasSize.width * this.zoom) / 2;
+                this.panOffset.y = (containerRect.height - this.canvasSize.height * this.zoom) / 2;
+                this.updateTransform();
+            }
+
+            updateTransform() {
+                this.canvasWrapper.style.transform = `translate(${this.panOffset.x}px, ${this.panOffset.y}px) scale(${this.zoom})`;
+            }
+            
+            handleToolbarClick(e) {
+                const target = e.target.closest('button');
+                if (!target) return;
+                
+                if (target.dataset.tool) {
+                    this.setActiveButton(target, '.tool-btn[data-tool]');
+                    this.currentTool = target.dataset.tool;
+                }
+
+                if (target.id === 'zoom-in-btn') {
+                    this.zoomAtCenter(1.2);
+                }
+                if (target.id === 'zoom-out-btn') {
+                    this.zoomAtCenter(1 / 1.2);
+                }
+                // ... (logik butang lain)
+            }
+            
+            zoomAtCenter(zoomMultiplier) {
+                const containerRect = this.canvasContainer.getBoundingClientRect();
+                const center = { x: containerRect.width / 2, y: containerRect.height / 2 };
+                
+                this.panOffset.x -= center.x;
+                this.panOffset.y -= center.y;
+                this.panOffset.x *= zoomMultiplier;
+                this.panOffset.y *= zoomMultiplier;
+                this.panOffset.x += center.x;
+                this.panOffset.y += center.y;
+                
+                this.zoom *= zoomMultiplier;
+                this.updateTransform();
+            }
+
+            setActiveButton(button, selector) {
+                this.toolbar.querySelectorAll(selector).forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            }
+        }
+        
+        new DrawingApp();
+    </script>
+</body>
+</html>
