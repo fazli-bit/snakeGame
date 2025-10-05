@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keluarga App: Tic-Tac-Toe</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+
+        :root {
+            --cell-size: clamp(80px, 25vw, 120px);
+            --board-background: #fff;
+            --primary-color: #2196F3;
+            --line-color: #333;
+            --line-width: 8px;
+            --x-color: #f44336;
+            --o-color: #4CAF50;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #e3f2fd;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        #mute-toggle {
+            position: absolute; top: 10px; right: 10px; width: 40px; height: 40px;
+            background: #fff; border: 1px solid #ccc; border-radius: 50%;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10;
+        }
+        #mute-toggle svg { width: 24px; height: 24px; }
+
+        #selection-screen button {
+            display: block; width: 80%; max-width: 300px; padding: 15px; font-size: 18px; margin: 10px auto;
+            cursor: pointer; border: 2px solid var(--primary-color); background-color: white; color: var(--primary-color);
+            border-radius: 12px; font-weight: 700; transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #selection-screen button:hover { background-color: var(--primary-color); color: white; transform: translateY(-2px); }
+
+        #game-container { display: none; }
+        
+        #scoreboard { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; font-size: 24px; font-weight: 700; }
+        .score { padding: 10px 20px; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .score.x { color: var(--x-color); }
+        .score.o { color: var(--o-color); }
+
+        #theme-selector { margin-bottom: 20px; display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+        #theme-selector label { padding: 8px 15px; border-radius: 20px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s ease; font-weight: 700; }
+        #theme-selector input[type="radio"] { display: none; }
+        #theme-selector input[type="radio"]:checked + label { background-color: var(--primary-color); color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+
+        #game-board { display: grid; grid-template-columns: repeat(3, var(--cell-size)); grid-template-rows: repeat(3, var(--cell-size)); margin: 20px auto; width: fit-content; background-color: transparent; position: relative; }
+        .cell { background-color: var(--board-background); cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: calc(var(--cell-size) * 0.7); font-weight: 700; border: calc(var(--line-width) / 2) solid var(--line-color); }
+        .cell[data-index='0'], .cell[data-index='1'], .cell[data-index='2'] { border-top: none; }
+        .cell[data-index='6'], .cell[data-index='7'], .cell[data-index='8'] { border-bottom: none; }
+        .cell[data-index='0'], .cell[data-index='3'], .cell[data-index='6'] { border-left: none; }
+        .cell[data-index='2'], .cell[data-index='5'], .cell[data-index='8'] { border-right: none; }
+        .cell .symbol { animation: pop-in 0.3s ease; }
+        @keyframes pop-in { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        #status-display { font-size: 24px; font-weight: 700; min-height: 36px; margin: 20px 0; }
+        #restart-button, #back-to-menu-button { padding: 12px 25px; font-size: 18px; font-weight: 700; cursor: pointer; border: none; border-radius: 8px; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease; margin: 5px; }
+        #restart-button { background-color: var(--primary-color); display: none; }
+        #back-to-menu-button { background-color: #757575; }
+        #restart-button:hover { transform: translateY(-2px); background-color: #1976D2; }
+        #back-to-menu-button:hover { transform: translateY(-2px); background-color: #424242; }
+        #winning-line { position: absolute; background-color: var(--line-color); height: var(--line-width); border-radius: calc(var(--line-width) / 2); transform: scaleX(0); transition: transform 0.3s ease-in-out; transform-origin: center; }
+
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <button id="mute-toggle"></button>
+        <h1>Tic-Tac-Toe (V2.2.0)</h1>
+
+        <div id="selection-screen">
+            <h2>Pilih Mod Permainan</h2>
+            <button data-mode="pvc">Pemain vs Komputer</button>
+            <button data-mode="pvp">Pemain vs Pemain</button>
+        </div>
+
+        <div id="game-container">
+            <div id="scoreboard"></div>
+            <div id="theme-selector"></div>
+            <div id="game-board">
+                <div id="winning-line"></div>
+            </div>
+            <div id="status-display"></div>
+            <div>
+                <button id="restart-button">Main Semula</button>
+                <button id="back-to-menu-button">Menu Utama</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TicTacToeGame {
+            constructor() {
+                this.selectionScreen = document.getElementById('selection-screen');
+                this.gameContainer = document.getElementById('game-container');
+                this.boardElement = document.getElementById('game-board');
+                this.statusDisplay = document.getElementById('status-display');
+                this.restartButton = document.getElementById('restart-button');
+                this.backToMenuButton = document.getElementById('back-to-menu-button');
+                this.scoreboard = document.getElementById('scoreboard');
+                this.themeSelector = document.getElementById('theme-selector');
+                this.winningLineElement = document.getElementById('winning-line');
+                this.muteToggle = document.getElementById('mute-toggle');
+                
+                this.winConditions = [ [0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6] ];
+                
+                this.boardState = Array(9).fill(null);
+                this.currentPlayer = 'X';
+                this.isGameActive = true;
+                this.gameMode = 'pvp';
+                this.scores = { X: 0, O: 0 };
+
+                this.themes = {
+                    'classic': { name: 'Klasik', symbols: { X: 'X', O: 'O' } },
+                    'animals': { name: 'Haiwan', symbols: { X: '🐶', O: '🐱' } },
+                    'fruits': { name: 'Buah-buahan', symbols: { X: '🍎', O: '🍌' } }
+                };
+                this.currentTheme = 'classic';
+                
+                this.soundEnabled = true; this.sounds = {};
+                this.speakerIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg>`;
+                this.muteIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"></path></svg>`;
+
+                this.initSounds();
+                this.setupEventListeners();
+                this.updateMuteIcon();
+            }
+
+            initSounds() { this.sounds.place = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.2 } }).toDestination(); const winSynth = new Tone.Synth().toDestination(); this.sounds.win = new Tone.Sequence((time, note) => { winSynth.triggerAttackRelease(note, '16n', time); }, ['C5', 'E5', 'G5'], '8n'); this.sounds.draw = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.3 } }).toDestination(); Tone.Transport.start(); }
+            playSound(soundName) { if (!this.soundEnabled || Tone.context.state !== 'running') return; try { switch(soundName) { case 'place': this.sounds.place.triggerAttackRelease('C5', '8n'); break; case 'win': this.sounds.win.start(0).stop(0.4); break; case 'draw': this.sounds.draw.triggerAttackRelease('A3', '8n'); break; } } catch (e) { console.warn("Audio context not ready."); } }
+            toggleMute() { this.soundEnabled = !this.soundEnabled; this.updateMuteIcon(); if (this.soundEnabled && Tone.context.state !== 'running') { Tone.start(); } }
+            updateMuteIcon() { this.muteToggle.innerHTML = this.soundEnabled ? this.speakerIcon : this.muteIcon; }
+            setupEventListeners() { this.selectionScreen.querySelectorAll('button').forEach(button => { button.addEventListener('click', () => { this.gameMode = button.dataset.mode; this.selectionScreen.style.display = 'none'; this.gameContainer.style.display = 'block'; this.playSound('place'); this.startGame(); }); }); this.restartButton.addEventListener('click', () => { this.playSound('place'); this.startGame(); }); this.backToMenuButton.addEventListener('click', () => { this.playSound('place'); this.showMenu(); }); this.muteToggle.addEventListener('click', () => this.toggleMute()); }
+            showMenu() { this.gameContainer.style.display = 'none'; this.selectionScreen.style.display = 'block'; this.scores = { X: 0, O: 0 }; }
+            startGame() { this.boardState.fill(null); this.currentPlayer = 'X'; this.isGameActive = true; this.statusDisplay.textContent = `Giliran: ${this.themes[this.currentTheme].symbols[this.currentPlayer]}`; this.restartButton.style.display = 'none'; this.winningLineElement.style.transition = 'transform 0s'; this.winningLineElement.style.transform = 'scaleX(0)'; this.drawBoard(); this.updateScoreboard(); this.buildThemeSelector(); }
+            buildThemeSelector() { this.themeSelector.innerHTML = ''; for (const themeKey in this.themes) { const theme = this.themes[themeKey]; const radio = document.createElement('input'); radio.type = 'radio'; radio.id = `theme-${themeKey}`; radio.name = 'theme'; radio.value = themeKey; if (themeKey === this.currentTheme) radio.checked = true; const label = document.createElement('label'); label.htmlFor = `theme-${themeKey}`; label.textContent = theme.name; radio.addEventListener('change', () => this.changeTheme(themeKey)); this.themeSelector.appendChild(radio); this.themeSelector.appendChild(label); } }
+            changeTheme(newTheme) { this.playSound('place'); this.currentTheme = newTheme; this.startGame(); }
+            drawBoard() { this.boardElement.querySelectorAll('.cell').forEach(cell => cell.remove()); for (let i = 0; i < 9; i++) { const cell = document.createElement('div'); cell.classList.add('cell'); cell.dataset.index = i; cell.addEventListener('click', (e) => this.handleCellClick(e)); this.boardElement.appendChild(cell); } }
+
+            handleCellClick(e) {
+                const clickedCell = e.target.closest('.cell'); // Pastikan kita dapat elemen .cell
+                if (!clickedCell) return;
+                const clickedCellIndex = parseInt(clickedCell.dataset.index);
+                if (this.boardState[clickedCellIndex] !== null || !this.isGameActive) return;
+
+                this.playSound('place');
+                this.updateCell(clickedCell, clickedCellIndex);
+                if (this.checkResult()) return;
+
+                if (this.gameMode === 'pvc' && this.currentPlayer === 'O' && this.isGameActive) {
+                    this.isGameActive = false;
+                    setTimeout(() => this.computerMove(), 500);
+                }
+            }
+            
+            // --- PERUBAHAN BESAR V2.2.0: AI yang dipertingkat ---
+            computerMove() {
+                // Keutamaan 1: Cari gerakan untuk menang
+                let move = this.findWinningMove('O');
+                if (move !== null) {
+                    const cellElement = this.boardElement.querySelector(`[data-index='${move}']`);
+                    this.playSound('place');
+                    this.updateCell(cellElement, move);
+                    if (!this.checkResult()) this.isGameActive = true;
+                    return;
+                }
+
+                // Keutamaan 2: Halang pemain dari menang
+                move = this.findWinningMove('X');
+                if (move !== null) {
+                    const cellElement = this.boardElement.querySelector(`[data-index='${move}']`);
+                    this.playSound('place');
+                    this.updateCell(cellElement, move);
+                    if (!this.checkResult()) this.isGameActive = true;
+                    return;
+                }
+
+                // Keutamaan 3: Buat gerakan rawak (fallback)
+                const availableCells = [];
+                this.boardState.forEach((cell, index) => { if (cell === null) availableCells.push(index); });
+                if (availableCells.length > 0) {
+                    const randomIndex = availableCells[Math.floor(Math.random() * availableCells.length)];
+                    const cellElement = this.boardElement.querySelector(`[data-index='${randomIndex}']`);
+                    this.playSound('place');
+                    this.updateCell(cellElement, randomIndex);
+                    if (!this.checkResult()) this.isGameActive = true;
+                }
+            }
+
+            findWinningMove(player) {
+                for (const condition of this.winConditions) {
+                    const [a, b, c] = condition;
+                    if (this.boardState[a] === player && this.boardState[b] === player && this.boardState[c] === null) return c;
+                    if (this.boardState[a] === player && this.boardState[c] === player && this.boardState[b] === null) return b;
+                    if (this.boardState[b] === player && this.boardState[c] === player && this.boardState[a] === null) return a;
+                }
+                return null;
+            }
+
+            updateCell(cell, index) { this.boardState[index] = this.currentPlayer; const symbolSpan = document.createElement('span'); symbolSpan.classList.add('symbol'); symbolSpan.textContent = this.themes[this.currentTheme].symbols[this.currentPlayer]; cell.innerHTML = ''; cell.appendChild(symbolSpan); if (this.currentTheme === 'classic') { cell.classList.add(this.currentPlayer.toLowerCase()); } }
+            checkResult() { let roundWon = false; let winningConditionIndex = -1; for (let i = 0; i < this.winConditions.length; i++) { const [a, b, c] = this.winConditions[i]; if (this.boardState[a] && this.boardState[a] === this.boardState[b] && this.boardState[a] === this.boardState[c]) { roundWon = true; winningConditionIndex = i; break; } } if (roundWon) { this.playSound('win'); this.statusDisplay.textContent = `Pemain ${this.themes[this.currentTheme].symbols[this.currentPlayer]} Menang!`; this.isGameActive = false; this.scores[this.currentPlayer]++; this.updateScoreboard(); this.drawWinningLine(winningConditionIndex); setTimeout(() => { this.restartButton.style.display = 'inline-block'; }, 400); return true; } if (!this.boardState.includes(null)) { this.playSound('draw'); this.statusDisplay.textContent = 'Permainan Berakhir Seri!'; this.isGameActive = false; this.restartButton.style.display = 'inline-block'; return true; } this.switchPlayer(); return false; }
+            switchPlayer() { this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X'; this.statusDisplay.textContent = `Giliran: ${this.themes[this.currentTheme].symbols[this.currentPlayer]}`; }
+            updateScoreboard() { const symbolX = this.themes[this.currentTheme].symbols['X']; const symbolO = this.themes[this.currentTheme].symbols['O']; const oPlayerName = this.gameMode === 'pvc' ? 'Komputer' : `Pemain ${symbolO}`; this.scoreboard.innerHTML = ` <div class="score ${this.currentTheme === 'classic' ? 'x' : ''}">${symbolX}: ${this.scores.X}</div> <div class="score ${this.currentTheme === 'classic' ? 'o' : ''}">${oPlayerName}: ${this.scores.O}</div> `; }
+            drawWinningLine(index) { const line = this.winningLineElement; line.style.transition = 'transform 0.3s ease-in-out'; const lineStyles = [ { top: `16.66%`, left: '0', width: '100%', transform: 'scaleX(1) translateY(-50%)' }, { top: `50%`, left: '0', width: '100%', transform: 'scaleX(1) translateY(-50%)' }, { top: `83.33%`, left: '0', width: '100%', transform: 'scaleX(1) translateY(-50%)' }, { top: `50%`, left: `-33.33%`, width: '100%', transform: 'translateY(-50%) rotate(90deg) scaleX(1)' }, { top: `50%`, left: `0`, width: '100%', transform: 'translateY(-50%) rotate(90deg) scaleX(1)' }, { top: `50%`, left: `33.33%`, width: '100%', transform: 'translateY(-50%) rotate(90deg) scaleX(1)' }, { top: `50%`, left: `-20.7%`, width: '141.4%', transform: 'translateY(-50%) rotate(45deg) scaleX(1)' }, { top: `50%`, left: `-20.7%`, width: '141.4%', transform: 'translateY(-50%) rotate(-45deg) scaleX(1)' }, ]; const style = lineStyles[index]; const winnerColor = this.themes[this.currentTheme].symbols[this.currentPlayer] === 'X' ? 'var(--x-color)' : 'var(--o-color)'; line.style.cssText = `background-color: ${this.currentTheme === 'classic' ? winnerColor : 'var(--line-color)'}; height: var(--line-width); border-radius: calc(var(--line-width) / 2); transform-origin: center;`; for (const prop in style) { line.style[prop] = style[prop]; } }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { new TicTacToeGame(); });
+    </script>
+</body>
+</html>
+
