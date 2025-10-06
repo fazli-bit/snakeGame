@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keluarga App: Lukisan Kreatif (V3.2.0 - Stabil)</title>
+    <title>Keluarga App: Lukisan Kreatif (V3.2.1 - Stabil)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700&display=swap');
 
@@ -109,7 +109,7 @@
             background-color: var(--bg-color);
             overflow: hidden;
         }
-        #canvas-container.panning { cursor: grab; }
+        #canvas-container.panning { cursor: grabbing; } /* FIX: Changed to grabbing for better UX */
         #canvas-container.drawing { cursor: none; }
 
         #canvas-wrapper {
@@ -241,6 +241,7 @@
                 this.zoom = 1;
                 this.panOffset = { x: 0, y: 0 };
                 this.startPanPoint = { x: 0, y: 0 };
+                this.initialPanOffset = { x: 0, y: 0 }; // FIX: Added for robust panning
                 this.canvasSize = { width: 1920, height: 1080 };
 
                 this.layers = [];
@@ -432,9 +433,6 @@
                 this.visibilityBtn.addEventListener('click', () => this.toggleVisibility());
             }
             
-            // --- PEMBAIKAN UTAMA BERMULA DI SINI ---
-
-            // Kaedah pengiraan yang lebih stabil untuk menukar koordinat skrin ke kanvas
             getCanvasPosFromEvent(e) {
                 const rect = this.previewCanvas.getBoundingClientRect();
                 return {
@@ -443,7 +441,6 @@
                 };
             }
 
-            // Kaedah untuk mengira kedudukan tetikus dalam bekas luar (untuk kursor dan sorotan)
             getMousePosInContainer(e) {
                 const rect = this.canvasContainer.getBoundingClientRect();
                 return { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -459,7 +456,9 @@
                 if (this.currentTool === 'pan') {
                     this.isPanning = true;
                     const mousePos = this.getMousePosInContainer(e);
-                    this.startPanPoint = { x: mousePos.x - this.panOffset.x, y: mousePos.y - this.panOffset.y };
+                    // FIX: Store starting mouse position AND starting pan offset separately for robust calculation
+                    this.startPanPoint = { x: mousePos.x, y: mousePos.y };
+                    this.initialPanOffset = { x: this.panOffset.x, y: this.panOffset.y };
                     this.canvasContainer.classList.add('panning');
                 } else {
                     const layer = this.getActiveLayer();
@@ -483,8 +482,11 @@
                 this.updateCursorPosition(mousePosContainer);
 
                 if (this.isPanning) {
-                    this.panOffset.x = mousePosContainer.x - this.startPanPoint.x;
-                    this.panOffset.y = mousePosContainer.y - this.startPanPoint.y;
+                    // FIX: Calculate pan based on initial state and mouse delta
+                    const dx = mousePosContainer.x - this.startPanPoint.x;
+                    const dy = mousePosContainer.y - this.startPanPoint.y;
+                    this.panOffset.x = this.initialPanOffset.x + dx;
+                    this.panOffset.y = this.initialPanOffset.y + dy;
                     this.updateTransform();
                 } else if (this.isDrawing) {
                     const layer = this.getActiveLayer();
@@ -497,8 +499,6 @@
                     ctx.stroke();
                 }
             }
-            
-            // --- PEMBAIKAN UTAMA BERAKHIR DI SINI ---
 
             endAction(e) {
                 if (this.isDrawing) {
