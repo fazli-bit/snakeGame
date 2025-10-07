@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Keluarga App: Lukisan Kreatif (V3.7.6 - Palet Warna)</title>
+    <title>Keluarga App: Lukisan Kreatif (V3.7.7 - Stabil)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700&display=swap');
 
@@ -410,7 +410,6 @@
                 this.previewCanvas.addEventListener('touchend', (e) => this.handleTouchEnd(e));
                 this.toolbar.addEventListener('click', (e) => this.handleToolbarClick(e));
                 
-                // --- PEMBAIKAN FUNGSI TUKAR WARNA ---
                 this.colorPicker.addEventListener('change', (e) => this.setBrushColor(e.target.value, true));
 
                 this.prevColor1.addEventListener('click', () => {
@@ -434,7 +433,6 @@
                     this.previousColors[1] = mainColor;
                     this.prevColor2.style.backgroundColor = mainColor;
                 });
-                // --- AKHIR PEMBAIKAN ---
 
                 document.getElementById('toolbar-toggle').addEventListener('click', () => { this.toolbarWrapper.classList.toggle('hidden'); });
                 this.brushTypeSelect.addEventListener('change', (e) => { this.currentBrushType = e.target.value; });
@@ -447,7 +445,16 @@
                 document.getElementById('open-bg-image-btn').addEventListener('click', () => this.bgImageInput.click());
                 this.bgImageInput.addEventListener('change', (e) => this.loadBackgroundImage(e));
                 document.getElementById('save-project-btn').addEventListener('click', () => this.saveProject());
-                document.getElementById('open-project-btn').addEventListener('click', () => this.projectInput.click());
+                
+                document.getElementById('open-project-btn').addEventListener('click', async () => {
+                    const confirmed = await this.confirmDialog.show('Membuka projek baru akan memadamkan kerja semasa anda. Teruskan?');
+                    if (confirmed) {
+                        this.resetWorkspace();
+                        this.toolbarWrapper.style.visibility = 'hidden';
+                        this.showStartupDialog();
+                    }
+                });
+
                 this.projectInput.addEventListener('change', (e) => this.loadProject(e));
                 this.sizeSlider.addEventListener('input', (e) => this.setBrushSize(e.target.value));
                 this.opacitySlider.addEventListener('input', (e) => { this.brushOpacity = e.target.value; this.opacityDisplay.textContent = `${Math.round(e.target.value * 100)}%`; });
@@ -631,7 +638,6 @@
             getMousePosInContainer(e) { const rect = this.canvasContainer.getBoundingClientRect(); const { clientX, clientY } = this.getEventCoordinates(e); return { x: clientX - rect.left, y: clientY - rect.top }; }
             handleToolbarClick(e) { const target = e.target.closest('button'); if (!target) return; if (target.dataset.tool) { this.setActiveButton(target, '.tool-btn[data-tool]'); this.currentTool = target.dataset.tool; this.updateCursor(); } if (target.dataset.size) { this.setBrushSize(target.dataset.size); this.setActiveButton(target, '.size-preset-btn');} if (target.id === 'undo-btn') this.undo(); if (target.id === 'redo-btn') this.redo(); if (target.id === 'save-png-btn') this.saveAsPng(); if (target.id === 'clear-btn') this.clearCanvas(); }
             
-            // --- PEMBAIKAN FUNGSI WARNA ---
             setBrushColor(color, updateHistory = true) {
                 const upperCaseColor = color.toUpperCase();
                 if (!color || upperCaseColor === this.brushColor.toUpperCase()) return;
@@ -647,20 +653,54 @@
             }
 
             updatePreviousColors(oldColor) {
-                // Jangan tambah warna yang sudah ada dalam sejarah
                 if (oldColor.toUpperCase() === this.previousColors[0].toUpperCase() || oldColor.toUpperCase() === this.previousColors[1].toUpperCase()) return;
                 
-                this.previousColors.unshift(oldColor); // Tambah warna lama ke hadapan
-                this.previousColors.pop(); // Kekalkan saiz tatasusunan kepada 2
+                this.previousColors.unshift(oldColor);
+                this.previousColors.pop();
 
                 this.prevColor1.style.backgroundColor = this.previousColors[0];
                 this.prevColor2.style.backgroundColor = this.previousColors[1];
             }
-            // --- AKHIR PEMBAIKAN ---
 
             setBrushSize(size) { this.brushSize = size; this.sizeSlider.value = size; this.sizeDisplay.textContent = size; this.updateTransform(); }
             
-            async saveAsPng() { const defaultName = `lukisan-${Date.now()}`; const filename = await this.promptDialog.show("Simpan sebagai PNG:", defaultName); if (!filename) return; const compositeCanvas = document.createElement('canvas'); compositeCanvas.width = this.canvasSize.width; compositeCanvas.height = this.canvasSize.height; const compositeCtx = compositeCanvas.getContext('2d'); if (this.projectBackground === 'white') { compositeCtx.fillStyle = 'white'; compositeCtx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height); } this.layers.forEach(layer => { if (layer.visible) { compositeCtx.drawImage(layer.canvas, 0, 0); } }); const link = document.createElement('a'); link.download = `${filename.replace(/\.png$/i, '')}.png`; link.href = compositeCanvas.toDataURL('image/png'); link.click(); }
+            async saveAsPng() {
+                const defaultName = `lukisan-${new Date().toISOString().slice(0,10)}`;
+                const filename = await this.promptDialog.show("Simpan sebagai PNG:", defaultName);
+                if (!filename) {
+                    console.log("Simpanan PNG dibatalkan.");
+                    return;
+                }
+
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = this.canvasSize.width;
+                tempCanvas.height = this.canvasSize.height;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                if (this.projectBackground === 'white') {
+                    tempCtx.fillStyle = 'white';
+                    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                }
+
+                this.layers.forEach(layer => {
+                    if (layer.visible && layer.canvas) {
+                        try {
+                            tempCtx.drawImage(layer.canvas, 0, 0);
+                        } catch (error) {
+                            console.error(`Gagal melukis lapisan "${layer.name}" ke PNG:`, error);
+                        }
+                    }
+                });
+
+                const link = document.createElement('a');
+                link.download = `${filename.replace(/\.png$/i, '')}.png`;
+                link.href = tempCanvas.toDataURL('image/png');
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
             async saveProject() { const defaultName = `projek-${Date.now()}`; const filename = await this.promptDialog.show("Simpan sebagai Projek Jan:", defaultName); if (!filename) return; const projectData = { canvasSize: this.canvasSize, background: this.projectBackground, layers: this.layers.map(layer => ({ name: layer.name, visible: layer.visible, imageDataURL: layer.canvas.toDataURL() })) }; const jsonString = JSON.stringify(projectData); const blob = new Blob([jsonString], {type: 'application/json'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${filename.replace(/\.jan$/i, '')}.jan`; link.click(); }
             async clearCanvas() { const confirmed = await this.confirmDialog.show('Anda pasti mahu mengosongkan kandungan lapisan ini?'); if (confirmed) { const layer = this.getActiveLayer(); if (layer) { layer.ctx.clearRect(0, 0, this.canvasSize.width, this.canvasSize.height); this.saveState(); } } }
             undo() { const layer = this.getActiveLayer(); if (layer && layer.historyIndex > 0) { layer.historyIndex--; layer.ctx.putImageData(layer.history[layer.historyIndex], 0, 0); this.updateHistoryButtons(); } }
@@ -702,6 +742,8 @@
                 this.layers.forEach(layer => layer.canvas.remove());
                 this.initializeAppState();
                 this.resetUIToDefaults();
+                this.canvasWrapper.classList.remove('checkerboard-bg');
+                this.canvasWrapper.style.backgroundColor = 'white';
              }
             resetUIToDefaults() {
                 this.setBrushColor('#000000', false);
@@ -724,5 +766,4 @@
     </script>
 </body>
 </html>
-
 
