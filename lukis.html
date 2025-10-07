@@ -2,8 +2,8 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keluarga App: Lukisan Kreatif (V3.4.0 - Projek Jan)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Keluarga App: Lukisan Kreatif (V3.6.2 - Bar Alat Pantas Ditingkatkan)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700&display=swap');
 
@@ -31,7 +31,6 @@
             position: relative;
             width: 100%;
             z-index: 1000;
-            transition: margin-top 0.3s ease;
         }
 
         #toolbar {
@@ -45,6 +44,7 @@
             align-items: center;
             gap: 10px;
             box-sizing: border-box;
+            transition: padding 0.3s ease;
         }
         
         #toolbar-toggle {
@@ -60,13 +60,28 @@
             border-bottom-right-radius: 15px;
             box-shadow: 0 4px 8px var(--shadow-color);
             cursor: pointer;
-            z-index: -1;
+            z-index: 999;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         #toolbar-toggle svg { transition: transform 0.3s ease; }
-        #toolbar-wrapper.hidden #toolbar-toggle svg { transform: rotate(180deg); }
+        
+        /* --- LOGIK BAR ALAT PANTAS BAHARU --- */
+        #toolbar-wrapper.hidden #toolbar {
+            justify-content: space-between; /* Sebarkan kumpulan alat pantas */
+            padding: 5px 20px; /* Kurangkan padding vertikal */
+            flex-wrap: nowrap; /* Pastikan ia kekal sebaris */
+        }
+        
+        #toolbar-wrapper.hidden .tool-group:not(.quick-tool) {
+            display: none; /* Sembunyikan semua kumpulan alat yang bukan alat pantas */
+        }
+
+        #toolbar-wrapper.hidden #toolbar-toggle svg {
+            transform: rotate(180deg);
+        }
+        /* --- TAMAT LOGIK BARU --- */
 
         .tool-group { display: flex; align-items: center; gap: 8px; }
         .tool-group label { font-weight: 700; font-size: 0.9em; }
@@ -81,23 +96,24 @@
         .tool-btn:disabled, .file-btn:disabled, .size-preset-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
         .tool-btn.active, .size-preset-btn.active { border-color: var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
         
-        #brush-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDIqCAyNCIgZmlsbD0ibm9uZXMiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9Imx1Y2lkZSBsdWNpZGUtc3BsYXQiPjxwYXRoIGQ9Ik0xNiAxMS4zIGMuNC0xLjMgMS4zLTIuMyAyLjgtMi4zIDEuOCAwIDMuMiAxLjMgMyAzLjIgMCAyLjMtMyA1LjMtNSA1LjNzLTUtMy01LTUuMyAxLjItMy4yIDMtMy4yIGMxLjUgMCAyLjQgMSAyLjggMi4zIi8+PHBhdGggZD0iTTE4IDIuNWwyIDJ2LTJaIi8+PHBhdGggZD0iTTEzIDEzLjVsMSAxIi8+PHBhdGggZD0iTTIxIDNsMi0yIi8+PHBhdGggZD0iTTMgNkgxbTQtMiAyLTIiLz48cGF0aCBkPSJNMzYyMWgyIi8+PHBhdGggZD0iTTEyIDEzYy0uMyAxLjMtMS41IDIuNC0yLjIgMiAtMS41IDAtMy0xLjgtMy00LjVzMS41LTQuNSAzLTQuNSAxLjMgMS4xIDQgMy41Ii8+PC9zdmc+'); }
-        #pan-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWhhbmQiPjxwYXRoIGQ9Im0xOCAxNS02LTZoNi02Ii8+PHBhdGggZD0iTTUgMTUtMiAydi00bDIgMiIvPjxwYXRoIGQ9Im0yIDEyIDMtMyA0IDQiLz48cGF0aCBkPSJtMSAxIDYgNiIvPjxwYXRoIGQ9Ik0xMiAyMiY5LTkgOS05Ii8+PC9zdmc+'); }
-        #eraser-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWVyYXNlciI+PHBhdGggZD0iTTIxIDExSDYubDUtNS03IDciLz48cGF0aCBkPSJNMjEgMTFIMTEuMThjLS45MiAwLTEuNzEuNTQtMi4wNiAxLjM3bC0zIDcuMjNjLS4zNi44My0xLjEgMS40LTIuMDIgMS40SDEuNSIvPjwvc3ZnPg=='); }
-        #undo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXVuZG8tMiI+PHBhdGggZD0iTTMgNyBjMC0yLjUgMi4xLTYgNy02IDUgMCA3IDQtNyA4LTEuNyAwLTMuMi0uNi00LjItMS40Ii8+PHBhdGggZD0iTTcgMk41IDdsMi41LTIuNSIvPjwvc3ZnPg=='); }
-        #redo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlZG8tMiI+PHBhdGggZD0iTTIxIDdjMC0yLjUtMi4xLTYtNy02LTUgMC03IDQtNyA4IDEuNyAwIDMuMi0uNiA0LjItMS40Ii8+PHBhdGggZD0iTTE3IDJsMi41IDUgMi41LTIuNSIvPjwvc3ZnPg=='); }
-        #save-png-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWRvd25sb2FkIj48cGF0aCBkPSJNMjEgMTV2NGMwIDEuMS0uOSAyLTIgMkg1Yy0xLjEgMC0yLS45LTItMlYxNSIvPjxwYXRoIGQ9Ik03IDEwbDUgNSA1LTUiLz48cGF0aCBkPSJNMTIgMTVWM20wIDAiLz48L3N2Zz4='); }
+        #brush-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAABsUExURQAAAAAAM4c3RX45SAAAAFxye7pwfJs5RgAAAIuAYLWWZnp7fis3VXdzXcKeZsCCSlZGOWxsWraZZbV9TGlTRGZmVrKYZruDUHhaQxo0VY6BYcKLVIVgRXOEjqSjm3VaQwAASSFBW1tvfgAAQOkum4YAAAAkdFJOUwAPxJwHqv/kAZX/7Tx+//dQZv7+ZlD3/30n7f+Uh/+oB7FlCLV3R1kAAAAJcEhZcwAABuwAAAbsAR51ODUAAAA+SURBVBhXY2AAAUYmZjDNwsrGDqI5OLm4eUAMXj5+ARAtKCQsAqJFxcQlQLSklLQMB4ghKyevANaqqKQMpgFJxQJ/8w3zlQAAAABJRU5ErkJggg=='); }
+        #pan-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAMAAAAMCGV4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFBUExURQAAAAAgVQAjVl1seVNndwAARgAaWWlzfW12fr+ol6qbkRlDaR5GaAAZU6uckcKrmL+olaiZj7Ojl3yAhAAASwAAAERfdE5jdqGVjbymlb6nla2dkNO1nJSPigAUTgAASpONjNK1nqmbkLqllKyckM+zm5ONigAKUgAAR5WNiNGznLqklJKMiQAKTpSNis+ym6maj7ijlKqbkM6ym5OMidy6n8Colsqumc6xmt27oJGLiQAtYEhfdSpLbAAAAI+KiP7PqPfKpfbKpf/PqIODhX6AhPXMq1hpewAAIPnLpd67nvjLpsGqmBhBZ/vMpvnNqGNvfAAAOY+LiP7Pp7WilA88YwAAQ4SFh//QqvfLqF1regAAADxZcdm6of/Qqf/QqP/Rqp6VjgQyYAAPS0BZcXx+g4ODhYKChISDhW52gCFEaWHNafsAAABrdFJOUwAYO9fHCxTQ///4nEw08v/////eEQKP3fv/////5RoY5P//////5BkZ5v//5Rrl///////l///////hYJ9cAeX/////+PX/yQj/////Xv//xwnm//9VE9v//74Glf/////7SBGg+P///+Zm2pQq8wAAAAlwSFlzAAALqgAAC6oBCFjLVAAAAK1JREFUGFdjYGBgYGBkYmZhBTEggI2dg5OLmwfO5+XjFxAUEhaB8ETFxCUkpaRlZOUgfHkFRSVlKRVVNXUIX0NTS0VbSkVVRxfK19M3MJQ0MobLm5iamVuYWVpZ29jagfj2Do5Ojo7OLq5u7h5gvrOjo6Ojp5e3jy9Yvb0DiO/o5x8QCOYHQfjBIaFg88LCI8DqI6OiIRbExMbFx8cnJCZBuAzJKalp6RmZWWAOAFzVH7G37HMZAAAAAElFTSuQmCC'); }
+        #eraser-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAMAAADXT/YiAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAACrUExURQAAAAAAAFWFZidINAAAAGegfITnpmOyfyNAMmefe4Hjo3venWu/iFOWazlgRhQAFGegenzgnnfWmFOVaWKvfUiDXVePaoLmpXvennvdnX3fn3jXmVSWaylFMIuIiJy0pXLNknvgnn/kolqjdBcuH6urq//9/6e8rnHMkYDno1qhcxcfF1xcXMTExP/+/6O7rE+TZxkpGU9PT6mpqXJvcQAAAAAAAAAAAAAAALdn3z0AAAA5dFJOUwANhCcMr//VJLD////UKA2v/////6Kk///////RJWX7////0SHd/////9EhL97//8QfLaORNysvLrsTP0gAAAAJcEhZcwAAB2IAAAdiATh6mdsAAABZSURBVBhXY2BgYGBgZGIGUQwMLKxs7BxgEU4ubh5ePgYGfgEuQSFhEVEGBjFxCUkpaRlZBjl5BUUJJWUVBgZVNXUNTS1tBgYGHV09fQNDsBlGxiamZubmFgC1KgaXO0PTTQAAAABJRU5ErkJggg=='); }
+        
+        #undo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXVuZG8iPjxwYXRoIGQ9Ik0zIDdoNnY2Ii8+PHBhdGggZD0iTTIxIDE3QTkgOSAwIDAgMCA3LjM2IDdsLTMuMzYtNCIvPjwvc3ZnPg=='); }
+        #redo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlZG8iPjxwYXRoIGQ9Ik0yMSA3aC02VjEiLz48cGF0aCBkPSJNOSAxN0E5IDkgMCAwIDAgMTYuNjQgNy4zbDMuMzYtNCIvPjwvc3ZnPg=='); }
+        #rect-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlY3RhbmdsZSI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiB4PSIzIiB5PSIzIiByeD0iMiIvPjwvc3ZnPg=='); }
+        
+        #save-png-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWRvd25sb2FkIj48cGF0aCBkPSJNMjEgMTV2NGMwIDEuMS0uOSAyLTIgMkg1Yy0xLjEgMC0yLS45LTItMlYxNSIvPjxwYXRoIGQ9Ik03IDEwbDUgNSA1LTUiLz48cGF0aCBkPSJNMTIgMTVWM20wIDAiLz48L3N2Zz4='); }
         #clear-btn { background-color: #f44336; color: white; border-radius: 8px; width: auto; padding: 0 15px; font-weight: 700; height: 38px; }
-        #zoom-in-btn, #zoom-out-btn { font-size: 1.2em; font-weight: bold; }
         
-        #open-bg-image-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWltYWdlIj48cmVjdCB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHg9IjMiIHk9IjMiIHJ4PSIyIiByeT0iMiIvPjxjaXJjbGUgY3g9IjguNSIgY3k9IjguNSIgcj0iMS41Ii8+PHBvbHlsaW5lIHBvaW50cz0iMjEgMTUgMTYgMTAgNSAyMSIvPjwvc3ZnPg=='); }
-        #save-project-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNhdmUiPjxwYXRoIGQ9Ik0xOSAyMUg1Yy0xLjEgMC0yLS45LTItMlY1YzAtMS4xLjktMiAyLTJoMTEubDUtNSIvPjxwYXRoIGQ9Ik0xNyAyMVYxM0g3djhoMTBaIi8+PHBhdGggZD0iTTcgM3Y1aDhsMi0ySDdaIi8+PC9zdmc+'); background-color: var(--primary-color);}
-        #open-project-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWZvbGRlci1vcGVuIj48cGF0aCBkPSJNMjAgMjFINDRjLTEuMSAwLTItLjktMi0yVjVjMC0xLjEuOS0yIDItMmg1bDIgM2g5YzEuMSAwIDIgLjkgMiAydjExLjY0Ii8+PHBhdGggZD0iTTIgMTdsMy40Ni0zLjQ2Ii8+PHBhdGggZD0ibTIuNDEgMTEuNTggMy4yMyAzLjIzIi8+PC9zdmc+'); }
+        #open-bg-image-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWltYWdlIj48cmVjdCB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHg9IjMiIHk9IjMiIHJ4PSIyIiByeT0iMiIvPjxjaXJjbGUgY3g9IjguNSIgY3k9IjguNSIgcj0iMS41Ii8+PHBvbHlsaW5lIHBvaW50cz0iMjEgMTUgMTYgMTAgNSAyMSIvPjwvc3ZnPg=='); }
+        #save-project-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNhdmUiPjxwYXRoIGQ9Ik0xOSAyMUg1Yy0xLjEgMC0yLS45LTItMlY1YzAtMS4xLjktMiAyLTJoMTEubDUtNSIvPjxwYXRoIGQ9Ik0xNyAyMVYxM0g3djhoMTBaIi8+PHBhdGggZD0iTTcgM3Y1aDhsMi0ySDdaIi8+PC9zdmc+'); background-color: var(--primary-color);}
+        #open-project-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAMAAABFjsb+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFZUExURQAAAP/MZv/ge//he//gev/gev/hef+/gP/VgP/eev/of//qgP/pgP/tgf/kff/iev/geP/geP/heP/heP/he//hff/ol///gP/bbf/kfP/nfv/he//kfP/nf//riv/tj//uk//umP/tmv/rnf/pof/sof/dd//ifP/lff/hev/hff/hf//mkP/pov/qov/xpv/roP/fgP/he//ngv/lkv/nmP/onP/on//pof/rov/pof/on//hev/ni//po//so//qov/kofvcdv/mjf/upP/qof//qvHVc//okv/qo//wpv/poPLVc//ql//yp//poPHWdf/smf/xp//qovLXd//tnf/vpf/2qv/uovPae//voP/upf/pov/poP/poP/movbdgf/vov/qof/qof/ooP/oov/nnv//kvjjlv/pof/pof/qov/mn//tp///mf/ppv/rov/0pv+AgMK4JNIAAABzdFJOUwAFU3aUpzsEBlb/////3Fhke5eyzLIWAgfM/////////////etPD+H//////////04I0v/////////3LcX////mE7f//9YJqf///7eZ//+Ug///a3T///9NZv//9tKfHln/78yTWioHSeq8h1AdBRc/FwI1IU9QAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAx0lEQVQoU2NgIBYwMjGzsLKBmewcUDFOLm4eXj5+AUEhYRFRMXGQkISklLS0tIysnLyCopKyiipITE1dQ1NaS1tHFwT09A1AYoZGxiamZuYWYGBpZQ0SE7extdPVhQhZ2Ds4gu1wctaDilhYuLi6gcXcPTzhYl7eELf4+CLU+flDxAICYaZZWAQFQ8RCQmFilmHhERCxyCiQmH20n1dMbFw8RCwh0d7LzyUpOSU1LR0iwsCQYZmZlZ2Tmwfjg0B+QWERMp94AADkSSsJLrPYugAAAABJRU5ErkJggg=='); }
         
-        #line-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxsaW5lIHgxPSI1IiB5MT0iMTIiIHgyPSIxOSIgeTI9IjEyIj48L2xpbmU+PC9zdmc+'); }
-        #rect-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiLz48L3N2Zz4='); }
-        #circle-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PC9zdmc+'); }
-
+        #line-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxsaW5lIHgxPSI1IiB5MT0iMTIiIHgyPSIxOSIgeTI9IjEyIj48L2xpbmU+PC9zdmc+'); }
+        #circle-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PC9zdmc+'); }
+        
         #color-picker { width: 38px; height: 38px; border: none; padding: 0; border-radius: 50%; overflow: hidden; cursor: pointer; }
         #color-picker::-webkit-color-swatch-wrapper { padding: 0; }
         #color-picker::-webkit-color-swatch { border: none; }
@@ -119,48 +135,63 @@
 
         #custom-cursor { position: absolute; border: 1px solid #333; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); display: none; }
 
-        #layers-dropdown { height: 38px; border-radius: 5px; border: 2px solid #ccc; font-weight: 700; }
+        #layers-dropdown, #brush-type-select { height: 38px; border-radius: 5px; border: 2px solid #ccc; font-weight: 700; background-color: white; padding: 0 5px;}
+
         .layer-control-btn { width: 32px; height: 32px; border: none; background-color: #eee; border-radius: 5px; cursor: pointer; font-size: 1.2em; }
         #layers-dropdown option.hidden-layer { color: #999; }
 
-        #confirm-dialog-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 200; animation: fade-in 0.3s ease; }
-        #confirm-box { background-color: white; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 8px 16px rgba(0,0,0,0.2); max-width: 300px; }
-        #confirm-message { font-size: 1.2em; margin-bottom: 20px; }
-        .confirm-btn { padding: 10px 20px; font-size: 1em; font-weight: 700; cursor: pointer; border: none; border-radius: 8px; color: white; margin: 0 10px; }
-        #confirm-yes { background-color: #f44336; }
-        #confirm-no { background-color: #757575; }
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        #confirm-dialog-overlay, #prompt-dialog-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 200; animation: fade-in 0.3s ease; }
+        .dialog-box { background-color: white; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 8px 16px rgba(0,0,0,0.2); max-width: 350px; width: 90%; }
+        .dialog-message { font-size: 1.2em; margin-bottom: 20px; }
+        .dialog-btn { padding: 10px 20px; font-size: 1em; font-weight: 700; cursor: pointer; border: none; border-radius: 8px; color: white; margin: 0 10px; }
+        #confirm-yes, #prompt-save { background-color: var(--primary-color); }
+        #confirm-no, #prompt-cancel { background-color: #757575; }
         
+        #prompt-input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
     <div id="toolbar-wrapper">
         <div id="toolbar">
-            <div class="tool-group">
+            <div class="tool-group quick-tool">
                 <label>Alat:</label>
                 <button id="brush-btn" class="tool-btn active" data-tool="brush" title="Berus"></button>
                 <button id="eraser-btn" class="tool-btn" data-tool="eraser" title="Pemadam"></button>
+            </div>
+            <div class="tool-group">
                 <button id="line-tool-btn" class="tool-btn" data-tool="line" title="Garisan"></button>
                 <button id="rect-tool-btn" class="tool-btn" data-tool="rectangle" title="Segi Empat"></button>
                 <button id="circle-tool-btn" class="tool-btn" data-tool="circle" title="Bulatan"></button>
                 <button id="pan-btn" class="tool-btn" data-tool="pan" title="Alih"></button>
             </div>
-            <div class="tool-group">
-                <label>Sejarah:</label>
-                <button id="undo-btn" class="tool-btn" title="Buat Asal"></button>
-                <button id="redo-btn" class="tool-btn" title="Buat Semula"></button>
-            </div>
              <div class="tool-group">
+                <label>Jenis Berus:</label>
+                <select id="brush-type-select">
+                    <option value="round">Bulat</option>
+                    <option value="square">Segi Empat</option>
+                    <option value="spray">Semburan</option>
+                </select>
+            </div>
+            <div class="tool-group">
                 <label>Fail:</label>
                 <button id="open-project-btn" class="file-btn" title="Buka Projek (.jan)"></button>
                 <button id="save-project-btn" class="file-btn" title="Simpan Projek (.jan)"></button>
                 <button id="open-bg-image-btn" class="file-btn" title="Buka Imej Panduan"></button>
+                <button id="save-png-btn" class="file-btn" title="Simpan sebagai PNG"></button>
             </div>
-            <div class="tool-group">
+            <div class="tool-group quick-tool">
                 <label>Warna:</label>
                 <input type="color" id="color-picker" value="#000000">
-                <div id="prev-color-1" class="color-swatch" style="background-color: #ffffff;"></div>
-                <div id="prev-color-2" class="color-swatch" style="background-color: #ffffff;"></div>
             </div>
              <div class="tool-group">
                 <label>Lutsinar:</label>
@@ -182,21 +213,19 @@
                 <button id="delete-layer-btn" class="layer-control-btn" title="Padam Lapisan">-</button>
                 <button id="visibility-btn" class="layer-control-btn" title="Tukar Keterlihatan">👁️</button>
             </div>
-             <div class="tool-group">
-                <label>Zoom:</label>
-                <button id="zoom-out-btn" class="tool-btn">-</button>
-                <button id="zoom-in-btn" class="tool-btn">+</button>
+            <div class="tool-group quick-tool">
+                 <label>Sejarah:</label>
+                <button id="undo-btn" class="tool-btn" title="Buat Asal"></button>
+                <button id="redo-btn" class="tool-btn" title="Buat Semula"></button>
             </div>
-            <div class="tool-group">
+             <div class="tool-group">
                 <button id="clear-btn">Kosongkan</button>
-                <button id="save-png-btn" class="tool-btn" title="Simpan sebagai PNG"></button>
             </div>
         </div>
         <button id="toolbar-toggle">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
         </button>
     </div>
-
     <div id="main-content">
         <div id="canvas-container">
             <div id="canvas-wrapper">
@@ -205,24 +234,57 @@
             <div id="custom-cursor"></div>
         </div>
     </div>
-    
     <div id="confirm-dialog-overlay">
-        <div id="confirm-box">
-            <p id="confirm-message"></p>
+        <div id="confirm-box" class="dialog-box">
+            <p id="confirm-message" class="dialog-message"></p>
             <div>
-                <button id="confirm-yes" class="confirm-btn">Ya</button>
-                <button id="confirm-no" class="confirm-btn">Tidak</button>
+                <button id="confirm-yes" class="dialog-btn">Ya</button>
+                <button id="confirm-no" class="dialog-btn">Tidak</button>
             </div>
         </div>
     </div>
-
-    <!-- Hidden file inputs -->
+    <div id="prompt-dialog-overlay">
+        <div id="prompt-box" class="dialog-box">
+            <p id="prompt-message" class="dialog-message"></p>
+            <input type="text" id="prompt-input">
+            <div>
+                <button id="prompt-save" class="dialog-btn">Simpan</button>
+                <button id="prompt-cancel" class="dialog-btn">Batal</button>
+            </div>
+        </div>
+    </div>
     <input type="file" id="bg-image-input" accept="image/*" style="display: none;">
     <input type="file" id="project-input" accept=".jan" style="display: none;">
 
     <script>
-        class CustomConfirm { constructor() { this.overlay = document.getElementById('confirm-dialog-overlay'); this.messageEl = document.getElementById('confirm-message'); this.yesBtn = document.getElementById('confirm-yes'); this.noBtn = document.getElementById('confirm-no'); } show(message) { return new Promise((resolve) => { this.messageEl.textContent = message; this.overlay.style.display = 'flex'; const yesHandler = () => { this.overlay.style.display = 'none'; resolve(true); this.yesBtn.removeEventListener('click', yesHandler); this.noBtn.removeEventListener('click', noHandler); }; const noHandler = () => { this.overlay.style.display = 'none'; resolve(false); this.yesBtn.removeEventListener('click', yesHandler); this.noBtn.removeEventListener('click', noHandler); }; this.yesBtn.addEventListener('click', yesHandler); this.noBtn.addEventListener('click', noHandler); }); } }
-
+        class CustomPrompt {
+             constructor() {
+                this.overlay = document.getElementById('prompt-dialog-overlay');
+                this.messageEl = document.getElementById('prompt-message');
+                this.inputEl = document.getElementById('prompt-input');
+                this.saveBtn = document.getElementById('prompt-save');
+                this.cancelBtn = document.getElementById('prompt-cancel');
+            }
+            show(message, defaultValue = '') {
+                return new Promise((resolve) => {
+                    this.messageEl.textContent = message;
+                    this.inputEl.value = defaultValue;
+                    this.overlay.style.display = 'flex';
+                    this.inputEl.focus();
+                    this.inputEl.select();
+                    const saveHandler = () => { this.overlay.style.display = 'none'; cleanup(); resolve(this.inputEl.value.trim()); };
+                    const cancelHandler = () => { this.overlay.style.display = 'none'; cleanup(); resolve(null); };
+                    const keydownHandler = (e) => { if (e.key === 'Enter') { saveHandler(); } else if (e.key === 'Escape') { cancelHandler(); } };
+                    const cleanup = () => { this.saveBtn.removeEventListener('click', saveHandler); this.cancelBtn.removeEventListener('click', cancelHandler); document.removeEventListener('keydown', keydownHandler); };
+                    this.saveBtn.addEventListener('click', saveHandler);
+                    this.cancelBtn.addEventListener('click', cancelHandler);
+                    document.addEventListener('keydown', keydownHandler);
+                });
+            }
+        }
+        class CustomConfirm {
+            constructor() { this.overlay = document.getElementById('confirm-dialog-overlay'); this.messageEl = document.getElementById('confirm-message'); this.yesBtn = document.getElementById('confirm-yes'); this.noBtn = document.getElementById('confirm-no'); } show(message) { return new Promise((resolve) => { this.messageEl.textContent = message; this.overlay.style.display = 'flex'; const yesHandler = () => { this.overlay.style.display = 'none'; resolve(true); this.yesBtn.removeEventListener('click', yesHandler); this.noBtn.removeEventListener('click', noHandler); }; const noHandler = () => { this.overlay.style.display = 'none'; resolve(false); this.yesBtn.removeEventListener('click', yesHandler); this.noBtn.removeEventListener('click', noHandler); }; this.yesBtn.addEventListener('click', yesHandler); this.noBtn.addEventListener('click', noHandler); }); } }
+        
         class DrawingApp {
             constructor() {
                 this.setupDOMReferences();
@@ -230,165 +292,13 @@
                 window.addEventListener('load', () => this.initApp());
             }
 
-            setupDOMReferences() {
-                this.canvasContainer = document.getElementById('canvas-container');
-                this.canvasWrapper = document.getElementById('canvas-wrapper');
-                this.previewCanvas = document.getElementById('preview-canvas');
-                this.previewCtx = this.previewCanvas.getContext('2d');
-                this.toolbar = document.getElementById('toolbar');
-                this.customCursor = document.getElementById('custom-cursor');
-                this.confirmDialog = new CustomConfirm();
-                this.sizeSlider = document.getElementById('size-slider');
-                this.sizeDisplay = document.getElementById('size-display');
-                this.opacitySlider = document.getElementById('opacity-slider');
-                this.opacityDisplay = document.getElementById('opacity-display');
-                this.colorPicker = document.getElementById('color-picker');
-                this.prevColor1 = document.getElementById('prev-color-1');
-                this.prevColor2 = document.getElementById('prev-color-2');
-                this.undoBtn = document.getElementById('undo-btn');
-                this.redoBtn = document.getElementById('redo-btn');
-                this.layersDropdown = document.getElementById('layers-dropdown');
-                this.addLayerBtn = document.getElementById('add-layer-btn');
-                this.deleteLayerBtn = document.getElementById('delete-layer-btn');
-                this.visibilityBtn = document.getElementById('visibility-btn');
-                this.bgImageInput = document.getElementById('bg-image-input');
-                this.projectInput = document.getElementById('project-input');
-            }
-
-            initializeAppState() {
-                this.isDrawing = false;
-                this.isPanning = false;
-                this.brushSize = 15;
-                this.brushColor = '#000000';
-                this.brushOpacity = 1;
-                this.currentTool = 'brush';
-                this.lastPoint = { x: 0, y: 0 };
-                this.startShapePoint = {x: 0, y: 0};
-                this.previousColors = ['#ffffff', '#ffffff'];
-
-                this.zoom = 1;
-                this.panOffset = { x: 0, y: 0 };
-                this.startPanPoint = { x: 0, y: 0 };
-                this.initialPanOffset = { x: 0, y: 0 };
-                this.canvasSize = { width: 1920, height: 1080 };
-
-                this.layers = [];
-                this.activeLayerIndex = 0;
-                this.layerCounter = 0;
-            }
+            setupDOMReferences() { this.canvasContainer = document.getElementById('canvas-container'); this.canvasWrapper = document.getElementById('canvas-wrapper'); this.previewCanvas = document.getElementById('preview-canvas'); this.previewCtx = this.previewCanvas.getContext('2d'); this.toolbarWrapper = document.getElementById('toolbar-wrapper'); this.toolbar = document.getElementById('toolbar'); this.customCursor = document.getElementById('custom-cursor'); this.confirmDialog = new CustomConfirm(); this.promptDialog = new CustomPrompt(); this.sizeSlider = document.getElementById('size-slider'); this.sizeDisplay = document.getElementById('size-display'); this.opacitySlider = document.getElementById('opacity-slider'); this.opacityDisplay = document.getElementById('opacity-display'); this.colorPicker = document.getElementById('color-picker'); this.prevColor1 = document.getElementById('prev-color-1'); this.prevColor2 = document.getElementById('prev-color-2'); this.undoBtn = document.getElementById('undo-btn'); this.redoBtn = document.getElementById('redo-btn'); this.layersDropdown = document.getElementById('layers-dropdown'); this.addLayerBtn = document.getElementById('add-layer-btn'); this.deleteLayerBtn = document.getElementById('delete-layer-btn'); this.visibilityBtn = document.getElementById('visibility-btn'); this.bgImageInput = document.getElementById('bg-image-input'); this.projectInput = document.getElementById('project-input'); this.brushTypeSelect = document.getElementById('brush-type-select'); }
+            initializeAppState() { this.isDrawing = false; this.isPanning = false; this.middleClickPanning = false; this.isPinching = false; this.touchStartTimer = null; this.brushSize = 15; this.brushColor = '#000000'; this.brushOpacity = 1; this.currentTool = 'brush'; this.currentBrushType = 'round'; this.lastPoint = { x: 0, y: 0 }; this.startShapePoint = {x: 0, y: 0}; this.previousColors = ['#ffffff', '#ffffff']; this.zoom = 1; this.panOffset = { x: 0, y: 0 }; this.startPanPoint = { x: 0, y: 0 }; this.initialPanOffset = { x: 0, y: 0 }; this.canvasSize = { width: 1920, height: 1080 }; this.layers = []; this.activeLayerIndex = 0; this.layerCounter = 0; this.lastTouchDistance = null; this.lastTouchMidpoint = null; }
+            initApp() { this.setupEventListeners(); this.setupCanvasWrapperSize(); this.addLayer(); this.centerCanvas(); this.updateCursor(); window.addEventListener('resize', () => this.resizeAllCanvases()); }
             
-            initApp() {
-                this.setupEventListeners();
-                this.setupCanvasWrapperSize();
-                this.addLayer();
-                this.centerCanvas();
-                this.updateCursor();
-                window.addEventListener('resize', () => this.resizeAllCanvases());
-            }
-
-            addLayer(data = null) {
-                this.layerCounter++;
-                const layerId = this.layers.length;
-                const canvas = document.createElement('canvas');
-                canvas.className = 'canvas-layer';
-                canvas.width = this.canvasSize.width;
-                canvas.height = this.canvasSize.height;
-
-                const ctx = canvas.getContext('2d');
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-
-                this.canvasWrapper.insertBefore(canvas, this.previewCanvas);
-                
-                const layer = {
-                    id: layerId,
-                    name: data ? data.name : `Lapisan ${this.layerCounter}`,
-                    canvas: canvas,
-                    ctx: ctx,
-                    history: [],
-                    historyIndex: -1,
-                    visible: data ? data.visible : true
-                };
-                
-                this.layers.push(layer);
-                this.setActiveLayer(layerId);
-
-                if (data && data.imageDataURL) {
-                    const img = new Image();
-                    img.onload = () => {
-                        layer.ctx.drawImage(img, 0, 0);
-                        this.saveState();
-                    };
-                    img.src = data.imageDataURL;
-                } else {
-                    this.saveState();
-                }
-                
-                if (data && !data.visible) {
-                    layer.canvas.style.display = 'none';
-                }
-                
-                this.renderLayersList();
-                return layer;
-            }
-
-            async deleteLayer() {
-                if (this.layers.length <= 1) return;
-                const confirmed = await this.confirmDialog.show('Anda pasti mahu memadam lapisan ini?');
-                if (confirmed) {
-                    const layerToRemove = this.layers.find(l => l.id === this.activeLayerIndex);
-                    layerToRemove.canvas.remove();
-                    this.layers = this.layers.filter(l => l.id !== this.activeLayerIndex);
-                    this.setActiveLayer(this.layers[this.layers.length - 1].id);
-                }
-            }
-            
-            setActiveLayer(id) {
-                this.activeLayerIndex = id;
-                this.renderLayersList();
-                this.updateHistoryButtons();
-            }
-
-            toggleVisibility() {
-                const layer = this.getActiveLayer();
-                if (!layer) return;
-                layer.visible = !layer.visible;
-                layer.canvas.style.display = layer.visible ? 'block' : 'none';
-                this.renderLayersList();
-            }
-            
-            renderLayersList() {
-                this.layersDropdown.innerHTML = '';
-                [...this.layers].reverse().forEach(layer => {
-                    const option = document.createElement('option');
-                    option.value = layer.id;
-                    option.textContent = layer.name;
-                    if (!layer.visible) { option.classList.add('hidden-layer'); }
-                    this.layersDropdown.appendChild(option);
-                });
-                this.layersDropdown.value = this.activeLayerIndex;
-                const activeLayer = this.getActiveLayer();
-                if (activeLayer) {
-                     this.visibilityBtn.innerHTML = activeLayer.visible ? '👁️' : '➖';
-                     this.deleteLayerBtn.disabled = this.layers.length <= 1;
-                }
-            }
-
-            getActiveLayer() { return this.layers.find(l => l.id === this.activeLayerIndex); }
-
-            setupCanvasWrapperSize() {
-                this.canvasWrapper.style.width = `${this.canvasSize.width}px`;
-                this.canvasWrapper.style.height = `${this.canvasSize.height}px`;
-                this.previewCanvas.width = this.canvasSize.width;
-                this.previewCanvas.height = this.canvasSize.height;
-            }
-
-            resizeAllCanvases() {
-                // This function is complex with project save/load, might need adjustments
-                this.updateTransform();
-            }
-
             setupEventListeners() {
+                this.previewCanvas.addEventListener('mousedown', (e) => { if (e.button === 1) { e.preventDefault(); this.middleClickPanning = true; this.isPanning = true; const mousePos = this.getMousePosInContainer(e); this.startPanPoint = { x: mousePos.x, y: mousePos.y }; this.initialPanOffset = { x: this.panOffset.x, y: this.panOffset.y }; this.canvasContainer.classList.add('panning'); } });
+                window.addEventListener('mouseup', (e) => { if (e.button === 1 && this.middleClickPanning) { e.preventDefault(); this.isPanning = false; this.middleClickPanning = false; this.canvasContainer.classList.remove('panning'); } });
                 this.previewCanvas.addEventListener('mousedown', (e) => this.startAction(e));
                 this.previewCanvas.addEventListener('mousemove', (e) => this.moveAction(e));
                 this.previewCanvas.addEventListener('mouseup', (e) => this.endAction(e));
@@ -396,95 +306,50 @@
                 this.canvasContainer.addEventListener('wheel', (e) => this.handleZoom(e), { passive: false });
                 this.previewCanvas.addEventListener('mouseenter', () => { if(this.currentTool !== 'pan') this.customCursor.style.display = 'block'; });
                 this.previewCanvas.addEventListener('mouseleave', () => { this.customCursor.style.display = 'none'; });
-
-                // Touch Events
-                let lastTouchDistance = null;
-                let lastTouchMidpoint = null;
-
-                this.previewCanvas.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    if (e.touches.length === 1) {
-                        const touch = e.touches[0];
-                        this.startAction({ clientX: touch.clientX, clientY: touch.clientY });
-                    } else if (e.touches.length === 2) {
-                        this.isPanning = true;
-                        this.isDrawing = false;
-                        lastTouchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                        lastTouchMidpoint = { x: (e.touches[0].clientX + e.touches[1].clientX) / 2, y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
-                    }
-                }, { passive: false });
-
-                this.previewCanvas.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    if (e.touches.length === 1 && !this.isPanning) {
-                        const touch = e.touches[0];
-                        this.moveAction({ clientX: touch.clientX, clientY: touch.clientY });
-                    } else if (e.touches.length === 2) {
-                        const newDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                        const newMidpoint = { x: (e.touches[0].clientX + e.touches[1].clientX) / 2, y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
-                        if (lastTouchDistance) {
-                            const zoomMultiplier = newDist / lastTouchDistance;
-                            this.zoomAtCenter(zoomMultiplier, { clientX: newMidpoint.x, clientY: newMidpoint.y });
-                        }
-                        if (lastTouchMidpoint) {
-                            this.panOffset.x += newMidpoint.x - lastTouchMidpoint.x;
-                            this.panOffset.y += newMidpoint.y - lastTouchMidpoint.y;
-                            this.updateTransform();
-                        }
-                        lastTouchDistance = newDist;
-                        lastTouchMidpoint = newMidpoint;
-                    }
-                }, { passive: false });
-
-                this.previewCanvas.addEventListener('touchend', (e) => {
-                    this.endAction(e);
-                    lastTouchDistance = null;
-                    lastTouchMidpoint = null;
-                    this.isPanning = false;
-                });
-                
-                // Toolbar Events
+                this.previewCanvas.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
+                this.previewCanvas.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
+                this.previewCanvas.addEventListener('touchend', (e) => this.handleTouchEnd(e));
                 this.toolbar.addEventListener('click', (e) => this.handleToolbarClick(e));
                 this.colorPicker.addEventListener('input', (e) => this.setBrushColor(e.target.value));
                 this.colorPicker.addEventListener('change', (e) => this.updatePreviousColors(e.target.value));
-                this.prevColor1.addEventListener('click', () => this.setBrushColor(this.previousColors[0]));
-                this.prevColor2.addEventListener('click', () => this.setBrushColor(this.previousColors[1]));
-                this.sizeSlider.addEventListener('input', (e) => this.setBrushSize(e.target.value));
-                this.opacitySlider.addEventListener('input', (e) => { this.brushOpacity = e.target.value; this.opacityDisplay.textContent = `${Math.round(e.target.value * 100)}%`; });
                 document.getElementById('toolbar-toggle').addEventListener('click', () => {
-                    const wrapper = document.getElementById('toolbar-wrapper');
-                    const toolbar = document.getElementById('toolbar');
-                    const isHidden = wrapper.style.marginTop && wrapper.style.marginTop !== '0px';
-                    wrapper.style.marginTop = isHidden ? '0px' : `-${toolbar.offsetHeight}px`;
-                    wrapper.classList.toggle('hidden', !isHidden);
+                    this.toolbarWrapper.classList.toggle('hidden');
                 });
-                
-                // Layer Events
+                this.brushTypeSelect.addEventListener('change', (e) => { this.currentBrushType = e.target.value; });
                 this.addLayerBtn.addEventListener('click', () => this.addLayer());
                 this.deleteLayerBtn.addEventListener('click', () => this.deleteLayer());
                 this.layersDropdown.addEventListener('change', (e) => this.setActiveLayer(parseInt(e.target.value)));
                 this.visibilityBtn.addEventListener('click', () => this.toggleVisibility());
-                
-                // File Events
                 document.getElementById('open-bg-image-btn').addEventListener('click', () => this.bgImageInput.click());
                 this.bgImageInput.addEventListener('change', (e) => this.loadBackgroundImage(e));
                 document.getElementById('save-project-btn').addEventListener('click', () => this.saveProject());
                 document.getElementById('open-project-btn').addEventListener('click', () => this.projectInput.click());
                 this.projectInput.addEventListener('change', (e) => this.loadProject(e));
+                this.sizeSlider.addEventListener('input', (e) => this.setBrushSize(e.target.value));
+                this.opacitySlider.addEventListener('input', (e) => { this.brushOpacity = e.target.value; this.opacityDisplay.textContent = `${Math.round(e.target.value * 100)}%`; });
             }
             
-            getCanvasPosFromEvent(e) { /* ... same logic ... */ }
-            getMousePosInContainer(e) { /* ... same logic ... */ }
-            
+            handleTouchStart(e) { e.preventDefault(); clearTimeout(this.touchStartTimer); const touches = e.touches; if (touches.length === 1) { const touch = touches[0]; this.touchStartTimer = setTimeout(() => { this.startAction({ clientX: touch.clientX, clientY: touch.clientY }); }, 50); } else if (touches.length >= 2) { clearTimeout(this.touchStartTimer); this.isDrawing = false; this.isPinching = true; this.lastTouchDistance = this.getTouchDistance(touches); this.lastTouchMidpoint = this.getTouchMidpoint(touches); } }
+            handleTouchMove(e) { e.preventDefault(); const touches = e.touches; if (touches.length === 1 && !this.isPinching) { clearTimeout(this.touchStartTimer); if (!this.isDrawing) { const touch = touches[0]; this.startAction({ clientX: touch.clientX, clientY: touch.clientY }); } this.moveAction({ clientX: touches[0].clientX, clientY: touches[0].clientY }); } else if (touches.length >= 2 && this.isPinching) { const newDist = this.getTouchDistance(touches); const newMidpoint = this.getTouchMidpoint(touches); if (this.lastTouchDistance) { const zoomMultiplier = newDist / this.lastTouchDistance; this.zoomAtCenter(zoomMultiplier, { clientX: newMidpoint.x, clientY: newMidpoint.y }); } if (this.lastTouchMidpoint) { const dx = newMidpoint.x - this.lastTouchMidpoint.x; const dy = newMidpoint.y - this.lastTouchMidpoint.y; this.panOffset.x += dx; this.panOffset.y += dy; this.updateTransform(); } this.lastTouchDistance = newDist; this.lastTouchMidpoint = newMidpoint; } }
+            handleTouchEnd(e) { clearTimeout(this.touchStartTimer); if (this.isDrawing) { this.endAction(e); } this.isPinching = false; this.isDrawing = false; this.isPanning = false; this.lastTouchDistance = null; this.lastTouchMidpoint = null; }
+            getTouchDistance(touches) { const dx = touches[0].clientX - touches[1].clientX; const dy = touches[0].clientY - touches[1].clientY; return Math.hypot(dx, dy); }
+            getTouchMidpoint(touches) { const x = (touches[0].clientX + touches[1].clientX) / 2; const y = (touches[0].clientY + touches[1].clientY) / 2; return { x, y }; }
             prepareContext(ctx) {
                 ctx.lineWidth = this.brushSize / this.zoom;
                 ctx.strokeStyle = this.brushColor;
-                ctx.fillStyle = this.brushColor; // For filled shapes
+                ctx.fillStyle = this.brushColor;
                 ctx.globalAlpha = this.brushOpacity;
                 ctx.globalCompositeOperation = this.currentTool === 'eraser' ? 'destination-out' : 'source-over';
+                if (this.currentBrushType === 'square') {
+                    ctx.lineCap = 'square';
+                    ctx.lineJoin = 'miter';
+                } else { 
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                }
             }
-
             startAction(e) {
+                if (e.button === 1) return;
                 if (this.currentTool === 'pan') {
                     this.isPanning = true;
                     const mousePos = this.getMousePosInContainer(e);
@@ -498,47 +363,58 @@
                     const canvasPos = this.getCanvasPosFromEvent(e);
                     this.startShapePoint = canvasPos;
                     this.lastPoint = canvasPos;
-
+                    this.prepareContext(layer.ctx);
                     if (this.currentTool === 'brush' || this.currentTool === 'eraser') {
-                         this.prepareContext(layer.ctx);
-                         layer.ctx.beginPath();
-                         layer.ctx.moveTo(canvasPos.x, canvasPos.y);
+                         const scaledBrushSize = this.brushSize / this.zoom;
+                        switch (this.currentBrushType) {
+                            case 'spray': this.drawSpray(layer.ctx, canvasPos); break;
+                            case 'square': layer.ctx.fillRect(canvasPos.x - scaledBrushSize / 2, canvasPos.y - scaledBrushSize / 2, scaledBrushSize, scaledBrushSize); break;
+                            case 'round': layer.ctx.beginPath(); layer.ctx.arc(canvasPos.x, canvasPos.y, scaledBrushSize / 2, 0, 2 * Math.PI); layer.ctx.fill(); break;
+                        }
+                        layer.ctx.beginPath();
+                        layer.ctx.moveTo(canvasPos.x, canvasPos.y);
                     }
                 }
             }
-
             moveAction(e) {
-                this.updateCursorPosition(this.getMousePosInContainer(e));
+                const mousePosContainer = this.getMousePosInContainer(e);
+                this.updateCursorPosition(mousePosContainer);
+
                 if (this.isPanning) {
-                    const mousePosContainer = this.getMousePosInContainer(e);
                     const dx = mousePosContainer.x - this.startPanPoint.x;
                     const dy = mousePosContainer.y - this.startPanPoint.y;
                     this.panOffset.x = this.initialPanOffset.x + dx;
                     this.panOffset.y = this.initialPanOffset.y + dy;
                     this.updateTransform();
-                } 
-                else if (this.isDrawing) {
+                } else if (this.isDrawing) {
                     const canvasPos = this.getCanvasPosFromEvent(e);
                     const layer = this.getActiveLayer();
                     if (!layer) return;
 
                     if (this.currentTool === 'brush' || this.currentTool === 'eraser') {
-                        layer.ctx.lineTo(canvasPos.x, canvasPos.y);
-                        layer.ctx.stroke();
-                        this.lastPoint = canvasPos;
-                    } else { // Shape tools
+                        switch (this.currentBrushType) {
+                            case 'round':
+                            case 'square':
+                                layer.ctx.lineTo(canvasPos.x, canvasPos.y);
+                                layer.ctx.stroke();
+                                layer.ctx.beginPath();
+                                layer.ctx.moveTo(canvasPos.x, canvasPos.y);
+                                break;
+                            case 'spray': this.drawSpray(layer.ctx, canvasPos); break;
+                        }
+                    } else {
                         this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
                         this.prepareContext(this.previewCtx);
                         this.drawShape(this.previewCtx, this.startShapePoint, canvasPos, this.currentTool);
                     }
                 }
             }
-
             endAction(e) {
+                if (e.button === 1) return;
                 if (this.isDrawing) {
                     const layer = this.getActiveLayer();
                     if (layer) {
-                        const canvasPos = this.getCanvasPosFromEvent(e);
+                        const canvasPos = this.getCanvasPosFromEvent(e); 
                         if (['line', 'rectangle', 'circle'].includes(this.currentTool)) {
                             this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
                             this.prepareContext(layer.ctx);
@@ -552,216 +428,44 @@
                 this.isPanning = false;
                 this.canvasContainer.classList.remove('panning');
             }
-
-            drawShape(ctx, start, end, tool) {
-                ctx.beginPath();
-                switch(tool) {
-                    case 'line':
-                        ctx.moveTo(start.x, start.y);
-                        ctx.lineTo(end.x, end.y);
-                        break;
-                    case 'rectangle':
-                        ctx.rect(start.x, start.y, end.x - start.x, end.y - start.y);
-                        break;
-                    case 'circle':
-                        const dx = end.x - start.x;
-                        const dy = end.y - start.y;
-                        const radius = Math.sqrt(dx * dx + dy * dy);
-                        ctx.arc(start.x, start.y, radius, 0, 2 * Math.PI);
-                        break;
-                }
-                ctx.stroke();
-            }
-            
-            saveState() {
-                const layer = this.getActiveLayer();
-                if (!layer) return;
-                layer.history = layer.history.slice(0, layer.historyIndex + 1);
-                layer.history.push(layer.ctx.getImageData(0, 0, this.canvasSize.width, this.canvasSize.height));
-                layer.historyIndex++;
-                this.updateHistoryButtons();
-            }
+            addLayer(data = null) { this.layerCounter++; const layerId = this.layers.length; const canvas = document.createElement('canvas'); canvas.className = 'canvas-layer'; canvas.width = this.canvasSize.width; canvas.height = this.canvasSize.height; const ctx = canvas.getContext('2d'); this.canvasWrapper.insertBefore(canvas, this.previewCanvas); const layer = { id: layerId, name: data ? data.name : `Lapisan ${this.layerCounter}`, canvas: canvas, ctx: ctx, history: [], historyIndex: -1, visible: data ? data.visible : true }; this.layers.push(layer); this.setActiveLayer(layerId); if (data && data.imageDataURL) { const img = new Image(); img.onload = () => { layer.ctx.drawImage(img, 0, 0); this.saveState(); }; img.src = data.imageDataURL; } else { this.saveState(); } if (data && !data.visible) { layer.canvas.style.display = 'none'; } this.renderLayersList(); return layer; }
+            async deleteLayer() { if (this.layers.length <= 1) return; const confirmed = await this.confirmDialog.show('Anda pasti mahu memadam lapisan ini?'); if (confirmed) { const layerToRemove = this.layers.find(l => l.id === this.activeLayerIndex); layerToRemove.canvas.remove(); this.layers = this.layers.filter(l => l.id !== this.activeLayerIndex); this.setActiveLayer(this.layers[this.layers.length - 1].id); } }
+            setActiveLayer(id) { this.activeLayerIndex = id; this.renderLayersList(); this.updateHistoryButtons(); }
+            toggleVisibility() { const layer = this.getActiveLayer(); if (!layer) return; layer.visible = !layer.visible; layer.canvas.style.display = layer.visible ? 'block' : 'none'; this.renderLayersList(); }
+            renderLayersList() { this.layersDropdown.innerHTML = ''; [...this.layers].reverse().forEach(layer => { const option = document.createElement('option'); option.value = layer.id; option.textContent = layer.name; if (!layer.visible) { option.classList.add('hidden-layer'); } this.layersDropdown.appendChild(option); }); this.layersDropdown.value = this.activeLayerIndex; const activeLayer = this.getActiveLayer(); if (activeLayer) { this.visibilityBtn.innerHTML = activeLayer.visible ? '👁️' : '➖'; this.deleteLayerBtn.disabled = this.layers.length <= 1; } }
+            getActiveLayer() { return this.layers.find(l => l.id === this.activeLayerIndex); }
+            setupCanvasWrapperSize() { this.canvasWrapper.style.width = `${this.canvasSize.width}px`; this.canvasWrapper.style.height = `${this.canvasSize.height}px`; this.previewCanvas.width = this.canvasSize.width; this.previewCanvas.height = this.canvasSize.height; }
+            resizeAllCanvases() { this.updateTransform(); }
+            drawSpray(ctx, pos) { const density = this.brushSize * 0.5; for (let i = 0; i < density; i++) { const angle = Math.random() * 2 * Math.PI; const radius = Math.random() * (this.brushSize / 2 / this.zoom); const offsetX = Math.cos(angle) * radius; const offsetY = Math.sin(angle) * radius; ctx.fillRect(pos.x + offsetX, pos.y + offsetY, 1, 1); } }
+            drawShape(ctx, start, end, tool) { ctx.beginPath(); switch(tool) { case 'line': ctx.moveTo(start.x, start.y); ctx.lineTo(end.x, end.y); break; case 'rectangle': ctx.rect(start.x, start.y, end.x - start.x, end.y - start.y); break; case 'circle': const dx = end.x - start.x; const dy = end.y - start.y; const radius = Math.sqrt(dx * dx + dy * dy); ctx.arc(start.x, start.y, radius, 0, 2 * Math.PI); break; } ctx.stroke(); }
+            saveState() { const layer = this.getActiveLayer(); if (!layer) return; layer.history = layer.history.slice(0, layer.historyIndex + 1); layer.history.push(layer.ctx.getImageData(0, 0, this.canvasSize.width, this.canvasSize.height)); layer.historyIndex++; this.updateHistoryButtons(); }
             handleZoom(e) { e.preventDefault(); const zoomIntensity = 0.1; const wheel = e.deltaY < 0 ? 1 : -1; const zoomMultiplier = Math.exp(wheel * zoomIntensity); this.zoomAtCenter(zoomMultiplier, e); }
             centerCanvas() { const cRect = this.canvasContainer.getBoundingClientRect(); this.zoom = Math.min(cRect.width / this.canvasSize.width, cRect.height / this.canvasSize.height) * 0.9; this.panOffset.x = (cRect.width - this.canvasSize.width * this.zoom) / 2; this.panOffset.y = (cRect.height - this.canvasSize.height * this.zoom) / 2; this.updateTransform(); }
-            updateTransform() {
-                this.canvasWrapper.style.transform = `translate(${this.panOffset.x}px, ${this.panOffset.y}px) scale(${this.zoom})`;
-                const cursorSize = this.brushSize; 
-                this.customCursor.style.width = `${cursorSize}px`;
-                this.customCursor.style.height = `${cursorSize}px`;
-            }
-            updateCursorPosition(pos) {
-                this.customCursor.style.left = `${pos.x}px`;
-                this.customCursor.style.top = `${pos.y}px`;
-            }
-            getCanvasPosFromEvent(e) { const rect = this.previewCanvas.getBoundingClientRect(); return { x: (e.clientX - rect.left) / this.zoom, y: (e.clientY - rect.top) / this.zoom }; }
-            getMousePosInContainer(e) { const rect = this.canvasContainer.getBoundingClientRect(); return { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
-            
-            handleToolbarClick(e) {
-                const target = e.target.closest('button');
-                if (!target) return;
-                if (target.dataset.tool) { this.setActiveButton(target, '.tool-btn[data-tool]'); this.currentTool = target.dataset.tool; this.updateCursor(); }
-                if (target.dataset.size) { this.setBrushSize(target.dataset.size); this.setActiveButton(target, '.size-preset-btn');}
-                if (target.id === 'zoom-in-btn') this.zoomAtCenter(1.2);
-                if (target.id === 'zoom-out-btn') this.zoomAtCenter(1 / 1.2);
-                if (target.id === 'undo-btn') this.undo();
-                if (target.id === 'redo-btn') this.redo();
-                if (target.id === 'save-png-btn') this.saveAsPng();
-                if (target.id === 'clear-btn') this.clearCanvas();
-            }
-
+            updateTransform() { this.canvasWrapper.style.transform = `translate(${this.panOffset.x}px, ${this.panOffset.y}px) scale(${this.zoom})`; const cursorSize = this.brushSize; this.customCursor.style.width = `${cursorSize}px`; this.customCursor.style.height = `${cursorSize}px`; }
+            updateCursorPosition(pos) { this.customCursor.style.left = `${pos.x}px`; this.customCursor.style.top = `${pos.y}px`; }
+            getEventCoordinates(e) { if (e.touches && e.touches.length > 0) { return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }; } if (e.changedTouches && e.changedTouches.length > 0) { return { clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY }; } return { clientX: e.clientX, clientY: e.clientY }; }
+            getCanvasPosFromEvent(e) { const rect = this.previewCanvas.getBoundingClientRect(); const { clientX, clientY } = this.getEventCoordinates(e); return { x: (clientX - rect.left) / this.zoom, y: (clientY - rect.top) / this.zoom }; }
+            getMousePosInContainer(e) { const rect = this.canvasContainer.getBoundingClientRect(); const { clientX, clientY } = this.getEventCoordinates(e); return { x: clientX - rect.left, y: clientY - rect.top }; }
+            handleToolbarClick(e) { const target = e.target.closest('button'); if (!target) return; if (target.dataset.tool) { this.setActiveButton(target, '.tool-btn[data-tool]'); this.currentTool = target.dataset.tool; this.updateCursor(); } if (target.dataset.size) { this.setBrushSize(target.dataset.size); this.setActiveButton(target, '.size-preset-btn');} if (target.id === 'undo-btn') this.undo(); if (target.id === 'redo-btn') this.redo(); if (target.id === 'save-png-btn') this.saveAsPng(); if (target.id === 'clear-btn') this.clearCanvas(); }
             setBrushColor(color) { this.brushColor = color; this.colorPicker.value = color; }
             setBrushSize(size) { this.brushSize = size; this.sizeSlider.value = size; this.sizeDisplay.textContent = size; this.updateTransform(); }
             updatePreviousColors(newColor) { if (newColor === this.previousColors[0]) return; this.previousColors.unshift(newColor); this.previousColors = this.previousColors.slice(0, 2); this.prevColor1.style.backgroundColor = this.previousColors[0]; this.prevColor2.style.backgroundColor = this.previousColors[1]; }
-            
-            saveAsPng() {
-                const compositeCanvas = document.createElement('canvas');
-                compositeCanvas.width = this.canvasSize.width;
-                compositeCanvas.height = this.canvasSize.height;
-                const compositeCtx = compositeCanvas.getContext('2d');
-                compositeCtx.fillStyle = 'white';
-                compositeCtx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
-
-                this.layers.forEach(layer => {
-                    if (layer.visible) {
-                        compositeCtx.drawImage(layer.canvas, 0, 0);
-                    }
-                });
-
-                const link = document.createElement('a');
-                link.download = 'lukisan-kreatif.png';
-                link.href = compositeCanvas.toDataURL('image/png');
-                link.click();
-            }
-            async clearCanvas() {
-                const confirmed = await this.confirmDialog.show('Anda pasti mahu mengosongkan kandungan lapisan ini?');
-                if (confirmed) {
-                    const layer = this.getActiveLayer();
-                    if (layer) {
-                        layer.ctx.clearRect(0, 0, this.canvasSize.width, this.canvasSize.height);
-                        this.saveState();
-                    }
-                }
-            }
+            async saveAsPng() { const defaultName = `lukisan-${Date.now()}`; const filename = await this.promptDialog.show("Simpan sebagai PNG:", defaultName); if (!filename) return; const compositeCanvas = document.createElement('canvas'); compositeCanvas.width = this.canvasSize.width; compositeCanvas.height = this.canvasSize.height; const compositeCtx = compositeCanvas.getContext('2d'); compositeCtx.fillStyle = 'white'; compositeCtx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height); this.layers.forEach(layer => { if (layer.visible) { compositeCtx.drawImage(layer.canvas, 0, 0); } }); const link = document.createElement('a'); link.download = `${filename.replace(/\.png$/i, '')}.png`; link.href = compositeCanvas.toDataURL('image/png'); link.click(); }
+            async saveProject() { const defaultName = `projek-${Date.now()}`; const filename = await this.promptDialog.show("Simpan sebagai Projek Jan:", defaultName); if (!filename) return; const projectData = { canvasSize: this.canvasSize, layers: this.layers.map(layer => ({ name: layer.name, visible: layer.visible, imageDataURL: layer.canvas.toDataURL() })) }; const jsonString = JSON.stringify(projectData); const blob = new Blob([jsonString], {type: 'application/json'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${filename.replace(/\.jan$/i, '')}.jan`; link.click(); }
+            async clearCanvas() { const confirmed = await this.confirmDialog.show('Anda pasti mahu mengosongkan kandungan lapisan ini?'); if (confirmed) { const layer = this.getActiveLayer(); if (layer) { layer.ctx.clearRect(0, 0, this.canvasSize.width, this.canvasSize.height); this.saveState(); } } }
             undo() { const layer = this.getActiveLayer(); if (layer && layer.historyIndex > 0) { layer.historyIndex--; layer.ctx.putImageData(layer.history[layer.historyIndex], 0, 0); this.updateHistoryButtons(); } }
             redo() { const layer = this.getActiveLayer(); if (layer && layer.historyIndex < layer.history.length - 1) { layer.historyIndex++; layer.ctx.putImageData(layer.history[layer.historyIndex], 0, 0); this.updateHistoryButtons(); } }
-            updateHistoryButtons() {
-                const layer = this.getActiveLayer();
-                this.undoBtn.disabled = !layer || layer.historyIndex <= 0;
-                this.redoBtn.disabled = !layer || layer.historyIndex >= layer.history.length - 1;
-            }
-            zoomAtCenter(zoomMultiplier, event = null) {
-                const containerRect = this.canvasContainer.getBoundingClientRect();
-                const center = event ? this.getMousePosInContainer(event) : { x: containerRect.width / 2, y: containerRect.height / 2 };
-                this.panOffset.x = center.x - (center.x - this.panOffset.x) * zoomMultiplier;
-                this.panOffset.y = center.y - (center.y - this.panOffset.y) * zoomMultiplier;
-                this.zoom *= zoomMultiplier;
-                this.updateTransform();
-            }
-            updateCursor() {
-                if (this.currentTool === 'pan') {
-                    this.canvasContainer.style.cursor = 'grab';
-                    this.customCursor.style.display = 'none';
-                } else {
-                    this.canvasContainer.style.cursor = 'none';
-                }
-                this.updateTransform();
-            }
+            updateHistoryButtons() { const layer = this.getActiveLayer(); this.undoBtn.disabled = !layer || layer.historyIndex <= 0; this.redoBtn.disabled = !layer || layer.historyIndex >= layer.history.length - 1; }
+            zoomAtCenter(zoomMultiplier, event = null) { const containerRect = this.canvasContainer.getBoundingClientRect(); const center = event ? this.getMousePosInContainer(event) : { x: containerRect.width / 2, y: containerRect.height / 2 }; this.panOffset.x = center.x - (center.x - this.panOffset.x) * zoomMultiplier; this.panOffset.y = center.y - (center.y - this.panOffset.y) * zoomMultiplier; this.zoom *= zoomMultiplier; this.updateTransform(); }
+            updateCursor() { if (this.currentTool === 'pan' || this.middleClickPanning) { this.canvasContainer.style.cursor = 'grab'; this.customCursor.style.display = 'none'; } else { this.canvasContainer.style.cursor = 'none'; } this.updateTransform(); }
             setActiveButton(button, selector) { this.toolbar.querySelectorAll(selector).forEach(btn => btn.classList.remove('active')); button.classList.add('active'); }
-            
-            async loadBackgroundImage(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const confirmed = await this.confirmDialog.show('Ini akan menggantikan kandungan pada lapisan paling bawah (Lapisan 1). Teruskan?');
-                if (!confirmed) {
-                    this.bgImageInput.value = ''; // Reset input
-                    return;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const baseLayer = this.layers[0];
-                        if (baseLayer) {
-                            // FIX: Ensure image is drawn fully opaque
-                            const currentOpacity = baseLayer.ctx.globalAlpha;
-                            baseLayer.ctx.globalAlpha = 1.0;
-                            
-                            baseLayer.ctx.clearRect(0, 0, baseLayer.canvas.width, baseLayer.canvas.height);
-                            baseLayer.ctx.drawImage(img, 0, 0, baseLayer.canvas.width, baseLayer.canvas.height);
-                            
-                            baseLayer.ctx.globalAlpha = currentOpacity; // Restore alpha
-                            
-                            // Simpan keadaan ini ke dalam sejarah lapisan
-                            const originalActiveLayerId = this.activeLayerIndex;
-                            this.activeLayerIndex = baseLayer.id;
-                            this.saveState();
-                            this.setActiveLayer(originalActiveLayerId);
-                        }
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-                this.bgImageInput.value = ''; // Reset input
-            }
-
-            // --- FUNGSI PROJEK JAN ---
-            saveProject() {
-                const projectData = {
-                    canvasSize: this.canvasSize,
-                    layers: this.layers.map(layer => ({
-                        name: layer.name,
-                        visible: layer.visible,
-                        imageDataURL: layer.canvas.toDataURL()
-                    }))
-                };
-                const jsonString = JSON.stringify(projectData);
-                const blob = new Blob([jsonString], {type: 'application/json'});
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `projek-${Date.now()}.jan`;
-                link.click();
-            }
-
-            async loadProject(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const confirmed = await this.confirmDialog.show('Membuka projek baru akan memadam kerja semasa anda. Teruskan?');
-                if (!confirmed) {
-                    this.projectInput.value = '';
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const projectData = JSON.parse(e.target.result);
-                        this.resetWorkspace();
-                        this.canvasSize = projectData.canvasSize;
-                        this.setupCanvasWrapperSize();
-                        projectData.layers.forEach(layerData => this.addLayer(layerData));
-                    } catch (err) {
-                        alert('Gagal membuka fail projek. Fail mungkin rosak.');
-                        console.error("Error parsing project file:", err);
-                    }
-                };
-                reader.readAsText(file);
-                this.projectInput.value = '';
-            }
-            
-            resetWorkspace() {
-                this.layers.forEach(layer => layer.canvas.remove());
-                this.layers = [];
-                this.layerCounter = 0;
-                this.initializeAppState();
-            }
+            async loadBackgroundImage(event) { const file = event.target.files[0]; if (!file) return; const confirmed = await this.confirmDialog.show('Ini akan menggantikan kandungan pada lapisan paling bawah (Lapisan 1). Teruskan?'); if (!confirmed) { this.bgImageInput.value = ''; return; } const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const baseLayer = this.layers[0]; if (baseLayer) { const currentOpacity = baseLayer.ctx.globalAlpha; baseLayer.ctx.globalAlpha = 1.0; baseLayer.ctx.clearRect(0, 0, baseLayer.canvas.width, baseLayer.canvas.height); baseLayer.ctx.drawImage(img, 0, 0, baseLayer.canvas.width, baseLayer.canvas.height); baseLayer.ctx.globalAlpha = currentOpacity; const originalActiveLayerId = this.activeLayerIndex; this.activeLayerIndex = baseLayer.id; this.saveState(); this.setActiveLayer(originalActiveLayerId); } }; img.src = e.target.result; }; reader.readAsDataURL(file); this.bgImageInput.value = ''; }
+            async loadProject(event) { const file = event.target.files[0]; if (!file) return; const confirmed = await this.confirmDialog.show('Membuka projek baru akan memadam kerja semasa anda. Teruskan?'); if (!confirmed) { this.projectInput.value = ''; return; } const reader = new FileReader(); reader.onload = (e) => { try { const projectData = JSON.parse(e.target.result); this.resetWorkspace(); this.canvasSize = projectData.canvasSize; this.setupCanvasWrapperSize(); projectData.layers.forEach(layerData => this.addLayer(layerData)); } catch (err) { alert('Gagal membuka fail projek. Fail mungkin rosak.'); console.error("Error parsing project file:", err); } }; reader.readAsText(file); this.projectInput.value = ''; }
+            resetWorkspace() { this.layers.forEach(layer => layer.canvas.remove()); this.layers = []; this.layerCounter = 0; this.initializeAppState(); }
         }
         
         new DrawingApp();
     </script>
 </body>
 </html>
-
 
