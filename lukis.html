@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keluarga App: Lukisan Kreatif (V3.2.1 - Stabil)</title>
+    <title>Keluarga App: Lukisan Kreatif (V3.4.0 - Projek Jan)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700&display=swap');
 
@@ -65,76 +65,62 @@
             justify-content: center;
             align-items: center;
         }
-        #toolbar-toggle svg {
-            transition: transform 0.3s ease;
-        }
-        #toolbar-wrapper.hidden #toolbar-toggle svg {
-            transform: rotate(180deg);
-        }
+        #toolbar-toggle svg { transition: transform 0.3s ease; }
+        #toolbar-wrapper.hidden #toolbar-toggle svg { transform: rotate(180deg); }
 
         .tool-group { display: flex; align-items: center; gap: 8px; }
         .tool-group label { font-weight: 700; font-size: 0.9em; }
 
-        .tool-btn {
+        .tool-btn, .file-btn, .size-preset-btn {
             width: 38px; height: 38px; border-radius: 50%; border: 3px solid transparent;
             cursor: pointer; transition: all 0.2s ease;
             background-color: #eee; background-size: 55%; background-repeat: no-repeat; background-position: center;
+            display: flex; justify-content: center; align-items: center; font-weight: bold;
         }
-        .tool-btn:hover { transform: scale(1.1); }
-        .tool-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-        .tool-btn.active { border-color: var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
+        .tool-btn:hover, .file-btn:hover, .size-preset-btn:hover { transform: scale(1.1); }
+        .tool-btn:disabled, .file-btn:disabled, .size-preset-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .tool-btn.active, .size-preset-btn.active { border-color: var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
         
-        #brush-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNwbGF0Ij48cGF0aCBkPSJNMTYgMTEuMyBjLjQtMS4zIDEuMy0yLjMgMi44LTIuMyAxLjggMCAzLjIgMS4zIDMgMy4yIDAgMi4zLTMgNS4zLTUgNS4zcy01LTMtNS01LjMgMS4yLTMuMiAzLTMuMiBjMS41IDAgMi40IDEgMi44IDIuMyIvPjxwYXRoIGQ9Ik0xOCAyLjVsMiAydi0yWiIvPjxwYXRoIGQ9Ik0xMyAxMy41bDEgMSIvPjxwYXRoIGQ9Ik0yMSAzbDItMiIvPjxwYXRoIGQ9Ik0zIDZIMW00LTIgMi0yIiIvPjxwYXRoIGQ9Ik0zIDIxaMiIvPjxwYXRoIGQ9Ik0xMiAxM2MtLjMgMS4zLTEuNSAyLjQtMi4yIDIgLTEuNSAwLTMtMS44LTMtNC41cyEuNS00LjUgMy00LjUgMS4zIDEuMSA0IDMuNSIvPjwvc3ZnPg=='); }
+        #brush-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDIqCAyNCIgZmlsbD0ibm9uZXMiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgY2xhc3M9Imx1Y2lkZSBsdWNpZGUtc3BsYXQiPjxwYXRoIGQ9Ik0xNiAxMS4zIGMuNC0xLjMgMS4zLTIuMyAyLjgtMi4zIDEuOCAwIDMuMiAxLjMgMyAzLjIgMCAyLjMtMyA1LjMtNSA1LjNzLTUtMy01LTUuMyAxLjItMy4yIDMtMy4yIGMxLjUgMCAyLjQgMSAyLjggMi4zIi8+PHBhdGggZD0iTTE4IDIuNWwyIDJ2LTJaIi8+PHBhdGggZD0iTTEzIDEzLjVsMSAxIi8+PHBhdGggZD0iTTIxIDNsMi0yIi8+PHBhdGggZD0iTTMgNkgxbTQtMiAyLTIiLz48cGF0aCBkPSJNMzYyMWgyIi8+PHBhdGggZD0iTTEyIDEzYy0uMyAxLjMtMS41IDIuNC0yLjIgMiAtMS41IDAtMy0xLjgtMy00LjVzMS41LTQuNSAzLTQuNSAxLjMgMS4xIDQgMy41Ii8+PC9zdmc+'); }
         #pan-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWhhbmQiPjxwYXRoIGQ9Im0xOCAxNS02LTZoNi02Ii8+PHBhdGggZD0iTTUgMTUtMiAydi00bDIgMiIvPjxwYXRoIGQ9Im0yIDEyIDMtMyA0IDQiLz48cGF0aCBkPSJtMSAxIDYgNiIvPjxwYXRoIGQ9Ik0xMiAyMiY5LTkgOS05Ii8+PC9zdmc+'); }
         #eraser-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWVyYXNlciI+PHBhdGggZD0iTTIxIDExSDYubDUtNS03IDciLz48cGF0aCBkPSJNMjEgMTFIMTEuMThjLS45MiAwLTEuNzEuNTQtMi4wNiAxLjM3bC0zIDcuMjNjLS4zNi44My0xLjEgMS40LTIuMDIgMS40SDEuNSIvPjwvc3ZnPg=='); }
         #undo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXVuZG8tMiI+PHBhdGggZD0iTTMgNyBjMC0yLjUgMi4xLTYgNy02IDUgMCA3IDQtNyA4LTEuNyAwLTMuMi0uNi00LjItMS40Ii8+PHBhdGggZD0iTTcgMk41IDdsMi41LTIuNSIvPjwvc3ZnPg=='); }
         #redo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlZG8tMiI+PHBhdGggZD0iTTIxIDdjMC0yLjUtMi4xLTYtNy02LTUgMC03IDQtNyA4IDEuNyAwIDMuMi0uNiA0LjItMS40Ii8+PHBhdGggZD0iTTE3IDJsMi41IDUgMi41LTIuNSIvPjwvc3ZnPg=='); }
-        #save-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWRvd25sb2FkIj48cGF0aCBkPSJNMjEgMTV2NGMwIDEuMS0uOSAyLTIgMkg1Yy0xLjEgMC0yLS45LTItMlYxNSIvPjxwYXRoIGQ9Ik03IDEwbDUgNSA1LTUiLz48cGF0aCBkPSJNMTIgMTVWM20wIDAiLz48L3N2Zz4='); background-color: var(--primary-color); }
+        #save-png-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWRvd25sb2FkIj48cGF0aCBkPSJNMjEgMTV2NGMwIDEuMS0uOSAyLTIgMkg1Yy0xLjEgMC0yLS45LTItMlYxNSIvPjxwYXRoIGQ9Ik03IDEwbDUgNSA1LTUiLz48cGF0aCBkPSJNMTIgMTVWM20wIDAiLz48L3N2Zz4='); }
         #clear-btn { background-color: #f44336; color: white; border-radius: 8px; width: auto; padding: 0 15px; font-weight: 700; height: 38px; }
         #zoom-in-btn, #zoom-out-btn { font-size: 1.2em; font-weight: bold; }
         
-        #color-picker { width: 38px; height: 38px; border: none; padding: 0; border-radius: 50%; overflow: hidden; }
+        #open-bg-image-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWltYWdlIj48cmVjdCB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHg9IjMiIHk9IjMiIHJ4PSIyIiByeT0iMiIvPjxjaXJjbGUgY3g9IjguNSIgY3k9IjguNSIgcj0iMS41Ii8+PHBvbHlsaW5lIHBvaW50cz0iMjEgMTUgMTYgMTAgNSAyMSIvPjwvc3ZnPg=='); }
+        #save-project-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNhdmUiPjxwYXRoIGQ9Ik0xOSAyMUg1Yy0xLjEgMC0yLS45LTItMlY1YzAtMS4xLjktMiAyLTJoMTEubDUtNSIvPjxwYXRoIGQ9Ik0xNyAyMVYxM0g3djhoMTBaIi8+PHBhdGggZD0iTTcgM3Y1aDhsMi0ySDdaIi8+PC9zdmc+'); background-color: var(--primary-color);}
+        #open-project-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWZvbGRlci1vcGVuIj48cGF0aCBkPSJNMjAgMjFINDRjLTEuMSAwLTItLjktMi0yVjVjMC0xLjEuOS0yIDItMmg1bDIgM2g5YzEuMSAwIDIgLjkgMiAydjExLjY0Ii8+PHBhdGggZD0iTTIgMTdsMy40Ni0zLjQ2Ii8+PHBhdGggZD0ibTIuNDEgMTEuNTggMy4yMyAzLjIzIi8+PC9zdmc+'); }
+        
+        #line-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxsaW5lIHgxPSI1IiB5MT0iMTIiIHgyPSIxOSIgeTI9IjEyIj48L2xpbmU+PC9zdmc+'); }
+        #rect-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiLz48L3N2Zz4='); }
+        #circle-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PC9zdmc+'); }
+
+        #color-picker { width: 38px; height: 38px; border: none; padding: 0; border-radius: 50%; overflow: hidden; cursor: pointer; }
         #color-picker::-webkit-color-swatch-wrapper { padding: 0; }
         #color-picker::-webkit-color-swatch { border: none; }
+        .color-swatch { width: 24px; height: 24px; border: 2px solid #ccc; border-radius: 50%; cursor: pointer; }
         
-        #size-slider { width: 80px; }
-        #size-display { font-weight: 700; min-width: 25px; text-align: right; }
+        #size-slider, #opacity-slider { width: 80px; }
+        #size-display, #opacity-display { font-weight: 700; min-width: 35px; text-align: right; }
 
         #main-content { display: flex; width: 100%; flex-grow: 1; overflow: hidden; }
 
-        #canvas-container { 
-            flex-grow: 1; 
-            box-sizing: border-box; 
-            position: relative; 
-            background-color: var(--bg-color);
-            overflow: hidden;
-        }
-        #canvas-container.panning { cursor: grabbing; } /* FIX: Changed to grabbing for better UX */
+        #canvas-container { flex-grow: 1; box-sizing: border-box; position: relative; background-color: var(--bg-color); overflow: hidden; }
+        #canvas-container.panning { cursor: grabbing; }
         #canvas-container.drawing { cursor: none; }
 
-        #canvas-wrapper {
-            position: relative;
-            box-shadow: 0 0 15px var(--shadow-color);
-            background-color: white;
-            transform-origin: 0 0;
-        }
+        #canvas-wrapper { position: relative; box-shadow: 0 0 15px var(--shadow-color); background-color: white; transform-origin: 0 0; }
         
-        .canvas-layer, #preview-canvas { 
-            position: absolute; 
-            top: 0;
-            left: 0;
-            pointer-events: none; 
-            background-color: transparent;
-        }
+        .canvas-layer, #preview-canvas { position: absolute; top: 0; left: 0; pointer-events: none; background-color: transparent; }
         #preview-canvas { pointer-events: auto; z-index: 100; }
 
         #custom-cursor { position: absolute; border: 1px solid #333; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); display: none; }
 
         #layers-dropdown { height: 38px; border-radius: 5px; border: 2px solid #ccc; font-weight: 700; }
-        .layer-control-btn {
-            width: 32px; height: 32px; border: none;
-            background-color: #eee; border-radius: 5px; cursor: pointer; font-size: 1.2em;
-        }
+        .layer-control-btn { width: 32px; height: 32px; border: none; background-color: #eee; border-radius: 5px; cursor: pointer; font-size: 1.2em; }
         #layers-dropdown option.hidden-layer { color: #999; }
 
         #confirm-dialog-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 200; animation: fade-in 0.3s ease; }
@@ -152,28 +138,42 @@
         <div id="toolbar">
             <div class="tool-group">
                 <label>Alat:</label>
-                <button id="brush-btn" class="tool-btn active" data-tool="brush"></button>
-                <button id="pan-btn" class="tool-btn" data-tool="pan"></button>
-                <button id="eraser-btn" class="tool-btn" data-tool="eraser"></button>
+                <button id="brush-btn" class="tool-btn active" data-tool="brush" title="Berus"></button>
+                <button id="eraser-btn" class="tool-btn" data-tool="eraser" title="Pemadam"></button>
+                <button id="line-tool-btn" class="tool-btn" data-tool="line" title="Garisan"></button>
+                <button id="rect-tool-btn" class="tool-btn" data-tool="rectangle" title="Segi Empat"></button>
+                <button id="circle-tool-btn" class="tool-btn" data-tool="circle" title="Bulatan"></button>
+                <button id="pan-btn" class="tool-btn" data-tool="pan" title="Alih"></button>
             </div>
             <div class="tool-group">
                 <label>Sejarah:</label>
-                <button id="undo-btn" class="tool-btn"></button>
-                <button id="redo-btn" class="tool-btn"></button>
+                <button id="undo-btn" class="tool-btn" title="Buat Asal"></button>
+                <button id="redo-btn" class="tool-btn" title="Buat Semula"></button>
             </div>
-            <div class="tool-group">
-                <label>Zoom:</label>
-                <button id="zoom-out-btn" class="tool-btn">-</button>
-                <button id="zoom-in-btn" class="tool-btn">+</button>
+             <div class="tool-group">
+                <label>Fail:</label>
+                <button id="open-project-btn" class="file-btn" title="Buka Projek (.jan)"></button>
+                <button id="save-project-btn" class="file-btn" title="Simpan Projek (.jan)"></button>
+                <button id="open-bg-image-btn" class="file-btn" title="Buka Imej Panduan"></button>
             </div>
             <div class="tool-group">
                 <label>Warna:</label>
                 <input type="color" id="color-picker" value="#000000">
+                <div id="prev-color-1" class="color-swatch" style="background-color: #ffffff;"></div>
+                <div id="prev-color-2" class="color-swatch" style="background-color: #ffffff;"></div>
+            </div>
+             <div class="tool-group">
+                <label>Lutsinar:</label>
+                <input type="range" id="opacity-slider" min="0" max="1" value="1" step="0.01">
+                <span id="opacity-display">100%</span>
             </div>
             <div class="tool-group">
                 <label>Saiz:</label>
                 <input type="range" id="size-slider" min="1" max="100" value="15">
                 <span id="size-display">15</span>
+                <button class="size-preset-btn" data-size="5">S</button>
+                <button class="size-preset-btn active" data-size="15">M</button>
+                <button class="size-preset-btn" data-size="30">L</button>
             </div>
             <div class="tool-group">
                 <label>Lapisan:</label>
@@ -182,9 +182,14 @@
                 <button id="delete-layer-btn" class="layer-control-btn" title="Padam Lapisan">-</button>
                 <button id="visibility-btn" class="layer-control-btn" title="Tukar Keterlihatan">👁️</button>
             </div>
+             <div class="tool-group">
+                <label>Zoom:</label>
+                <button id="zoom-out-btn" class="tool-btn">-</button>
+                <button id="zoom-in-btn" class="tool-btn">+</button>
+            </div>
             <div class="tool-group">
                 <button id="clear-btn">Kosongkan</button>
-                <button id="save-btn" class="tool-btn"></button>
+                <button id="save-png-btn" class="tool-btn" title="Simpan sebagai PNG"></button>
             </div>
         </div>
         <button id="toolbar-toggle">
@@ -211,11 +216,21 @@
         </div>
     </div>
 
+    <!-- Hidden file inputs -->
+    <input type="file" id="bg-image-input" accept="image/*" style="display: none;">
+    <input type="file" id="project-input" accept=".jan" style="display: none;">
+
     <script>
         class CustomConfirm { constructor() { this.overlay = document.getElementById('confirm-dialog-overlay'); this.messageEl = document.getElementById('confirm-message'); this.yesBtn = document.getElementById('confirm-yes'); this.noBtn = document.getElementById('confirm-no'); } show(message) { return new Promise((resolve) => { this.messageEl.textContent = message; this.overlay.style.display = 'flex'; const yesHandler = () => { this.overlay.style.display = 'none'; resolve(true); this.yesBtn.removeEventListener('click', yesHandler); this.noBtn.removeEventListener('click', noHandler); }; const noHandler = () => { this.overlay.style.display = 'none'; resolve(false); this.yesBtn.removeEventListener('click', yesHandler); this.noBtn.removeEventListener('click', noHandler); }; this.yesBtn.addEventListener('click', yesHandler); this.noBtn.addEventListener('click', noHandler); }); } }
 
         class DrawingApp {
             constructor() {
+                this.setupDOMReferences();
+                this.initializeAppState();
+                window.addEventListener('load', () => this.initApp());
+            }
+
+            setupDOMReferences() {
                 this.canvasContainer = document.getElementById('canvas-container');
                 this.canvasWrapper = document.getElementById('canvas-wrapper');
                 this.previewCanvas = document.getElementById('preview-canvas');
@@ -225,30 +240,41 @@
                 this.confirmDialog = new CustomConfirm();
                 this.sizeSlider = document.getElementById('size-slider');
                 this.sizeDisplay = document.getElementById('size-display');
+                this.opacitySlider = document.getElementById('opacity-slider');
+                this.opacityDisplay = document.getElementById('opacity-display');
+                this.colorPicker = document.getElementById('color-picker');
+                this.prevColor1 = document.getElementById('prev-color-1');
+                this.prevColor2 = document.getElementById('prev-color-2');
                 this.undoBtn = document.getElementById('undo-btn');
                 this.redoBtn = document.getElementById('redo-btn');
                 this.layersDropdown = document.getElementById('layers-dropdown');
                 this.addLayerBtn = document.getElementById('add-layer-btn');
                 this.deleteLayerBtn = document.getElementById('delete-layer-btn');
                 this.visibilityBtn = document.getElementById('visibility-btn');
-                
+                this.bgImageInput = document.getElementById('bg-image-input');
+                this.projectInput = document.getElementById('project-input');
+            }
+
+            initializeAppState() {
                 this.isDrawing = false;
                 this.isPanning = false;
                 this.brushSize = 15;
                 this.brushColor = '#000000';
+                this.brushOpacity = 1;
                 this.currentTool = 'brush';
+                this.lastPoint = { x: 0, y: 0 };
+                this.startShapePoint = {x: 0, y: 0};
+                this.previousColors = ['#ffffff', '#ffffff'];
 
                 this.zoom = 1;
                 this.panOffset = { x: 0, y: 0 };
                 this.startPanPoint = { x: 0, y: 0 };
-                this.initialPanOffset = { x: 0, y: 0 }; // FIX: Added for robust panning
+                this.initialPanOffset = { x: 0, y: 0 };
                 this.canvasSize = { width: 1920, height: 1080 };
 
                 this.layers = [];
                 this.activeLayerIndex = 0;
                 this.layerCounter = 0;
-                
-                window.addEventListener('load', () => this.initApp());
             }
             
             initApp() {
@@ -260,12 +286,11 @@
                 window.addEventListener('resize', () => this.resizeAllCanvases());
             }
 
-            addLayer() {
+            addLayer(data = null) {
                 this.layerCounter++;
                 const layerId = this.layers.length;
                 const canvas = document.createElement('canvas');
                 canvas.className = 'canvas-layer';
-                
                 canvas.width = this.canvasSize.width;
                 canvas.height = this.canvasSize.height;
 
@@ -277,17 +302,34 @@
                 
                 const layer = {
                     id: layerId,
-                    name: `Lapisan ${this.layerCounter}`,
+                    name: data ? data.name : `Lapisan ${this.layerCounter}`,
                     canvas: canvas,
                     ctx: ctx,
                     history: [],
                     historyIndex: -1,
-                    visible: true
+                    visible: data ? data.visible : true
                 };
                 
                 this.layers.push(layer);
                 this.setActiveLayer(layerId);
-                this.saveState();
+
+                if (data && data.imageDataURL) {
+                    const img = new Image();
+                    img.onload = () => {
+                        layer.ctx.drawImage(img, 0, 0);
+                        this.saveState();
+                    };
+                    img.src = data.imageDataURL;
+                } else {
+                    this.saveState();
+                }
+                
+                if (data && !data.visible) {
+                    layer.canvas.style.display = 'none';
+                }
+                
+                this.renderLayersList();
+                return layer;
             }
 
             async deleteLayer() {
@@ -332,9 +374,7 @@
                 }
             }
 
-            getActiveLayer() {
-                return this.layers.find(l => l.id === this.activeLayerIndex);
-            }
+            getActiveLayer() { return this.layers.find(l => l.id === this.activeLayerIndex); }
 
             setupCanvasWrapperSize() {
                 this.canvasWrapper.style.width = `${this.canvasSize.width}px`;
@@ -344,21 +384,7 @@
             }
 
             resizeAllCanvases() {
-                const oldData = this.layers.map(layer => layer.ctx.getImageData(0, 0, layer.canvas.width, layer.canvas.height));
-                
-                this.setupCanvasWrapperSize();
-                this.layers.forEach(layer => {
-                    layer.canvas.width = this.canvasSize.width;
-                    layer.canvas.height = this.canvasSize.height;
-                });
-
-                this.layers.forEach((layer, index) => {
-                    if (oldData[index]) {
-                        layer.ctx.putImageData(oldData[index], 0, 0);
-                        layer.ctx.lineCap = 'round';
-                        layer.ctx.lineJoin = 'round';
-                    }
-                });
+                // This function is complex with project save/load, might need adjustments
                 this.updateTransform();
             }
 
@@ -371,6 +397,7 @@
                 this.previewCanvas.addEventListener('mouseenter', () => { if(this.currentTool !== 'pan') this.customCursor.style.display = 'block'; });
                 this.previewCanvas.addEventListener('mouseleave', () => { this.customCursor.style.display = 'none'; });
 
+                // Touch Events
                 let lastTouchDistance = null;
                 let lastTouchMidpoint = null;
 
@@ -415,10 +442,15 @@
                     lastTouchMidpoint = null;
                     this.isPanning = false;
                 });
-
+                
+                // Toolbar Events
                 this.toolbar.addEventListener('click', (e) => this.handleToolbarClick(e));
-                document.getElementById('color-picker').addEventListener('input', (e) => { this.brushColor = e.target.value; if (this.currentTool === 'pan') this.currentTool = 'brush'; this.setActiveButton(document.getElementById('brush-btn'), '.tool-btn[data-tool]'); });
-                document.getElementById('size-slider').addEventListener('input', (e) => { this.brushSize = e.target.value; document.getElementById('size-display').textContent = e.target.value; this.updateTransform(); });
+                this.colorPicker.addEventListener('input', (e) => this.setBrushColor(e.target.value));
+                this.colorPicker.addEventListener('change', (e) => this.updatePreviousColors(e.target.value));
+                this.prevColor1.addEventListener('click', () => this.setBrushColor(this.previousColors[0]));
+                this.prevColor2.addEventListener('click', () => this.setBrushColor(this.previousColors[1]));
+                this.sizeSlider.addEventListener('input', (e) => this.setBrushSize(e.target.value));
+                this.opacitySlider.addEventListener('input', (e) => { this.brushOpacity = e.target.value; this.opacityDisplay.textContent = `${Math.round(e.target.value * 100)}%`; });
                 document.getElementById('toolbar-toggle').addEventListener('click', () => {
                     const wrapper = document.getElementById('toolbar-wrapper');
                     const toolbar = document.getElementById('toolbar');
@@ -426,29 +458,29 @@
                     wrapper.style.marginTop = isHidden ? '0px' : `-${toolbar.offsetHeight}px`;
                     wrapper.classList.toggle('hidden', !isHidden);
                 });
-
+                
+                // Layer Events
                 this.addLayerBtn.addEventListener('click', () => this.addLayer());
                 this.deleteLayerBtn.addEventListener('click', () => this.deleteLayer());
                 this.layersDropdown.addEventListener('change', (e) => this.setActiveLayer(parseInt(e.target.value)));
                 this.visibilityBtn.addEventListener('click', () => this.toggleVisibility());
+                
+                // File Events
+                document.getElementById('open-bg-image-btn').addEventListener('click', () => this.bgImageInput.click());
+                this.bgImageInput.addEventListener('change', (e) => this.loadBackgroundImage(e));
+                document.getElementById('save-project-btn').addEventListener('click', () => this.saveProject());
+                document.getElementById('open-project-btn').addEventListener('click', () => this.projectInput.click());
+                this.projectInput.addEventListener('change', (e) => this.loadProject(e));
             }
             
-            getCanvasPosFromEvent(e) {
-                const rect = this.previewCanvas.getBoundingClientRect();
-                return {
-                    x: (e.clientX - rect.left) / this.zoom,
-                    y: (e.clientY - rect.top) / this.zoom
-                };
-            }
-
-            getMousePosInContainer(e) {
-                const rect = this.canvasContainer.getBoundingClientRect();
-                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-            }
+            getCanvasPosFromEvent(e) { /* ... same logic ... */ }
+            getMousePosInContainer(e) { /* ... same logic ... */ }
             
             prepareContext(ctx) {
                 ctx.lineWidth = this.brushSize / this.zoom;
-                ctx.strokeStyle = this.currentTool === 'eraser' ? 'white' : this.brushColor;
+                ctx.strokeStyle = this.brushColor;
+                ctx.fillStyle = this.brushColor; // For filled shapes
+                ctx.globalAlpha = this.brushOpacity;
                 ctx.globalCompositeOperation = this.currentTool === 'eraser' ? 'destination-out' : 'source-over';
             }
 
@@ -456,7 +488,6 @@
                 if (this.currentTool === 'pan') {
                     this.isPanning = true;
                     const mousePos = this.getMousePosInContainer(e);
-                    // FIX: Store starting mouse position AND starting pan offset separately for robust calculation
                     this.startPanPoint = { x: mousePos.x, y: mousePos.y };
                     this.initialPanOffset = { x: this.panOffset.x, y: this.panOffset.y };
                     this.canvasContainer.classList.add('panning');
@@ -464,39 +495,42 @@
                     const layer = this.getActiveLayer();
                     if (!layer || !layer.visible) return;
                     this.isDrawing = true;
-
                     const canvasPos = this.getCanvasPosFromEvent(e);
-                    const ctx = layer.ctx;
-                    
-                    this.prepareContext(ctx);
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(canvasPos.x, canvasPos.y);
-                    ctx.lineTo(canvasPos.x, canvasPos.y);
-                    ctx.stroke();
+                    this.startShapePoint = canvasPos;
+                    this.lastPoint = canvasPos;
+
+                    if (this.currentTool === 'brush' || this.currentTool === 'eraser') {
+                         this.prepareContext(layer.ctx);
+                         layer.ctx.beginPath();
+                         layer.ctx.moveTo(canvasPos.x, canvasPos.y);
+                    }
                 }
             }
 
             moveAction(e) {
-                const mousePosContainer = this.getMousePosInContainer(e);
-                this.updateCursorPosition(mousePosContainer);
-
+                this.updateCursorPosition(this.getMousePosInContainer(e));
                 if (this.isPanning) {
-                    // FIX: Calculate pan based on initial state and mouse delta
+                    const mousePosContainer = this.getMousePosInContainer(e);
                     const dx = mousePosContainer.x - this.startPanPoint.x;
                     const dy = mousePosContainer.y - this.startPanPoint.y;
                     this.panOffset.x = this.initialPanOffset.x + dx;
                     this.panOffset.y = this.initialPanOffset.y + dy;
                     this.updateTransform();
-                } else if (this.isDrawing) {
-                    const layer = this.getActiveLayer();
-                    if (!layer || !layer.visible) return;
-
+                } 
+                else if (this.isDrawing) {
                     const canvasPos = this.getCanvasPosFromEvent(e);
-                    const ctx = layer.ctx;
-                    
-                    ctx.lineTo(canvasPos.x, canvasPos.y);
-                    ctx.stroke();
+                    const layer = this.getActiveLayer();
+                    if (!layer) return;
+
+                    if (this.currentTool === 'brush' || this.currentTool === 'eraser') {
+                        layer.ctx.lineTo(canvasPos.x, canvasPos.y);
+                        layer.ctx.stroke();
+                        this.lastPoint = canvasPos;
+                    } else { // Shape tools
+                        this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+                        this.prepareContext(this.previewCtx);
+                        this.drawShape(this.previewCtx, this.startShapePoint, canvasPos, this.currentTool);
+                    }
                 }
             }
 
@@ -504,6 +538,12 @@
                 if (this.isDrawing) {
                     const layer = this.getActiveLayer();
                     if (layer) {
+                        const canvasPos = this.getCanvasPosFromEvent(e);
+                        if (['line', 'rectangle', 'circle'].includes(this.currentTool)) {
+                            this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+                            this.prepareContext(layer.ctx);
+                            this.drawShape(layer.ctx, this.startShapePoint, canvasPos, this.currentTool);
+                        }
                         layer.ctx.closePath();
                         this.saveState();
                     }
@@ -511,6 +551,26 @@
                 this.isDrawing = false;
                 this.isPanning = false;
                 this.canvasContainer.classList.remove('panning');
+            }
+
+            drawShape(ctx, start, end, tool) {
+                ctx.beginPath();
+                switch(tool) {
+                    case 'line':
+                        ctx.moveTo(start.x, start.y);
+                        ctx.lineTo(end.x, end.y);
+                        break;
+                    case 'rectangle':
+                        ctx.rect(start.x, start.y, end.x - start.x, end.y - start.y);
+                        break;
+                    case 'circle':
+                        const dx = end.x - start.x;
+                        const dy = end.y - start.y;
+                        const radius = Math.sqrt(dx * dx + dy * dy);
+                        ctx.arc(start.x, start.y, radius, 0, 2 * Math.PI);
+                        break;
+                }
+                ctx.stroke();
             }
             
             saveState() {
@@ -521,30 +581,39 @@
                 layer.historyIndex++;
                 this.updateHistoryButtons();
             }
-
             handleZoom(e) { e.preventDefault(); const zoomIntensity = 0.1; const wheel = e.deltaY < 0 ? 1 : -1; const zoomMultiplier = Math.exp(wheel * zoomIntensity); this.zoomAtCenter(zoomMultiplier, e); }
             centerCanvas() { const cRect = this.canvasContainer.getBoundingClientRect(); this.zoom = Math.min(cRect.width / this.canvasSize.width, cRect.height / this.canvasSize.height) * 0.9; this.panOffset.x = (cRect.width - this.canvasSize.width * this.zoom) / 2; this.panOffset.y = (cRect.height - this.canvasSize.height * this.zoom) / 2; this.updateTransform(); }
-            
             updateTransform() {
                 this.canvasWrapper.style.transform = `translate(${this.panOffset.x}px, ${this.panOffset.y}px) scale(${this.zoom})`;
                 const cursorSize = this.brushSize; 
                 this.customCursor.style.width = `${cursorSize}px`;
                 this.customCursor.style.height = `${cursorSize}px`;
             }
+            updateCursorPosition(pos) {
+                this.customCursor.style.left = `${pos.x}px`;
+                this.customCursor.style.top = `${pos.y}px`;
+            }
+            getCanvasPosFromEvent(e) { const rect = this.previewCanvas.getBoundingClientRect(); return { x: (e.clientX - rect.left) / this.zoom, y: (e.clientY - rect.top) / this.zoom }; }
+            getMousePosInContainer(e) { const rect = this.canvasContainer.getBoundingClientRect(); return { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
             
             handleToolbarClick(e) {
                 const target = e.target.closest('button');
                 if (!target) return;
                 if (target.dataset.tool) { this.setActiveButton(target, '.tool-btn[data-tool]'); this.currentTool = target.dataset.tool; this.updateCursor(); }
+                if (target.dataset.size) { this.setBrushSize(target.dataset.size); this.setActiveButton(target, '.size-preset-btn');}
                 if (target.id === 'zoom-in-btn') this.zoomAtCenter(1.2);
                 if (target.id === 'zoom-out-btn') this.zoomAtCenter(1 / 1.2);
                 if (target.id === 'undo-btn') this.undo();
                 if (target.id === 'redo-btn') this.redo();
-                if (target.id === 'save-btn') this.saveDrawing();
+                if (target.id === 'save-png-btn') this.saveAsPng();
                 if (target.id === 'clear-btn') this.clearCanvas();
             }
+
+            setBrushColor(color) { this.brushColor = color; this.colorPicker.value = color; }
+            setBrushSize(size) { this.brushSize = size; this.sizeSlider.value = size; this.sizeDisplay.textContent = size; this.updateTransform(); }
+            updatePreviousColors(newColor) { if (newColor === this.previousColors[0]) return; this.previousColors.unshift(newColor); this.previousColors = this.previousColors.slice(0, 2); this.prevColor1.style.backgroundColor = this.previousColors[0]; this.prevColor2.style.backgroundColor = this.previousColors[1]; }
             
-            saveDrawing() {
+            saveAsPng() {
                 const compositeCanvas = document.createElement('canvas');
                 compositeCanvas.width = this.canvasSize.width;
                 compositeCanvas.height = this.canvasSize.height;
@@ -563,7 +632,6 @@
                 link.href = compositeCanvas.toDataURL('image/png');
                 link.click();
             }
-
             async clearCanvas() {
                 const confirmed = await this.confirmDialog.show('Anda pasti mahu mengosongkan kandungan lapisan ini?');
                 if (confirmed) {
@@ -574,16 +642,13 @@
                     }
                 }
             }
-
             undo() { const layer = this.getActiveLayer(); if (layer && layer.historyIndex > 0) { layer.historyIndex--; layer.ctx.putImageData(layer.history[layer.historyIndex], 0, 0); this.updateHistoryButtons(); } }
             redo() { const layer = this.getActiveLayer(); if (layer && layer.historyIndex < layer.history.length - 1) { layer.historyIndex++; layer.ctx.putImageData(layer.history[layer.historyIndex], 0, 0); this.updateHistoryButtons(); } }
-            
             updateHistoryButtons() {
                 const layer = this.getActiveLayer();
                 this.undoBtn.disabled = !layer || layer.historyIndex <= 0;
                 this.redoBtn.disabled = !layer || layer.historyIndex >= layer.history.length - 1;
             }
-            
             zoomAtCenter(zoomMultiplier, event = null) {
                 const containerRect = this.canvasContainer.getBoundingClientRect();
                 const center = event ? this.getMousePosInContainer(event) : { x: containerRect.width / 2, y: containerRect.height / 2 };
@@ -592,7 +657,6 @@
                 this.zoom *= zoomMultiplier;
                 this.updateTransform();
             }
-
             updateCursor() {
                 if (this.currentTool === 'pan') {
                     this.canvasContainer.style.cursor = 'grab';
@@ -602,17 +666,102 @@
                 }
                 this.updateTransform();
             }
+            setActiveButton(button, selector) { this.toolbar.querySelectorAll(selector).forEach(btn => btn.classList.remove('active')); button.classList.add('active'); }
             
-            updateCursorPosition(pos) {
-                this.customCursor.style.left = `${pos.x}px`;
-                this.customCursor.style.top = `${pos.y}px`;
+            async loadBackgroundImage(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const confirmed = await this.confirmDialog.show('Ini akan menggantikan kandungan pada lapisan paling bawah (Lapisan 1). Teruskan?');
+                if (!confirmed) {
+                    this.bgImageInput.value = ''; // Reset input
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const baseLayer = this.layers[0];
+                        if (baseLayer) {
+                            // FIX: Ensure image is drawn fully opaque
+                            const currentOpacity = baseLayer.ctx.globalAlpha;
+                            baseLayer.ctx.globalAlpha = 1.0;
+                            
+                            baseLayer.ctx.clearRect(0, 0, baseLayer.canvas.width, baseLayer.canvas.height);
+                            baseLayer.ctx.drawImage(img, 0, 0, baseLayer.canvas.width, baseLayer.canvas.height);
+                            
+                            baseLayer.ctx.globalAlpha = currentOpacity; // Restore alpha
+                            
+                            // Simpan keadaan ini ke dalam sejarah lapisan
+                            const originalActiveLayerId = this.activeLayerIndex;
+                            this.activeLayerIndex = baseLayer.id;
+                            this.saveState();
+                            this.setActiveLayer(originalActiveLayerId);
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                this.bgImageInput.value = ''; // Reset input
             }
 
-            setActiveButton(button, selector) { this.toolbar.querySelectorAll(selector).forEach(btn => btn.classList.remove('active')); button.classList.add('active'); }
+            // --- FUNGSI PROJEK JAN ---
+            saveProject() {
+                const projectData = {
+                    canvasSize: this.canvasSize,
+                    layers: this.layers.map(layer => ({
+                        name: layer.name,
+                        visible: layer.visible,
+                        imageDataURL: layer.canvas.toDataURL()
+                    }))
+                };
+                const jsonString = JSON.stringify(projectData);
+                const blob = new Blob([jsonString], {type: 'application/json'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `projek-${Date.now()}.jan`;
+                link.click();
+            }
+
+            async loadProject(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const confirmed = await this.confirmDialog.show('Membuka projek baru akan memadam kerja semasa anda. Teruskan?');
+                if (!confirmed) {
+                    this.projectInput.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const projectData = JSON.parse(e.target.result);
+                        this.resetWorkspace();
+                        this.canvasSize = projectData.canvasSize;
+                        this.setupCanvasWrapperSize();
+                        projectData.layers.forEach(layerData => this.addLayer(layerData));
+                    } catch (err) {
+                        alert('Gagal membuka fail projek. Fail mungkin rosak.');
+                        console.error("Error parsing project file:", err);
+                    }
+                };
+                reader.readAsText(file);
+                this.projectInput.value = '';
+            }
+            
+            resetWorkspace() {
+                this.layers.forEach(layer => layer.canvas.remove());
+                this.layers = [];
+                this.layerCounter = 0;
+                this.initializeAppState();
+            }
         }
         
         new DrawingApp();
     </script>
 </body>
 </html>
+
 
