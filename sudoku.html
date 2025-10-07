@@ -3,104 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keluarga App: Sudoku Klasik</title>
+    <title>Keluarga App: Sudoku Zen</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Noto+Serif+JP:wght@700&family=Patrick+Hand&family=Kalam:wght@700&display=swap');
         
         :root {
-            --board-gap: 3px; --border-thick: 2px; --border-thin: 1px;
-            --primary-color: #4CAF50; --error-color: #ffdddd;
-            --font-family-default: 'Nunito', Arial, sans-serif;
+            /* Zen Theme (Default) */
+            --zen-bg: #F5F5DC;
+            --zen-text: #3a3a3a;
+            --zen-primary: #607D8B;
+            --zen-secondary: #009688;
+            --zen-error: #ffebee;
+            --zen-error-text: #c62828;
+            --zen-filled-bg: #ECEFF1;
+            --zen-selected-bg: rgba(0, 150, 136, 0.2);
+            --zen-hint-color: #0277BD;
+            --zen-font-title: 'Yuji Syuku', serif;
+            --zen-font-body: 'Noto Serif JP', serif;
         }
+
         body {
-            font-family: var(--font-family-default); display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; margin: 0; background-color: #f0f2f5; padding: 10px; box-sizing: border-box;
+            font-family: var(--zen-font-body);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0;
+            background-color: var(--zen-bg);
+            background-image: url('https://www.transparenttextures.com/patterns/washi.png');
+            padding: 10px; box-sizing: border-box;
             transition: background-color 0.5s ease;
+            position: relative;
+            overflow: hidden;
         }
-        h1, h2 { color: #333; margin-top: 0; }
-        #app-container { width: 100%; max-width: 600px; text-align: center; position: relative; }
+        h1, h2 { color: var(--zen-text); margin-top: 0; font-family: var(--zen-font-title); }
+        
+        #app-container {
+            width: 100%; max-width: 600px; text-align: center; position: relative;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
         
         #level-selection button {
             display: block; width: 80%; max-width: 300px; padding: 15px; font-size: 18px; margin: 10px auto;
-            cursor: pointer; border: 2px solid var(--primary-color); background-color: white; color: var(--primary-color);
+            cursor: pointer; border: 2px solid var(--zen-primary); background-color: transparent; color: var(--zen-primary);
             border-radius: 12px; font-weight: 700; transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        #level-selection button:hover { background-color: var(--primary-color); color: white; transform: translateY(-2px); }
-        #load-button { display: none; border-color: #2196F3; color: #2196F3; }
-        #load-button:hover { background-color: #2196F3; }
-
+        #level-selection button:hover { background-color: var(--zen-primary); color: white; transform: translateY(-2px); }
+        
         #mute-toggle {
-            position: absolute; top: 10px; right: 10px; width: 40px; height: 40px;
-            background: #fff; border: 1px solid #ccc; border-radius: 50%;
-            cursor: pointer; display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10;
+             position: absolute; top: 15px; right: 15px; width: 40px; height: 40px;
+             background: #fff; border: 1px solid #ccc; border-radius: 50%;
+             cursor: pointer; display: flex; justify-content: center; align-items: center;
+             box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10;
         }
         #mute-toggle svg { width: 24px; height: 24px; }
         
         #game-container { display: none; width: 100%; }
-        #game-stats { display: flex; justify-content: center; width: 90%; max-width: 400px; margin: 0 auto 15px auto; padding: 10px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .stat-item { font-size: 18px; font-weight: 700; color: #333; }
-        .stat-item span:first-child { color: #666; margin-right: 8px; }
-        #sudoku-board { display: grid; border: var(--board-gap) solid #333; margin: 20px auto; width: 90vw; max-width: 500px; aspect-ratio: 1 / 1; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-        .cell { display: flex; justify-content: center; align-items: center; box-sizing: border-box; cursor: pointer; border: var(--border-thin) solid #ccc; background-color: white; font-size: clamp(16px, 4vw, 28px); font-weight: 700; transition: background-color 0.2s; }
-        .cell.filled { background-color: #e9ecef; color: #343a40; cursor: not-allowed; }
-        .cell.selected { background-color: #a8d1ff; }
-        .cell.error { background-color: var(--error-color); }
-        .cell.hint { color: #1a73e8; font-weight: bold; animation: pop-in 0.3s ease; }
+        #game-stats { display: flex; justify-content: space-evenly; width: 90%; max-width: 400px; margin: 0 auto 15px auto; padding: 10px; background-color: rgba(255,255,255,0.7); border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
+        #sudoku-board {
+            display: grid; border: 3px solid #5D4037; margin: 20px auto;
+            width: 90vw; max-width: 500px; aspect-ratio: 1 / 1; border-radius: 8px;
+            overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+        }
+        .cell {
+            display: flex; justify-content: center; align-items: center; box-sizing: border-box; cursor: pointer;
+            border: 1px solid rgba(0,0,0,0.2); background-color: rgba(255,255,255,0.6);
+            font-size: clamp(16px, 4vw, 28px); font-weight: 700;
+            transition: background-color 0.2s;
+        }
+        .cell.filled { background-color: var(--zen-filled-bg); color: var(--zen-text); cursor: not-allowed; }
+        .cell.selected { background-color: var(--zen-selected-bg); }
+        .cell.error { background-color: var(--zen-error); color: var(--zen-error-text); }
+        .cell.hint { color: var(--zen-hint-color); font-weight: bold; animation: pop-in 0.3s ease; }
         @keyframes pop-in { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
         .grid-9x9 { grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(9, 1fr); }
-        .grid-9x9 .cell:nth-child(3n) { border-right: var(--border-thick) solid #333; }
-        .grid-9x9 .cell:nth-child(9n) { border-right: var(--border-thin) solid #ccc; }
-        .grid-9x9 > .cell:nth-child(n+19):nth-child(-n+27),
-        .grid-9x9 > .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: var(--border-thick) solid #333; }
+        .grid-9x9 .cell:nth-child(3n) { border-right: 2px solid #5D4037; }
+        .grid-9x9 .cell:nth-child(9n) { border-right: 1px solid rgba(0,0,0,0.2); }
+        .grid-9x9 > .cell:nth-child(n+19):nth-child(-n+27), .grid-9x9 > .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #5D4037; }
+
         .grid-4x4 { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); }
-        .grid-4x4 .cell:nth-child(2n) { border-right: var(--border-thick) solid #333; }
-        .grid-4x4 .cell:nth-child(4n) { border-right: var(--border-thin) solid #ccc; }
-        .grid-4x4 > .cell:nth-child(n+5):nth-child(-n+8) { border-bottom: var(--border-thick) solid #333; }
+
         #digits { display: flex; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
-        .digit { width: 45px; height: 45px; border: 1px solid #666; margin: 5px; display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; background-color: #fff; border-radius: 8px; font-weight: 700; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease; }
+        .digit { width: 45px; height: 45px; border: 2px solid var(--zen-primary); color: var(--zen-primary); margin: 5px; display: flex; justify-content: center; align-items: center; font-size: 22px; cursor: pointer; background-color: #fff; border-radius: 8px; font-weight: 700; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease; }
         .digit:hover { transform: translateY(-2px); }
-        .digit.eraser { font-weight: bold; }
-        .digit.selected { background-color: var(--primary-color); color: white; transform: scale(1.1); }
-        .game-options { margin-bottom: 20px; }
-        .controls { display: flex; flex-wrap: wrap; justify-content: center; }
-        .controls button { padding: 12px 20px; font-size: 16px; cursor: pointer; font-weight: 700; margin: 5px; border-radius: 8px; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease; }
-        .controls button:hover { transform: translateY(-2px); }
-        #check-button { background-color: #2196F3; color: white; }
-        #reset-button { background-color: #ff9800; color: white; }
-        #hint-button { background-color: #9c27b0; color: white; }
-        #save-button { background-color: #009688; color: white; }
-        #back-button { background-color: #f44336; color: white; }
-        #hint-button:disabled { background-color: #ccc; cursor: not-allowed; }
-        #message { margin-top: 15px; font-size: 18px; font-weight: bold; min-height: 25px; }
-        body.kids-theme { background-color: #f0faff; }
-        .kids-theme h1, .kids-theme h2 { color: #0077c2; }
-        .kids-theme #level-selection button { border-color: #ff9800; color: #ff9800; }
-        .kids-theme #level-selection button:hover { background-color: #ff9800; }
-        .kids-theme #game-stats { background-color: #e0f7fa; border: 2px solid #00aaff; }
-        .kids-theme .stat-item { font-size: 20px; }
-        .kids-theme #sudoku-board { border-color: #00aaff; }
-        .kids-theme .cell { border-radius: 8px; font-size: clamp(24px, 6vw, 40px); }
-        .kids-theme .cell.filled { background-color: #e0f7fa; color: #0077c2; }
-        .kids-theme .digit { width: 50px; height: 50px; font-size: 28px; border-radius: 12px; }
-        .kids-theme .digit.selected { background-color: #ff9800; }
-        .kids-theme #check-button { background-color: #00c853; }
-        .kids-theme #reset-button { background-color: #ffc107; }
-        .kids-theme #hint-button { background-color: #651fff; }
-        .kids-theme #back-button { background-color: #ff5252; }
+        .digit.selected { background-color: var(--zen-primary); color: white; transform: scale(1.1); }
+        
+        .controls button {
+            padding: 12px 20px; font-size: 16px; cursor: pointer; font-weight: 700; margin: 5px;
+            border-radius: 8px; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease;
+            background-color: var(--zen-primary); color: white;
+        }
+        .controls button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        #back-button { background-color: #BF360C; }
+
+        /* Kids "Doodle" Theme */
+        body.kids-theme {
+            --kids-bg: #fdfdf6;
+            --kids-text: #4a4a4a;
+            --kids-primary: #FF6F00; /* Orange crayon */
+            --kids-secondary: #00BFA5; /* Teal crayon */
+            --kids-error: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><path d="M-1,1 l2,-2 M0,10 l10,-10 M9,11 l2,-2" stroke="%23ff6347" stroke-width="1"/></svg>'), #fff0f0;
+            --kids-error-text: #d32f2f;
+            --kids-filled-bg: #f5f5f5;
+            --kids-selected-bg: #FFF8E1; /* highlighter yellow */
+            --kids-hint-color: #00B0FF; /* Blue pen */
+            --kids-font-title: 'Patrick Hand', cursive;
+            --kids-font-body: 'Kalam', cursive;
+            
+            font-family: var(--kids-font-body);
+            background-color: var(--kids-bg);
+            background-image: url('https://www.transparenttextures.com/patterns/notebook-dark.png');
+        }
+        .kids-theme h1, .kids-theme h2 { color: var(--kids-text); font-family: var(--kids-font-title); }
+        .kids-theme #app-container { background: rgba(255, 255, 255, 0.8); }
+        .kids-theme #level-selection button { border-color: var(--kids-primary); color: var(--kids-primary); }
+        .kids-theme #level-selection button:hover { background-color: var(--kids-primary); }
+        .kids-theme #sudoku-board { border-color: var(--kids-text); background-image: none; background-color: white; }
+        .kids-theme .cell { border-color: rgba(0,0,0,0.3); border-radius: 4px; background-color: white; }
+        .kids-theme .grid-4x4 .cell:nth-child(2n) { border-right: 2px solid var(--kids-text); }
+        .kids-theme .grid-4x4 > .cell:nth-child(n+5):nth-child(-n+8) { border-bottom: 2px solid var(--kids-text); }
+        .kids-theme .cell.filled { background-color: var(--kids-filled-bg); color: var(--kids-text); }
+        .kids-theme .cell.selected { background-color: var(--kids-selected-bg); border: 2px solid var(--kids-primary); }
+        .kids-theme .cell.error { background-image: var(--kids-error); color: var(--kids-error-text); }
+        .kids-theme .digit { border-color: var(--kids-secondary); color: var(--kids-secondary); }
+        .kids-theme .digit.selected { background-color: var(--kids-secondary); }
+        .kids-theme .controls button { background-color: var(--kids-secondary); }
+        .kids-theme #back-button { background-color: #F44336; }
+
+        /* Win Animations */
+        #petal-container, #doodle-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+        .petal { position: absolute; width: 15px; height: 15px; background: #FFC0CB; border-radius: 1px 70%; animation: fall 10s linear infinite; }
+        @keyframes fall { 0% { transform: translateY(-10vh) translateX(0) rotate(0deg); } 100% { transform: translateY(110vh) translateX(10vw) rotate(720deg); } }
+        .doodle-star { position: absolute; font-size: 40px; animation: pop-spin 2s ease-out forwards; }
+        @keyframes pop-spin { 0% { transform: scale(0) rotate(0deg); opacity: 1; } 50% { transform: scale(1.2) rotate(180deg); } 100% { transform: scale(0) rotate(360deg); opacity: 0; } }
     </style>
 </head>
 <body>
+    <div id="petal-container"></div>
+    <div id="doodle-container"></div>
+
     <audio id="background-music" src="sound/background.mp3" loop></audio>
     
     <div id="app-container">
         <button id="mute-toggle"></button>
-        <h1>Sudoku Klasik (V2.3.1)</h1>
+        <h1>Sudoku Zen</h1>
         <div id="level-selection">
             <h2>Pilih Tahap</h2>
-            <button id="load-button">Sambung Permainan Terakhir</button>
+            <button id="load-button" style="display:none;">Sambung Permainan Terakhir</button>
             <button data-level="kids">Entry Level (4x4)</button>
             <button data-level="easy">Mudah (9x9)</button>
             <button data-level="medium">Sederhana (9x9)</button>
@@ -145,7 +201,7 @@
 
                 this.gridSize = 0; this.currentPuzzle = null; this.currentSolution = null;
                 this.userBoard = []; this.selectedCell = null; this.selectedDigit = null;
-                this.currentLevel = null; 
+                this.currentLevel = null;
                 this.hintsRemaining = 3; this.liveValidationEnabled = false;
                 this.timerInterval = null; this.secondsElapsed = 0; this.mistakeCount = 0;
                 
@@ -160,107 +216,17 @@
                 this.updateMuteIcon();
             }
 
-            // --- PERUBAHAN BESAR V2.3.1: Definisi bunyi yang diperhalusi ---
-            initSounds() {
-                // Bunyi 'plop' untuk klik sel/nombor
-                this.sounds.click = new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 2, envelope: { attack: 0.001, decay: 0.2, sustain: 0.01, release: 0.1 } }).toDestination();
-                // Bunyi 'plink' untuk meletakkan nombor
-                this.sounds.place = new Tone.MetalSynth({ frequency: 300, envelope: { attack: 0.001, decay: 0.1, release: 0.1 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).toDestination();
-                // Bunyi 'swoosh' untuk pemadam
-                this.sounds.erase = new Tone.NoiseSynth({ noise: { type: "white" }, envelope: { attack: 0.005, decay: 0.15, sustain: 0 } }).toDestination();
-                // Bunyi 'thud' atau 'buzz' rendah untuk ralat
-                this.sounds.error = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.3 } }).toDestination();
-                // Melodi kemenangan yang lebih ceria
-                const winSynth = new Tone.Synth().toDestination();
-                this.sounds.win = new Tone.Sequence((time, note) => {
-                    winSynth.triggerAttackRelease(note, '16n', time);
-                }, ['C5', 'E5', 'G5', 'C6'], '8n');
-                Tone.Transport.start();
-
-                this.backgroundMusic.volume = 0.3;
-            }
-
-            playSound(soundName) {
-                if (!this.soundEnabled || Tone.context.state !== 'running') return;
-                try {
-                    switch(soundName) {
-                        case 'click': this.sounds.click.triggerAttackRelease('C2', '8n'); break;
-                        case 'place': this.sounds.place.triggerAttack('8n'); break;
-                        case 'erase': this.sounds.erase.triggerAttackRelease('16n'); break;
-                        case 'error': this.sounds.error.triggerAttackRelease('A2', '8n'); break;
-                        case 'win': this.sounds.win.start(0).stop(0.5); break;
-                    }
-                } catch (e) { console.warn("Audio context not ready."); }
-            }
+            // --- ALL OTHER JS METHODS ARE THE SAME AS BEFORE, WITH THE ADDITION OF WIN ANIMATION LOGIC ---
             
-            toggleMute() {
-                this.soundEnabled = !this.soundEnabled;
-                this.updateMuteIcon();
-                if (this.soundEnabled) {
-                    if (Tone.context.state !== 'running') { Tone.start(); }
-                    this.playBackgroundMusic();
-                } else {
-                    this.stopBackgroundMusic();
-                }
-            }
-            
+            initSounds() { this.sounds.click = new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 2, envelope: { attack: 0.001, decay: 0.2, sustain: 0.01, release: 0.1 } }).toDestination(); this.sounds.place = new Tone.MetalSynth({ frequency: 300, envelope: { attack: 0.001, decay: 0.1, release: 0.1 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).toDestination(); this.sounds.erase = new Tone.NoiseSynth({ noise: { type: "white" }, envelope: { attack: 0.005, decay: 0.15, sustain: 0 } }).toDestination(); this.sounds.error = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.3 } }).toDestination(); const winSynth = new Tone.Synth().toDestination(); this.sounds.win = new Tone.Sequence((time, note) => { winSynth.triggerAttackRelease(note, '16n', time); }, ['C5', 'E5', 'G5', 'C6'], '8n'); Tone.Transport.start(); this.backgroundMusic.volume = 0.3; }
+            playSound(soundName) { if (!this.soundEnabled || Tone.context.state !== 'running') return; try { switch(soundName) { case 'click': this.sounds.click.triggerAttackRelease('C2', '8n'); break; case 'place': this.sounds.place.triggerAttack('8n'); break; case 'erase': this.sounds.erase.triggerAttackRelease('16n'); break; case 'error': this.sounds.error.triggerAttackRelease('A2', '8n'); break; case 'win': this.sounds.win.start(0).stop(0.5); break; } } catch (e) { console.warn("Audio context not ready."); } }
+            toggleMute() { this.soundEnabled = !this.soundEnabled; this.updateMuteIcon(); if (this.soundEnabled) { if (Tone.context.state !== 'running') { Tone.start(); } this.playBackgroundMusic(); } else { this.stopBackgroundMusic(); } }
             playBackgroundMusic() { if (this.soundEnabled) { this.backgroundMusic.play().catch(e => {}); } }
             stopBackgroundMusic() { this.backgroundMusic.pause(); }
             updateMuteIcon() { this.muteToggle.innerHTML = this.soundEnabled ? this.speakerIcon : this.muteIcon; }
-
-            // --- PERUBAHAN V2.3.1: Membuang bunyi dari menu utama ---
-            setupEventListeners() { 
-                const levelButtons = this.levelSelectionEl.querySelectorAll('button');
-                levelButtons.forEach(button => { 
-                    button.addEventListener('click', () => this.startGame(button.dataset.level)); 
-                });
-                // Bunyi hanya dimainkan pada butang dalam permainan
-                this.checkButton.addEventListener('click', () => { this.playSound('click'); this.checkSolution(); });
-                this.resetButton.addEventListener('click', () => { this.playSound('click'); this.startGame(this.currentLevel); });
-                this.backButton.addEventListener('click', () => { this.playSound('click'); this.showLevelSelection(); });
-                this.hintButton.addEventListener('click', () => { this.playSound('click'); this.useHint(); });
-                this.saveButton.addEventListener('click', () => { this.playSound('click'); this.saveGame(); });
-                this.loadButton.addEventListener('click', () => this.loadGame()); // Tiada bunyi untuk load dari menu
-                this.muteToggle.addEventListener('click', () => this.toggleMute());
-                this.liveValidationToggle.addEventListener('change', (e) => this.toggleLiveValidation(e.target.checked));
-            }
-
-            // --- PERUBAHAN V2.3.1: Menambah bunyi untuk pemadam ---
-            handleCellClick(cellElement) {
-                this.playSound('click');
-                if (this.selectedDigit) {
-                    const value = this.selectedDigit.classList.contains('eraser') ? '' : this.selectedDigit.textContent;
-                    cellElement.textContent = value;
-                    this.recordMove(cellElement.dataset.row, cellElement.dataset.col, value);
-                    this.selectedDigit.classList.remove('selected');
-                    this.selectedDigit = null;
-                    this.validateBoard();
-                    if (value !== '') this.playSound('place'); else this.playSound('erase');
-                } else {
-                    if (this.selectedCell) this.selectedCell.classList.remove('selected');
-                    this.selectedCell = cellElement;
-                    this.selectedCell.classList.add('selected');
-                }
-            }
-
-            handleDigitClick(digitElement, isEraser = false) {
-                this.playSound('click');
-                if (this.selectedCell) {
-                    const value = isEraser ? '' : digitElement.textContent;
-                    this.selectedCell.textContent = value;
-                    this.recordMove(this.selectedCell.dataset.row, this.selectedCell.dataset.col, value);
-                    if (value !== '') this.playSound('place'); else this.playSound('erase');
-                    this.selectedCell.classList.remove('selected');
-                    this.selectedCell = null;
-                    this.validateBoard();
-                } else {
-                    if (this.selectedDigit) this.selectedDigit.classList.remove('selected');
-                    this.selectedDigit = digitElement;
-                    this.selectedDigit.classList.add('selected');
-                }
-            }
-            
-            // ... (Fungsi-fungsi lain dikekalkan tanpa perubahan)
+            setupEventListeners() { const levelButtons = this.levelSelectionEl.querySelectorAll('button'); levelButtons.forEach(button => { button.addEventListener('click', () => this.startGame(button.dataset.level)); }); this.checkButton.addEventListener('click', () => { this.playSound('click'); this.checkSolution(); }); this.resetButton.addEventListener('click', () => { this.playSound('click'); this.startGame(this.currentLevel); }); this.backButton.addEventListener('click', () => { this.playSound('click'); this.showLevelSelection(); }); this.hintButton.addEventListener('click', () => { this.playSound('click'); this.useHint(); }); this.saveButton.addEventListener('click', () => { this.playSound('click'); this.saveGame(); }); this.loadButton.addEventListener('click', () => this.loadGame()); this.muteToggle.addEventListener('click', () => this.toggleMute()); this.liveValidationToggle.addEventListener('change', (e) => this.toggleLiveValidation(e.target.checked)); }
+            handleCellClick(cellElement) { this.playSound('click'); if (this.selectedDigit) { const value = this.selectedDigit.classList.contains('eraser') ? '' : this.selectedDigit.textContent; cellElement.textContent = value; this.recordMove(cellElement.dataset.row, cellElement.dataset.col, value); this.selectedDigit.classList.remove('selected'); this.selectedDigit = null; this.validateBoard(); if (value !== '') this.playSound('place'); else this.playSound('erase'); } else { if (this.selectedCell) this.selectedCell.classList.remove('selected'); this.selectedCell = cellElement; this.selectedCell.classList.add('selected'); } }
+            handleDigitClick(digitElement, isEraser = false) { this.playSound('click'); if (this.selectedCell) { const value = isEraser ? '' : digitElement.textContent; this.selectedCell.textContent = value; this.recordMove(this.selectedCell.dataset.row, this.selectedCell.dataset.col, value); if (value !== '') this.playSound('place'); else this.playSound('erase'); this.selectedCell.classList.remove('selected'); this.selectedCell = null; this.validateBoard(); } else { if (this.selectedDigit) this.selectedDigit.classList.remove('selected'); this.selectedDigit = digitElement; this.selectedDigit.classList.add('selected'); } }
             getRandomInt(min, max) { return Math.floor(Math.random() * (Math.floor(max) - Math.ceil(min) + 1)) + Math.ceil(min); }
             getNewPuzzle(level) { this.messageElement.textContent = 'Menjana teka-teki baru...'; let gridSize, attempts; switch(level) { case 'kids': gridSize = 4; attempts = this.getRandomInt(6, 8); break; case 'easy': gridSize = 9; attempts = this.getRandomInt(38, 42); break; case 'medium': gridSize = 9; attempts = this.getRandomInt(48, 52); break; case 'master': gridSize = 9; attempts = this.getRandomInt(58, 62); break; default: gridSize = 9; attempts = this.getRandomInt(38, 42); } const generator = new SudokuGenerator(gridSize); generator.fillBoard(); const solution = generator.board.map(row => [...row]); const puzzle = generator.digHoles(attempts); this.messageElement.textContent = ''; return { puzzle, solution, gridSize }; }
             startGame(level, savedState = null) { setTimeout(() => { let gameData; if (savedState) { gameData = { puzzle: savedState.puzzle, solution: savedState.solution, gridSize: savedState.gridSize }; } else { gameData = this.getNewPuzzle(level); } if (!gameData) return; if (level === 'kids') { this.body.classList.add('kids-theme'); } else { this.body.classList.remove('kids-theme'); } this.currentLevel = level; this.gridSize = gameData.gridSize; this.currentPuzzle = gameData.puzzle; this.currentSolution = gameData.solution; if (savedState) { this.userBoard = savedState.userBoard; this.secondsElapsed = savedState.secondsElapsed; this.mistakeCount = savedState.mistakeCount; this.hintsRemaining = savedState.hintsRemaining; } else { this.userBoard = this.currentPuzzle.map(row => [...row]); this.secondsElapsed = 0; this.mistakeCount = 0; this.hintsRemaining = 3; } this.updateHintButton(); this.startTimer(); this.levelSelectionEl.style.display = 'none'; this.gameContainerEl.style.display = 'block'; this.setupBoard(!!savedState); this.setupControls(); this.validateBoard(); this.playBackgroundMusic(); }, 50); }
@@ -270,22 +236,7 @@
             loadGame() { const savedData = localStorage.getItem('sudokuGameState'); if (savedData) { const gameState = JSON.parse(savedData); this.startGame(gameState.currentLevel, gameState); } else { alert('Tiada permainan yang disimpan ditemui.'); } }
             setupBoard(isLoadedGame = false) { this.boardElement.innerHTML = ''; this.boardElement.className = ''; this.boardElement.classList.add(`grid-${this.gridSize}x${this.gridSize}`); for (let r = 0; r < this.gridSize; r++) { for (let c = 0; c < this.gridSize; c++) { const cell = document.createElement('div'); cell.classList.add('cell'); cell.dataset.row = r; cell.dataset.col = c; const puzzleNum = this.currentPuzzle[r][c]; const userNum = isLoadedGame ? this.userBoard[r][c] : 0; if (puzzleNum !== 0) { cell.textContent = puzzleNum; cell.classList.add('filled'); } else { if (isLoadedGame && userNum !== 0) { cell.textContent = userNum; } cell.addEventListener('click', (e) => this.handleCellClick(e.target)); } this.boardElement.appendChild(cell); } } }
             setupControls() { this.digitsElement.innerHTML = ''; for (let i = 1; i <= this.gridSize; i++) { const digit = document.createElement('div'); digit.classList.add('digit'); digit.textContent = i; digit.addEventListener('click', (e) => this.handleDigitClick(e.target)); this.digitsElement.appendChild(digit); } const eraser = document.createElement('div'); eraser.classList.add('digit', 'eraser'); eraser.textContent = 'X'; eraser.addEventListener('click', (e) => this.handleDigitClick(e.target, true)); this.digitsElement.appendChild(eraser); }
-            
-            recordMove(row, col, value) {
-                const numValue = value === '' ? 0 : parseInt(value);
-                const previousValue = this.userBoard[row][col];
-                if (previousValue !== this.currentSolution[row][col]) {
-                    if (numValue !== 0 && numValue !== this.currentSolution[row][col]) {
-                        this.mistakeCount++;
-                        // --- PERUBAHAN V2.3.2: Bunyi ralat hanya jika 'live validation' aktif ---
-                        if (this.liveValidationEnabled) {
-                            this.playSound('error');
-                        }
-                    }
-                }
-                this.userBoard[row][col] = numValue;
-            }
-
+            recordMove(row, col, value) { const numValue = value === '' ? 0 : parseInt(value); const previousValue = this.userBoard[row][col]; if (previousValue !== this.currentSolution[row][col]) { if (numValue !== 0 && numValue !== this.currentSolution[row][col]) { this.mistakeCount++; if (this.liveValidationEnabled) { this.playSound('error'); } } } this.userBoard[row][col] = numValue; }
             startTimer() { clearInterval(this.timerInterval); this.secondsElapsed = 0; this.timerEl.textContent = '00:00'; this.timerInterval = setInterval(() => this.updateTimer(), 1000); }
             updateTimer() { this.secondsElapsed++; const minutes = Math.floor(this.secondsElapsed / 60).toString().padStart(2, '0'); const seconds = (this.secondsElapsed % 60).toString().padStart(2, '0'); this.timerEl.textContent = `${minutes}:${seconds}`; }
             useHint() { if (this.hintsRemaining > 0 && this.selectedCell && this.selectedCell.textContent === '') { const row = this.selectedCell.dataset.row; const col = this.selectedCell.dataset.col; const solutionNum = this.currentSolution[row][col]; this.selectedCell.textContent = solutionNum; this.selectedCell.classList.add('hint'); this.userBoard[row][col] = solutionNum; this.hintsRemaining--; this.updateHintButton(); this.validateBoard(); } }
@@ -293,9 +244,49 @@
             toggleLiveValidation(isEnabled) { this.liveValidationEnabled = isEnabled; this.validateBoard(); }
             validateBoard() { this.boardElement.querySelectorAll('.cell').forEach(c => c.classList.remove('error')); if (!this.liveValidationEnabled) return; for (let r = 0; r < this.gridSize; r++) { for (let c = 0; c < this.gridSize; c++) { const num = this.userBoard[r][c]; if (num === 0 || this.currentPuzzle[r][c] !== 0) continue; if (!this.isNumberValid(num, r, c)) { const cell = this.boardElement.querySelector(`[data-row='${r}'][data-col='${c}']`); if (cell) cell.classList.add('error'); } } } }
             isNumberValid(num, row, col) { for (let i = 0; i < this.gridSize; i++) { if ((this.userBoard[row][i] == num && i != col) || (this.userBoard[i][col] == num && i != row)) return false; } const boxSize = Math.sqrt(this.gridSize); const startRow = row - row % boxSize; const startCol = col - col % boxSize; for (let r = 0; r < boxSize; r++) { for (let c = 0; c < boxSize; c++) { if (this.userBoard[r + startRow][c + startCol] == num && (r + startRow != row || c + startCol != col)) return false; } } return true; }
-            checkSolution() { const board = this.userBoard; const size = this.gridSize; const boxSize = Math.sqrt(size); for (let r = 0; r < size; r++) { for (let c = 0; c < size; c++) { if (board[r][c] === 0) { this.messageElement.textContent = 'Papan belum lengkap. Sila isi semua kotak.'; this.messageElement.style.color = 'orange'; return; } } } const hasDuplicates = (arr) => new Set(arr).size !== arr.length; for (let r = 0; r < size; r++) { if (hasDuplicates(board[r])) { this.messageElement.textContent = 'Maaf, ada kesilapan. Cuba lagi!'; this.messageElement.style.color = 'red'; this.playSound('error'); return; } } for (let c = 0; c < size; c++) { const column = []; for (let r = 0; r < size; r++) { column.push(board[r][c]); } if (hasDuplicates(column)) { this.messageElement.textContent = 'Maaf, ada kesilapan. Cuba lagi!'; this.messageElement.style.color = 'red'; this.playSound('error'); return; } } for (let blockRow = 0; blockRow < size; blockRow += boxSize) { for (let blockCol = 0; blockCol < size; blockCol += boxSize) { const block = []; for (let r = 0; r < boxSize; r++) { for (let c = 0; c < boxSize; c++) { block.push(board[blockRow + r][blockCol + c]); } } if (hasDuplicates(block)) { this.messageElement.textContent = 'Maaf, ada kesilapan. Cuba lagi!'; this.messageElement.style.color = 'red'; this.playSound('error'); return; } } } clearInterval(this.timerInterval); this.messageElement.textContent = `Tahniah! Selesai dalam ${this.timerEl.textContent} dengan ${this.mistakeCount} kesilapan.`; this.messageElement.style.color = 'green'; this.playSound('win'); localStorage.removeItem('sudokuGameState'); this.loadButton.style.display = 'none'; }
+            
+            checkSolution() {
+                // ... logic is complex and correct, leave as is
+                const board = this.userBoard; const size = this.gridSize; const boxSize = Math.sqrt(size); for (let r = 0; r < size; r++) { for (let c = 0; c < size; c++) { if (board[r][c] === 0) { this.messageElement.textContent = 'Papan belum lengkap. Sila isi semua kotak.'; this.messageElement.style.color = 'orange'; return; } } } const hasDuplicates = (arr) => new Set(arr).size !== arr.length; for (let r = 0; r < size; r++) { if (hasDuplicates(board[r])) { this.messageElement.textContent = 'Maaf, ada kesilapan. Cuba lagi!'; this.messageElement.style.color = 'red'; this.playSound('error'); return; } } for (let c = 0; c < size; c++) { const column = []; for (let r = 0; r < size; r++) { column.push(board[r][c]); } if (hasDuplicates(column)) { this.messageElement.textContent = 'Maaf, ada kesilapan. Cuba lagi!'; this.messageElement.style.color = 'red'; this.playSound('error'); return; } } for (let blockRow = 0; blockRow < size; blockRow += boxSize) { for (let blockCol = 0; blockCol < size; blockCol += boxSize) { const block = []; for (let r = 0; r < boxSize; r++) { for (let c = 0; c < boxSize; c++) { block.push(board[blockRow + r][blockCol + c]); } } if (hasDuplicates(block)) { this.messageElement.textContent = 'Maaf, ada kesilapan. Cuba lagi!'; this.messageElement.style.color = 'red'; this.playSound('error'); return; } } }
+                // Win condition
+                clearInterval(this.timerInterval);
+                this.messageElement.textContent = `Tahniah! Selesai dalam ${this.timerEl.textContent} dengan ${this.mistakeCount} kesilapan.`;
+                this.messageElement.style.color = 'green';
+                this.playSound('win');
+                if (this.body.classList.contains('kids-theme')) { this.playDoodleWinAnimation(); } else { this.playPetalWinAnimation(); }
+                localStorage.removeItem('sudokuGameState'); this.loadButton.style.display = 'none';
+            }
+
+            playPetalWinAnimation() {
+                const container = document.getElementById('petal-container');
+                for(let i = 0; i < 30; i++) {
+                    const petal = document.createElement('div');
+                    petal.className = 'petal';
+                    petal.style.left = Math.random() * 100 + 'vw';
+                    petal.style.animationDelay = Math.random() * 5 + 's';
+                    petal.style.animationDuration = 5 + Math.random() * 5 + 's';
+                    container.appendChild(petal);
+                    setTimeout(() => petal.remove(), 10000);
+                }
+            }
+
+            playDoodleWinAnimation() {
+                const container = document.getElementById('doodle-container');
+                const stars = ['⭐', '🌟', '✨'];
+                for(let i = 0; i < 20; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'doodle-star';
+                    star.textContent = stars[Math.floor(Math.random() * stars.length)];
+                    star.style.left = Math.random() * 90 + 'vw';
+                    star.style.top = Math.random() * 90 + 'vh';
+                    star.style.animationDelay = Math.random() * 1 + 's';
+                    container.appendChild(star);
+                    setTimeout(() => star.remove(), 2000);
+                }
+            }
         }
 
+        // --- Sudoku Generator and Solver Classes are complex and correct, leave as is ---
         class SudokuGenerator { constructor(size = 9) { this.size = size; this.boxSize = Math.sqrt(size); this.board = Array(this.size).fill(0).map(() => Array(this.size).fill(0)); } shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; } isSafe(row, col, num) { for (let i = 0; i < this.size; i++) { if (this.board[row][i] === num || this.board[i][col] === num) return false; } const startRow = row - row % this.boxSize; const startCol = col - col % this.boxSize; for (let r = 0; r < this.boxSize; r++) { for (let c = 0; c < this.boxSize; c++) { if (this.board[r + startRow][c + startCol] === num) return false; } } return true; } fillBoard() { this.solve(); } solve() { for (let r = 0; r < this.size; r++) { for (let c = 0; c < this.size; c++) { if (this.board[r][c] === 0) { const numbers = this.shuffle([...Array(this.size).keys()].map(x => x + 1)); for (let num of numbers) { if (this.isSafe(r, c, num)) { this.board[r][c] = num; if (this.solve()) return true; this.board[r][c] = 0; } } return false; } } } return true; } digHoles(attempts) { const puzzle = this.board.map(row => [...row]); const cellsByBlock = Array(this.size).fill(0).map(() => []); for(let r=0; r < this.size; r++) { for (let c=0; c < this.size; c++) { const blockIndex = Math.floor(r / this.boxSize) * this.boxSize + Math.floor(c / this.boxSize); cellsByBlock[blockIndex].push({r, c}); } } let dugCells = new Set(); for(let block of cellsByBlock) { this.shuffle(block); for(let cell of block) { const {r, c} = cell; const temp = puzzle[r][c]; puzzle[r][c] = 0; const solver = new SudokuSolver(puzzle, this.size); if (solver.countSolutions() === 1) { dugCells.add(`${r}-${c}`); break; } else { puzzle[r][c] = temp; } } } const remainingCells = []; for(let r=0; r < this.size; r++) { for (let c=0; c < this.size; c++) { if (!dugCells.has(`${r}-${c}`)) { remainingCells.push({r,c}); } } } this.shuffle(remainingCells); let holes = dugCells.size; for(let cell of remainingCells) { if (holes >= attempts) break; const {r, c} = cell; if(puzzle[r][c] === 0) continue; const temp = puzzle[r][c]; puzzle[r][c] = 0; const solver = new SudokuSolver(puzzle, this.size); if (solver.countSolutions() === 1) { holes++; } else { puzzle[r][c] = temp; } } return puzzle; } }
         class SudokuSolver { constructor(board, size) { this.board = board.map(row => [...row]); this.size = size; this.boxSize = Math.sqrt(size); this.count = 0; } isSafe(row, col, num) { for (let i = 0; i < this.size; i++) { if (this.board[row][i] === num || this.board[i][col] === num) return false; } const startRow = row - row % this.boxSize, startCol = col - col % this.boxSize; for (let r = 0; r < this.boxSize; r++) { for (let c = 0; c < this.boxSize; c++) { if (this.board[r + startRow][c + startCol] === num) return false; } } return true; } countSolutions() { for (let r = 0; r < this.size; r++) { for (let c = 0; c < this.size; c++) { if (this.board[r][c] === 0) { for (let num = 1; num <= this.size; num++) { if (this.isSafe(r, c, num)) { this.board[r][c] = num; this.countSolutions(); this.board[r][c] = 0; if (this.count > 1) return this.count; } } return this.count; } } } this.count++; return this.count; } }
 
