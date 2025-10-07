@@ -3,17 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keluarga App: Permainan Memori</title>
+    <title>Keluarga App: Memori Hutan Ajaib</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Nunito:wght@400;700&display=swap');
 
         :root {
-            --primary-color: #ff9800;
-            --background-color: #fff3e0;
-            --card-color: #ffffff;
-            --card-matched-color: #c8e6c9;
+            --default-primary: #ff9800;
+            --default-bg: #fff3e0;
+            --default-matched: #c8e6c9;
         }
+
+        /* Magical Forest Theme Colors */
+        body.theme-kids { --primary-color: #A1887F; --background-color: #3E2723; --card-matched-color: #6D4C41; --glow-color: #D7CCC8;} /* Earthy Brown */
+        body.theme-fruits { --primary-color: #E53935; --background-color: #4E0A0A; --card-matched-color: #B71C1C; --glow-color: #FFCDD2; } /* Vibrant Red */
+        body.theme-veggies { --primary-color: #43A047; --background-color: #1B5E20; --card-matched-color: #2E7D32; --glow-color: #A5D6A7; } /* Fresh Green */
+        body.theme-general { --primary-color: #5E35B1; --background-color: #311B92; --card-matched-color: #4527A0; --glow-color: #B39DDB; } /* Mystic Purple */
 
         body {
             font-family: 'Nunito', sans-serif;
@@ -22,87 +27,105 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background-color: var(--background-color);
-            transition: background-color 0.5s ease;
+            background-color: var(--background-color, var(--default-bg));
+            background-image: linear-gradient(325deg, rgba(0,0,0,0.5), transparent), var(--bg-gradient, linear-gradient(180deg, #2E1C2B, #4A306D));
+            transition: background-color 0.8s ease;
+            color: #f0f0f0;
+            overflow: hidden;
+            position: relative;
         }
+
+        /* Fireflies Background */
+        .fireflies { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+        .firefly { position: absolute; left: 50%; top: 50%; width: 0.4vw; height: 0.4vw; max-width: 4px; max-height: 4px; background: #fff; border-radius: 50%; box-shadow: 0 0 6px 3px #fff, 0 0 10px 6px var(--primary-color, var(--default-primary)); animation: move 10s linear infinite; }
+        @keyframes move {
+            0% { transform: translateX(0) translateY(0) scale(1); opacity: 1; }
+            50% { opacity: 1; }
+            100% { transform: translateX(calc(50vw - 50%)) translateY(calc(50vh - 50%)) scale(0.2); opacity: 0; }
+        }
+
+        #app-container {
+            width: 100%; max-width: 600px; text-align: center; padding: 20px; box-sizing: border-box; position: relative;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        h1 { font-family: 'Cinzel', serif; font-size: clamp(2.2em, 8vw, 3em); text-shadow: 0 0 15px rgba(255,255,255,0.7); margin-bottom: 25px; }
+        h2 { color: #eee; font-family: 'Cinzel', serif; }
         
-        body.theme-kids { --primary-color: #ff9800; --background-color: #fff3e0; --card-matched-color: #c8e6c9; }
-        body.theme-fruits { --primary-color: #f44336; --background-color: #ffebee; --card-matched-color: #ffcdd2; }
-        body.theme-veggies { --primary-color: #4CAF50; --background-color: #e8f5e9; --card-matched-color: #c8e6c9; }
-        body.theme-general { --primary-color: #2196F3; --background-color: #e3f2fd; --card-matched-color: #bbdefb; }
-
-        #app-container { width: 100%; max-width: 600px; text-align: center; padding: 20px; box-sizing: border-box; position: relative; }
-        h1, h2 { color: #333; }
-
         #mute-toggle {
-            position: absolute; top: 10px; right: 10px; width: 40px; height: 40px;
-            background: #fff; border: 1px solid #ccc; border-radius: 50%;
+            position: absolute; top: 15px; right: 15px; width: 40px; height: 40px;
+            background: rgba(0,0,0,0.3); border: 1px solid var(--primary-color, var(--default-primary)); border-radius: 50%;
             cursor: pointer; display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10;
+            box-shadow: 0 0 8px var(--primary-color, var(--default-primary)); z-index: 10;
+            transition: all 0.3s ease;
         }
-        #mute-toggle svg { width: 24px; height: 24px; }
+        #mute-toggle:hover { box-shadow: 0 0 15px var(--primary-color, var(--default-primary)); }
+        #mute-toggle svg { width: 22px; height: 22px; fill: var(--primary-color, var(--default-primary)); }
 
-        #selection-screen .selection-group { margin-bottom: 20px; }
         #selection-screen button {
-            display: inline-block; width: 120px; padding: 12px; font-size: 16px; margin: 5px;
-            cursor: pointer; border: 2px solid var(--primary-color); background-color: white; color: var(--primary-color);
+            padding: 12px; font-size: 16px; margin: 5px; cursor: pointer;
+            border: 2px solid var(--primary-color, var(--default-primary));
+            background: transparent; color: var(--primary-color, var(--default-primary));
             border-radius: 12px; font-weight: 700; transition: all 0.3s ease;
         }
-        #selection-screen button:hover { background-color: var(--primary-color); color: white; }
-        #selection-screen button.selected { background-color: var(--primary-color); color: white; }
-        #start-game-button {
-            display: block; width: 80%; max-width: 300px; padding: 15px; font-size: 18px; margin: 20px auto 0;
-            border-radius: 12px; font-weight: 700; border: none; background-color: #4CAF50; color: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s ease;
-        }
-        #start-game-button:hover { transform: translateY(-2px); }
+        #selection-screen button:hover { background: var(--primary-color, var(--default-primary)); color: #fff; }
+        #selection-screen button.selected { background: var(--primary-color, var(--default-primary)); color: #fff; transform: scale(1.05); }
         
+        #start-game-button {
+            border: none; background: #4CAF50; color: white;
+            box-shadow: 0 0 10px #4caf50, 0 0 20px #81C784;
+        }
+
         #game-screen { display: none; }
 
         #theme-selector { margin-bottom: 20px; display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
-        #theme-selector label { padding: 8px 15px; border-radius: 20px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s ease; font-weight: 700; }
+        #theme-selector label { padding: 8px 15px; border-radius: 20px; background: rgba(0,0,0,0.3); box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s ease; font-weight: 700; border: 1px solid transparent; }
         #theme-selector input[type="radio"] { display: none; }
-        #theme-selector input[type="radio"]:checked + label { background-color: var(--primary-color); color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        #theme-selector input[type="radio"]:checked + label { background-color: var(--primary-color); color: white; box-shadow: 0 0 15px var(--glow-color); border-color: var(--glow-color); }
 
-        #game-stats { display: flex; justify-content: space-around; width: 90%; max-width: 400px; margin: 0 auto 15px auto; padding: 10px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .stat-item { font-size: 18px; font-weight: 700; color: #333; transition: all 0.3s ease; padding: 5px 10px; border-radius: 8px; }
-        /* --- PERUBAHAN V2.2.1: Penunjuk pemain aktif yang lebih jelas --- */
-        .stat-item.active-player {
-            background-color: var(--primary-color);
-            color: white;
-            transform: scale(1.05);
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        #game-stats { 
+            display: flex; justify-content: space-around; width: 90%; max-width: 400px; margin: 0 auto 15px auto; padding: 10px; 
+            background-color: rgba(0,0,0,0.3); border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .stat-item span:first-child { color: #666; margin-right: 8px; }
-        .stat-item.active-player span:first-child { color: white; }
+        .stat-item.active-player { border-bottom: 3px solid var(--primary-color); transform: scale(1.05); }
 
         #game-board { display: grid; grid-template-columns: repeat(var(--grid-cols, 4), 1fr); gap: 10px; width: 90vw; max-width: 500px; margin: 20px auto; }
         .card { background-color: transparent; cursor: pointer; perspective: 1000px; aspect-ratio: 1/1; }
-        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .card-inner {
+            position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; 
+            border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png'), linear-gradient(145deg, #6D5A4D, #4E3E34);
+        }
         .card.flipped .card-inner { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: clamp(16px, 5vw, 40px); }
-        .card-back { background-color: var(--primary-color); color: white; font-size: clamp(24px, 7vw, 50px); }
-        .card-front { background-color: var(--card-color); transform: rotateY(180deg); }
-        .card.matched .card-inner { box-shadow: none; animation: match-pop 0.3s ease; }
+        .card-back { color: var(--glow-color); font-size: clamp(24px, 7vw, 50px); text-shadow: 0 0 10px var(--glow-color); }
+        .card-front { background-color: #3C2F2F; transform: rotateY(180deg); }
+        .card.matched .card-inner { box-shadow: 0 0 20px var(--primary-color); animation: match-pop 0.5s ease; }
         .card.matched .card-front { background-color: var(--card-matched-color); }
         @keyframes match-pop { 0% { transform: scale(1) rotateY(180deg); } 50% { transform: scale(1.1) rotateY(180deg); } 100% { transform: scale(1) rotateY(180deg); } }
 
-        #message-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 100; animation: fade-in 0.3s ease; }
-        #message-box { background-color: white; padding: 30px 40px; border-radius: 12px; text-align: center; box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
-        #final-stats { margin: 20px 0; font-size: 18px; }
-        #play-again-button, #back-to-menu-button { padding: 12px 25px; font-size: 18px; font-weight: 700; cursor: pointer; border: none; border-radius: 8px; color: white; transition: background-color 0.3s; margin: 5px; }
-        #play-again-button { background-color: var(--primary-color); }
-        #play-again-button:hover { background-color: #e65100; }
-        #back-to-menu-button { background-color: #757575; }
-        #back-to-menu-button:hover { background-color: #424242; }
-        .game-controls { margin-top: 20px; }
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        #message-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 100; animation: fade-in 0.5s ease; }
+        #message-box { background-color: rgba(0,0,0,0.7); padding: 30px 40px; border-radius: 12px; text-align: center; box-shadow: 0 0 25px var(--primary-color); border: 1px solid var(--primary-color); }
+
+        #play-again-button, #back-to-menu-button { padding: 12px 25px; font-size: 18px; font-weight: 700; cursor: pointer; border: none; border-radius: 8px; color: white; transition: all 0.3s; margin: 5px; }
+        #play-again-button { background-color: var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
+        #play-again-button:hover { box-shadow: 0 0 20px var(--primary-color); }
+        #back-to-menu-button { background-color: #757575; box-shadow: 0 0 10px #757575; }
+        #back-to-menu-button:hover { box-shadow: 0 0 20px #757575; }
+
     </style>
 </head>
 <body>
+    <div class="fireflies"></div>
+
     <div id="app-container">
         <button id="mute-toggle"></button>
-        <h1>Permainan Memori (V2.2.0)</h1>
+        <h1>Memori Ajaib</h1>
 
         <div id="selection-screen">
             <div class="selection-group">
@@ -135,6 +158,22 @@
     </div>
 
     <script>
+        // Create 20 fireflies
+        const firefliesContainer = document.querySelector('.fireflies');
+        for (let i = 0; i < 20; i++) {
+            const firefly = document.createElement('div');
+            firefly.className = 'firefly';
+            const x = Math.random() * 100;
+            const y = Math.random() * 100;
+            const delay = Math.random() * 10;
+            const duration = 5 + Math.random() * 10;
+            firefly.style.left = `${x}vw`;
+            firefly.style.top = `${y}vh`;
+            firefly.style.animationDelay = `${delay}s`;
+            firefly.style.animationDuration = `${duration}s`;
+            firefliesContainer.appendChild(firefly);
+        }
+
         class MemoryGame {
             constructor() {
                 this.selectionScreen = document.getElementById('selection-screen');
@@ -175,7 +214,7 @@
                 this.updateMuteIcon();
             }
             
-            initSounds() { /* ... (sama seperti V2.1.0) ... */ this.sounds.flip = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.1, sustain: 0.01, release: 0.1 } }).toDestination(); this.sounds.match = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination(); this.sounds.mismatch = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.3 } }).toDestination(); const winSynth = new Tone.Synth().toDestination(); this.sounds.win = new Tone.Sequence((time, note) => { winSynth.triggerAttackRelease(note, '16n', time); }, ['C5', 'E5', 'G5', 'C6'], '8n'); Tone.Transport.start(); }
+            initSounds() { this.sounds.flip = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.1, sustain: 0.01, release: 0.1 } }).toDestination(); this.sounds.match = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination(); this.sounds.mismatch = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.3 } }).toDestination(); const winSynth = new Tone.Synth().toDestination(); this.sounds.win = new Tone.Sequence((time, note) => { winSynth.triggerAttackRelease(note, '16n', time); }, ['C5', 'E5', 'G5', 'C6'], '8n'); Tone.Transport.start(); }
             playSound(soundName) { if (!this.soundEnabled || Tone.context.state !== 'running') return; try { switch(soundName) { case 'flip': this.sounds.flip.triggerAttackRelease('C5', '8n'); break; case 'match': this.sounds.match.triggerAttackRelease('G5', '8n'); break; case 'mismatch': this.sounds.mismatch.triggerAttackRelease('A2', '8n'); break; case 'win': this.sounds.win.start(0).stop(0.5); break; } } catch (e) { console.warn("Audio context not ready."); } }
             toggleMute() { this.soundEnabled = !this.soundEnabled; this.updateMuteIcon(); if (this.soundEnabled && Tone.context.state !== 'running') { Tone.start(); } }
             updateMuteIcon() { this.muteToggle.innerHTML = this.soundEnabled ? this.speakerIcon : this.muteIcon; }
@@ -185,14 +224,11 @@
                     button.addEventListener('click', (e) => {
                         const selectionType = e.currentTarget.dataset.selection;
                         const value = e.currentTarget.dataset.value;
-
-                        // --- PEMBETULAN V2.2.1: Memadankan atribut data dengan pembolehubah kelas yang betul ---
                         if (selectionType === 'player-mode') {
                             this.playerMode = parseInt(value, 10);
                         } else if (selectionType === 'difficulty') {
                             this.difficulty = value;
                         }
-
                         this.selectionScreen.querySelectorAll(`button[data-selection="${selectionType}"]`).forEach(btn => btn.classList.remove('selected'));
                         e.currentTarget.classList.add('selected');
                     });
@@ -208,37 +244,26 @@
                 const cardCount = rows * cols;
                 if (cardCount % 2 !== 0) { console.error("Saiz papan mesti genap."); return; }
                 this.numPairs = cardCount / 2;
-
                 document.body.className = `theme-${this.currentTheme}`;
                 this.gameBoardElement.style.setProperty('--grid-cols', cols);
-
                 this.selectionScreen.style.display = 'none';
                 this.gameScreen.style.display = 'block';
                 this.messageOverlay.style.display = 'none';
-                
                 this.buildThemeSelector();
                 this.resetGameStats();
                 this.shuffleAndDeal();
             }
             
-            buildThemeSelector() { /* ... (sama seperti V2.1.0) ... */ this.themeSelector.innerHTML = ''; for (const themeKey in this.themes) { const theme = this.themes[themeKey]; const radio = document.createElement('input'); radio.type = 'radio'; radio.id = `theme-${themeKey}`; radio.name = 'theme'; radio.value = themeKey; if (themeKey === this.currentTheme) radio.checked = true; const label = document.createElement('label'); label.htmlFor = `theme-${themeKey}`; label.textContent = theme.name; radio.addEventListener('change', () => this.changeTheme(themeKey)); this.themeSelector.appendChild(radio); this.themeSelector.appendChild(label); } }
+            buildThemeSelector() { this.themeSelector.innerHTML = ''; for (const themeKey in this.themes) { const theme = this.themes[themeKey]; const radio = document.createElement('input'); radio.type = 'radio'; radio.id = `theme-${themeKey}`; radio.name = 'theme'; radio.value = themeKey; if (themeKey === this.currentTheme) radio.checked = true; const label = document.createElement('label'); label.htmlFor = `theme-${themeKey}`; label.textContent = theme.name; radio.addEventListener('change', () => this.changeTheme(themeKey)); this.themeSelector.appendChild(radio); this.themeSelector.appendChild(label); } }
             shuffleAndDeal() { const availableIcons = this.themes[this.currentTheme].cardSet; const selectedIcons = availableIcons.slice(0, this.numPairs); const fullDeck = [...selectedIcons, ...selectedIcons]; for (let i = fullDeck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [fullDeck[i], fullDeck[j]] = [fullDeck[j], fullDeck[i]]; } this.gameCards = fullDeck; this.createBoard(); }
             createBoard() {
                 this.gameBoardElement.innerHTML = '';
-                // --- PERUBAHAN V2.2.2: Simbol belakang kad kini mengikut tema ---
                 let backIcon;
                 switch(this.currentTheme) {
-                    case 'kids':
-                        backIcon = '🐾';
-                        break;
-                    case 'fruits':
-                        backIcon = '🍏';
-                        break;
-                    case 'veggies':
-                        backIcon = '🌱';
-                        break;
-                    default:
-                        backIcon = '⭐';
+                    case 'kids': backIcon = '🐾'; break;
+                    case 'fruits': backIcon = '🍏'; break;
+                    case 'veggies': backIcon = '🌱'; break;
+                    default: backIcon = '⭐';
                 }
                 this.gameCards.forEach(icon => {
                     const cardElement = document.createElement('div');
@@ -253,10 +278,8 @@
             handleCardClick(cardElement) {
                 if (!this.canFlip || cardElement.classList.contains('flipped') || this.flippedCards.length >= 2) return;
                 if (!this.timerInterval && this.playerMode == 1) this.startTimer();
-                
                 this.playSound('flip');
                 this.flipCard(cardElement);
-
                 if (this.flippedCards.length === 2) {
                     this.canFlip = false;
                     if (this.playerMode == 1) this.moves++;
@@ -265,18 +288,16 @@
                 }
             }
             flipCard(cardElement) { cardElement.classList.add('flipped'); this.flippedCards.push(cardElement); }
-            checkForMatch() { setTimeout(() => { const [c1, c2] = this.flippedCards; (c1.dataset.icon === c2.dataset.icon) ? this.onMatch() : this.onMismatch(); }, 400); }
+            checkForMatch() { setTimeout(() => { const [c1, c2] = this.flippedCards; (c1.dataset.icon === c2.dataset.icon) ? this.onMatch() : this.onMismatch(); }, 500); }
             
             onMatch() {
                 this.playSound('match');
-                if (this.playerMode == 2) {
-                    this.playerScores[this.currentPlayer]++;
-                }
+                if (this.playerMode == 2) { this.playerScores[this.currentPlayer]++; }
                 this.updateStatsDisplay();
                 this.flippedCards.forEach(card => card.classList.add('matched'));
                 this.matchedPairs++;
                 this.flippedCards = [];
-                this.canFlip = true; // Pemain dapat giliran lagi
+                this.canFlip = true;
                 if (this.matchedPairs === this.numPairs) {
                     clearInterval(this.timerInterval);
                     setTimeout(() => this.showWinMessage(), 500);
@@ -288,36 +309,26 @@
                 setTimeout(() => {
                     this.flippedCards.forEach(card => card.classList.remove('flipped'));
                     this.flippedCards = [];
-                    if (this.playerMode == 2) {
-                        this.switchPlayer();
-                    }
+                    if (this.playerMode == 2) { this.switchPlayer(); }
                     this.canFlip = true;
-                }, 800);
+                }, 1000);
             }
 
-            switchPlayer() {
-                this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
-                this.updateStatsDisplay();
-            }
+            switchPlayer() { this.currentPlayer = this.currentPlayer === 1 ? 2 : 1; this.updateStatsDisplay(); }
 
             showWinMessage() {
                 this.playSound('win');
                 if (this.playerMode == 1) {
                     this.winTitle.textContent = "Tahniah!";
-                    this.finalStatsEl.innerHTML = `Anda berjaya dalam <strong>${this.moves}</strong> gerakan dan masa <strong>${this.timerEl.textContent}</strong>!`;
+                    // Bug fix: get timer text from the created element
+                    const timerEl = this.gameStats.querySelector('#timer');
+                    this.finalStatsEl.innerHTML = `Anda berjaya dalam <strong>${this.moves}</strong> gerakan dan masa <strong>${timerEl.textContent}</strong>!`;
                 } else {
-                    const score1 = this.playerScores[1];
-                    const score2 = this.playerScores[2];
-                    if (score1 > score2) {
-                        this.winTitle.textContent = "Pemain 1 Menang!";
-                        this.finalStatsEl.innerHTML = `Skor Akhir: <strong>${score1}</strong> - ${score2}`;
-                    } else if (score2 > score1) {
-                        this.winTitle.textContent = "Pemain 2 Menang!";
-                        this.finalStatsEl.innerHTML = `Skor Akhir: ${score1} - <strong>${score2}</strong>`;
-                    } else {
-                        this.winTitle.textContent = "Seri!";
-                        this.finalStatsEl.innerHTML = `Skor Akhir: <strong>${score1}</strong> - <strong>${score2}</strong>`;
-                    }
+                    const score1 = this.playerScores[1], score2 = this.playerScores[2];
+                    if (score1 > score2) { this.winTitle.textContent = "Pemain 1 Menang!"; } 
+                    else if (score2 > score1) { this.winTitle.textContent = "Pemain 2 Menang!"; }
+                    else { this.winTitle.textContent = "Seri!"; }
+                    this.finalStatsEl.innerHTML = `Skor Akhir: <strong>${score1}</strong> - <strong>${score2}</strong>`;
                 }
                 this.messageOverlay.style.display = 'flex';
             }
@@ -328,28 +339,17 @@
                 if (this.playerMode == 1) {
                     const minutes = Math.floor(this.secondsElapsed / 60).toString().padStart(2, '0');
                     const seconds = (this.secondsElapsed % 60).toString().padStart(2, '0');
-                    this.gameStats.innerHTML = `
-                        <div class="stat-item"><span>Masa:</span><span id="timer">${minutes}:${seconds}</span></div>
-                        <div class="stat-item"><span>Langkah:</span><span id="moves-counter">${this.moves}</span></div>`;
+                    this.gameStats.innerHTML = `<div class="stat-item"><span>Masa:</span><span id="timer">${minutes}:${seconds}</span></div><div class="stat-item"><span>Langkah:</span><span id="moves-counter">${this.moves}</span></div>`;
                 } else {
-                    // --- PERUBAHAN V2.2.1: Paparan skor yang lebih jelas ---
-                    this.gameStats.innerHTML = `
-                        <div class="stat-item ${this.currentPlayer === 1 ? 'active-player' : ''}"><span>Pemain 1:</span><span>${this.playerScores[1]}</span></div>
-                        <div class="stat-item ${this.currentPlayer === 2 ? 'active-player' : ''}"><span>Pemain 2:</span><span>${this.playerScores[2]}</span></div>`;
+                    this.gameStats.innerHTML = `<div class="stat-item ${this.currentPlayer === 1 ? 'active-player' : ''}"><span>Pemain 1:</span><span>${this.playerScores[1]}</span></div><div class="stat-item ${this.currentPlayer === 2 ? 'active-player' : ''}"><span>Pemain 2:</span><span>${this.playerScores[2]}</span></div>`;
                 }
             }
 
             resetGameStats() {
-                this.matchedPairs = 0;
-                this.flippedCards = [];
-                this.moves = 0;
-                this.secondsElapsed = 0;
-                clearInterval(this.timerInterval);
-                this.timerInterval = null;
-                this.playerScores = { 1: 0, 2: 0 };
-                this.currentPlayer = 1;
-                this.updateStatsDisplay();
-                this.canFlip = true;
+                this.matchedPairs = 0; this.flippedCards = []; this.moves = 0; this.secondsElapsed = 0;
+                clearInterval(this.timerInterval); this.timerInterval = null;
+                this.playerScores = { 1: 0, 2: 0 }; this.currentPlayer = 1;
+                this.updateStatsDisplay(); this.canFlip = true;
                 this.messageOverlay.style.display = 'none';
             }
 
@@ -358,10 +358,8 @@
             showMenu() { this.gameScreen.style.display = 'none'; this.selectionScreen.style.display = 'block'; document.body.className = ''; clearInterval(this.timerInterval); }
         }
 
-        document.addEventListener('DOMContentLoaded', () => { new MemoryGame(); });
+        document.addEventListener('DOMContentLoaded', () => new MemoryGame());
     </script>
 </body>
 </html>
-
-
 
