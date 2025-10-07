@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Keluarga App: Lukisan Kreatif (V3.7.2 - Susun Lapisan)</title>
+    <title>Keluarga App: Lukisan Kreatif (V3.7.6 - Palet Warna)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700&display=swap');
 
@@ -85,19 +85,19 @@
         .tool-btn.active, .size-preset-btn.active { border-color: var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
         
         /* Icons */
-        #brush-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAABsUExURQAAAAAAM4c3RX45SAAAAFxye7pwfJs5RgAAAIuAYLWWZnp7fis3VXdzXcKeZsCCSlZGOWxsWraZZbV9TGlTRGZmVrKYZruDUHhaQxo0VY6BYcKLVIVgRXOEjqSjm3VaQwAASSFBW1tvfgAAQOkum4YAAAAkdFJOUwAPxJwHqv/kAZX/7Tx+//dQZv7+ZlD3/30n7f+Uh/+oB7FlCLV3R1kAAAAJcEhLcwAABuwAAAbsAR51ODUAAAA+SURBVBhXY2AAAUYmZjDNwsrGDqI5OLm4eUAMXj5+ARAtKCQsAqJFxcQlQLSklLQMB4ghKyevANaqqKQMpgFJxQJ/8w3zlQAAAABJRU5ErkJggg=='); }
-        #pan-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAMAAAAMCGV4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFBUExURQAAAAAgVQAjVl1seVNndwAARgAaWWlzfW12fr+ol6qbkRlDaR5GaAAZU6uckcKrmL+olaiZj7Ojl3yAhAAASwAAAERfdE5jdqGVjbymlb6nla2dkNO1nJSPigAUTgAASpONjNK1nqmbkLqllKyckM+zm5ONigAKUgAAR5WNiNGznLqklJKMiQAKTpSNis+ym6maj7ijlKqbkM6ym5OMidy6n8Colsqumc6xmt27oJGLiQAtYEhfdSpLbAAAAI+KiP7PqPfKpfbKpf/PqIODhX6AhPXMq1hpewAAIPnLpd67nvjLpsGqmBhBZ/vMpvnNqGNvfAAAOY+LiP7Pp7WilA88YwAAQ4SFh//QqvfLqF1regAAADxZcdm6of/Qqf/QqP/Rqp6VjgQyYAAPS0BZcXx+g4ODhYKChISDhW52gCFEaWHNafsAAABrdFJOUwAYO9fHCxTQ///4nEw08v/////eEQKP3fv/////5RoY5P//////5BkZ5v//5Rrl///////l///////hYJ9cAeX/////+PX/yQj/////Xv//xwnm//9VE9v//74Glf/////7SBGg+P///+Zm2pQq8wAAAAlwSFlzAAALqgAAC6oBCFjLVAAAAK1JREFUGFdjYGBgYGBkYmZhBTEggI2dg5OLmwfO5+XjFxAUEhaB8ETFxCUkpaRlZOUgfHkFRSVlKRVVNXUIX0NTS0VbSkVVRxfK1T09fQNDsBlGxiamZubmFgC1KgaXO0PTTQAAAABJRU5ErkJggg=='); }
-        #eraser-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAMAAADXT/YiAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAACrUExURQAAAAAAAFWFZidINAAAAGegfITnpmOyfyNAMmefe4Hjo3venWu/iFOWazlgRhQAFGegenzgnnfWmFOVaWKvfUiDXVePaoLmpXvennvdnX3fn3jXmVSWaylFMIuIiJy0pXLNknvgnn/kolqjdBcuH6urq//9/6e8rnHMkYDno1qhcxcfF1xcXMTExP/+/6O7rE+TZxkpGU9PT6mpqXJvcQAAAAAAAAAAAAAAALdn3z0AAAA5dFJOUwANhCcMr//VJLD////UKA2v/////6Kk///////RJWX7////0SHd/////9EhL97//8QfLaORNysvLrsTP0gAAAAJcEhLcwAAB2IAAAdiATh6mdsAAABZSURBVBhXY2BgYGBgZGIGUQwMLKxs7BxgEU4ubh5ePgYGfgEuQSFhEVEGBjFxCUkpaRlZBjl5BUUJJWUVBgZVNXUNTS1tBgYGHV09fQNDsBlGxiamZubmFgC1KgaXO0PTTQAAAABJRU5ErkJggg=='); }
-        #bucket-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZGH0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXBhaW50LWJ1Y2tldCI+PHBhdGggZD0iTTggMmwyLTJoNC41bDItMiIvPjxwYXRoIGQ9Im0xMiA2IDUtMiIgc3R5bGU9ImZpbGw6IHJnYigyNTUsIDI1NSwgMjU1KTsiLz48cGF0aCBkPSJNMjIgMTRhNCA0IDAgMCAxLTQgNGgtOGE0IDQgMCAwIDEtNC00VjdoMTAuNSIvPjxwYXRoIGQ9Ik02IDdoMi4yIi8+PC9zdmc+'); }
-        #undo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXVuZG8iPjxwYXRoIGQ9Ik0zIDdoNnY2Ii8+PHBhdGggZD0iTTIxIDE3QTkgOSAwIDAgMCA3LjM2IDdsLTMuMzYtNCIvPjwvc3ZnPg=='); }
-        #redo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlZG8iPjxwYXRoIGQ9Ik0yMSA3aC02VjEiLz48cGF0aCBkPSJNOSAxN0E5IDkgMCAwIDAgMTYuNjQgNy4zbDMuMzYtNCIvPjwvc3ZnPg=='); }
-        #rect-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlY3RhbmdsZSI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiB4PSIzIiB5PSIzIiByeD0iMiIvPjwvc3ZnPg=='); }
-        #line-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxsaW5lIHgxPSI1IiB5MT0iMTIiIHgyPSIxOSIgeTI9IjEyIj48L2xpbmU+PC9zdmc+'); }
-        #circle-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PC9zdmc+'); }
-        #open-project-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAMAAABFjsb+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFZUExURQAAAP/MZv/ge//he//gev/gev/hef+/gP/VgP/eev/of//qgP/pgP/tgf/kff/iev/geP/geP/heP/heP/he//hff/ol///gP/bbf/kfP/nfv/he//kfP/nf//riv/tj//uk//umP/tmv/rnf/pof/sof/dd//ifP/lff/hev/hff/hf//mkP/pov/qov/xpv/roP/fgP/he//ngv/lkv/nmP/onP/on//pof/rov/pof/on//hev/ni//po//so//qov/kofvcdv/mjf/upP/qof//qvHVc//okv/qo//wpv/poPLVc//ql//yp//poPHWdf/smf/xp//qovLXd//tnf/vpf/2qv/uovPae//voP/upf/pov/poP/poP/movbdgf/vov/qof/qof/ooP/oov/nnv//kvjjlv/pof/pof/qov/mn//tp///mf/ppv/rov/0pv+AgMK4JNIAAABzdFJOUwAFU3aUpzsEBlb/////3Fhke5eyzLIWAgfM/////////////etPD+H//////////04I0v/////////3LcX////mE7f//9YJqf///7eZ//+Ug///a3T///9NZv//9tKfHln/78yTWioHSeq8h1AdBRc/FwI1IU9QAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAx0lEQVQoU2NgIBYwMjGzsLKBmewcUDFOLm4eXj5+AUEhYRFRMXGQkISklLS0tIysnLyCopKyiipITE1dQ1NaS1tHFwT09A1AYoZGxiamZuYWYGBpZQ0SE7extdPVhQhZ2Ds4gu1wctaDilhYuLi6gcXcPTzhYl7eELf4+CLU+flDxAICYaZZWAQFQ8RCQmFilmHhERCxyCiQmH20n1dMbFw8RCwh0d7LzyUpOSU1LR0iwsCQYZmZlZ2Tmwfjg0B+QWERMp94AADkSSsJLrPYugAAAABJRU5ErkJggg==');}
-        #save-project-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNhdmUiPjxwYXRoIGQ9Ik0xOSAyMUg1Yy0xLjEgMC0yLS45LTItMlY1YzAtMS4xLjktMiAyLTJoMTEubDUtNSIvPjxwYXRoIGQ9Ik0xNyAyMVYxM0g3djhoMTBaIi8+PHBhdGggZD0iTTcgM3Y1aDhsMi0ySDdaIi8+PC9zdmc+');}
-        #open-bg-image-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWltYWdlIj48cmVjdCB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHg9IjMiIHk9IjMiIHJ4PSIyIiByeT0iMiIvPjxjaXJjbGUgY3g9IjguNSIgY3k9IjguNSIgcj0iMS41Ii8+PHBvbHlsaW5lIHBvaW50cz0iMjEgMTUgMTYgMTAgNSAyMSIvPjwvc3ZnPg==');}
-        #save-png-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWRvd25sb2FkIj48cGF0aCBkPSJNMjEgMTV2NGMwIDEuMS0uOSAyLTIgMkg1Yy0xLjEgMC0yLS45LTItMlYxNSIvPjxwYXRoIGQ9Ik03IDEwbDUgNSA1LTUiLz48cGF0aCBkPSJNMTIgMTVWM20wIDAiLz48L3N2Zz4=');}
+        #brush-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXBhaW50YnJ1c2giPjxwYXRoIGQ9Ik0xNyAzYTIuODUgMi44NSAwIDAgMCA0IDRMMTMuNSAxOS41Yy0yLjA5IDIuMDktNi4wNCAyLjA5LTguMTQgMEE1LjU0IDUuNTQgMCAwIDEgMiA4LjM1VjVjMC0xLjEuOS0yIDItMmgzLjM1YTUuNTQgNS41NCAwIDAgMSAzLjE4IDEuMzVaIi8+PC9zdmc+'); }
+        #pan-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWhhbmQiPjxwYXRoIGQ9Im0xOCAxNS02LTZoNi02Ii8+PHBhdGggZD0iTTUgMTUtMiAydi00bDIgMiIvPjxwYXRoIGQ9Im0yIDEyIDMtMyA0IDQiLz48cGF0aCBkPSJtMSAxIDYgNiIvPjxwYXRoIGQ9Ik0xMiAyMiY5LTkgOS05Ii8+PC9zdmc+'); }
+        #eraser-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWVyYXNlciI+PHBhdGggZD0ibTIxIDExLTgtOEw2IDEzbDgtOCIvPjxwYXRoIGQ9Ik0xOSA5bDIuMiAyLjJjLjU4LjU4LjU4IDEuNTIgMCAyLjEybC01LjcgNS43Yy0uNTguNTgtMS41Mi41OC0yLjEyIDBMMTMgMTciLz48cGF0aCBkPSJtOSA4IDEuNSA1LjMiLz48cGF0aCBkPSJNMTIgN2gtNS41Yy0xLjQgMC0yLjUgMS4xLTIuNSAyLjVTNSAxMiA2LjUgMTJIMTQiLz48L3N2Zz4='); }
+        #bucket-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXBhaW50LWJ1Y2tldCI+PHBhdGggZD0ibTggMmwyLTJoNC41bDItMiIvPjxwYXRoIGQ9Im0xMiA2IDUtMiIvPjxwYXRoIGQ9Ik0yMiAxNGE0IDQgMCAwIDEtNCA0SDZhNCA0IDAgMCAxLTQtNFY3aDEwLjUiLz48cGF0aCBkPSJNNiA3aDIuMiIvPjwvc3ZnPg=='); }
+        #undo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXVuZG8iPjxwYXRoIGQ9Ik0zIDdoNnY2Ii8+PHBhdGggZD0iTTIxIDE3QTkgOSAwIDAgMCA3LjM2IDdsLTMuMzYtNCIvPjwvc3ZnPg=='); }
+        #redo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlZG8iPjxwYXRoIGQ9Ik0yMSA3aC02VjEiLz48cGF0aCBkPSJNOSAxN0E5IDkgMCAwIDAgMTYuNjQgNy4zbDMuMzYtNCIvPjwvc3ZnPg=='); }
+        #rect-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlY3RhbmdsZSI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiB4PSIzIiB5PSIzIiByeD0iMiIvPjwvc3ZnPg=='); }
+        #line-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxsaW5lIHgxPSI1IiB5MT0iMTIiIHgyPSIxOSIgeTI9IjEyIj48L2xpbmU+PC9zdmc+'); }
+        #circle-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PC9zdmc+'); }
+        #open-project-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWZvbGRlci1vcGVuIj48cGF0aCBkPSJtNiA5IDgtMy4yQTUuMTIgNS4xMiAwIDAgMSAxOSAyVjdoLTEiLz48cGF0aCBkPSJNMTkgMTJWNWEyIDIgMCAwIDAtMi0ySDVhMiAyIDAgMCAwLTIgMnYxNGMwIDEuMS45IDIgMiAyaDE0Ii8+PC9zdmc+');}
+        #save-project-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNhdmUiPjxwYXRoIGQ9Ik0xOSAyMUg1Yy0xLjEgMC0yLS45LTItMlY1YzAtMS4xLjktMiAyLTJoMTEubDUtNSIvPjxwYXRoIGQ9Ik0xNyAyMVYxM0g3djhoMTBaIi8+PHBhdGggZD0iTTcgM3Y1aDhsMi0ySDdaIi8+PC9zdmc+');}
+        #open-bg-image-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWltYWdlIj48cmVjdCB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHg9IjMiIHk9IjMiIHJ4PSIyIiByeT0iMiIvPjxjaXJjbGUgY3g9IjguNSIgY3k9IjguNSIgcj0iMS41Ii8+PHBvbHlsaW5lIHBvaW50cz0iMjEgMTUgMTYgMTAgNSAyMSIvPjwvc3ZnPg==');}
+        #save-png-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWRvd25sb2FkIj48cGF0aCBkPSJNMjEgMTV2NGMwIDEuMS0uOSAyLTIgMkg1Yy0xLjEgMC0yLS45LTItMlYxNSIvPjxwYXRoIGQ9Ik03IDEwbDUgNSA1LTUiLz48cGF0aCBkPSJNMTIgMTVWM20wIDAiLz48L3N2Zz4=');}
 
         #color-picker { width: 38px; height: 38px; border: none; padding: 0; border-radius: 50%; overflow: hidden; cursor: pointer; }
         #color-picker::-webkit-color-swatch-wrapper { padding: 0; }
@@ -346,7 +346,7 @@
                 this.layers = []; this.activeLayerIndex = 0; this.layerCounter = 0; 
                 this.lastTouchDistance = null; this.lastTouchMidpoint = null;
                 this.projectBackground = 'white';
-                this.previousColors = ['#ffffff', '#ffffff'];
+                this.previousColors = ['#FFFFFF', '#FFFFFF'];
             }
             initApp() {
                 this.setupEventListeners();
@@ -409,10 +409,33 @@
                 this.previewCanvas.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
                 this.previewCanvas.addEventListener('touchend', (e) => this.handleTouchEnd(e));
                 this.toolbar.addEventListener('click', (e) => this.handleToolbarClick(e));
-                this.colorPicker.addEventListener('input', (e) => this.setBrushColor(e.target.value));
-                this.colorPicker.addEventListener('change', (e) => this.updatePreviousColors(e.target.value));
-                this.prevColor1.addEventListener('click', () => this.setBrushColor(this.previousColors[0]));
-                this.prevColor2.addEventListener('click', () => this.setBrushColor(this.previousColors[1]));
+                
+                // --- PEMBAIKAN FUNGSI TUKAR WARNA ---
+                this.colorPicker.addEventListener('change', (e) => this.setBrushColor(e.target.value, true));
+
+                this.prevColor1.addEventListener('click', () => {
+                    const swatchColor = this.previousColors[0];
+                    if (!swatchColor || swatchColor.toUpperCase() === this.brushColor.toUpperCase()) return;
+                    const mainColor = this.brushColor;
+
+                    this.brushColor = swatchColor;
+                    this.colorPicker.value = swatchColor;
+                    this.previousColors[0] = mainColor;
+                    this.prevColor1.style.backgroundColor = mainColor;
+                });
+
+                this.prevColor2.addEventListener('click', () => {
+                    const swatchColor = this.previousColors[1];
+                    if (!swatchColor || swatchColor.toUpperCase() === this.brushColor.toUpperCase()) return;
+                    const mainColor = this.brushColor;
+
+                    this.brushColor = swatchColor;
+                    this.colorPicker.value = swatchColor;
+                    this.previousColors[1] = mainColor;
+                    this.prevColor2.style.backgroundColor = mainColor;
+                });
+                // --- AKHIR PEMBAIKAN ---
+
                 document.getElementById('toolbar-toggle').addEventListener('click', () => { this.toolbarWrapper.classList.toggle('hidden'); });
                 this.brushTypeSelect.addEventListener('change', (e) => { this.currentBrushType = e.target.value; });
                 this.addLayerBtn.addEventListener('click', () => this.addLayer());
@@ -555,15 +578,16 @@
                     const y = pixelsToCheck.pop();
                     const x = pixelsToCheck.pop();
                     const currentIndex = getPixelIndex(x, y);
+                    if (x < 0 || x >= canvasWidth || y < 0 || y >= canvasHeight) continue;
                     if (data[currentIndex] === targetColor[0] && data[currentIndex + 1] === targetColor[1] && data[currentIndex + 2] === targetColor[2] && data[currentIndex + 3] === targetColor[3]) {
                         data[currentIndex] = fillColor[0];
                         data[currentIndex + 1] = fillColor[1];
                         data[currentIndex + 2] = fillColor[2];
                         data[currentIndex + 3] = fillColor[3];
-                        if (x > 0) pixelsToCheck.push(x - 1, y);
-                        if (x < canvasWidth - 1) pixelsToCheck.push(x + 1, y);
-                        if (y > 0) pixelsToCheck.push(x, y - 1);
-                        if (y < canvasHeight - 1) pixelsToCheck.push(x, y + 1);
+                        pixelsToCheck.push(x + 1, y);
+                        pixelsToCheck.push(x - 1, y);
+                        pixelsToCheck.push(x, y + 1);
+                        pixelsToCheck.push(x, y - 1);
                     }
                 }
                 ctx.putImageData(imageData, 0, 0);
@@ -585,10 +609,13 @@
                 this.renderLayersList();
             }
             renderCanvasOrder() {
-                this.layers.forEach(layer => this.canvasWrapper.appendChild(layer.canvas));
-                this.canvasWrapper.appendChild(this.previewCanvas);
+                const allCanvases = [...this.canvasWrapper.querySelectorAll('.canvas-layer')];
+                allCanvases.forEach(c => c.remove());
+                this.layers.forEach(layer => {
+                    this.canvasWrapper.insertBefore(layer.canvas, this.previewCanvas);
+                });
             }
-            renderLayersList() { this.layersDropdown.innerHTML = ''; [...this.layers].reverse().forEach(layer => { const option = document.createElement('option'); option.value = layer.id; option.textContent = layer.name; if (!layer.visible) { option.classList.add('hidden-layer'); } this.layersDropdown.appendChild(option); }); this.layersDropdown.value = this.activeLayerIndex; const activeLayer = this.getActiveLayer(); const currentIndex = this.layers.findIndex(l => l.id === this.activeLayerIndex); if (activeLayer) { this.visibilityBtn.innerHTML = activeLayer.visible ? '👁️' : '➖'; this.deleteLayerBtn.disabled = this.layers.length <= 1; this.moveLayerUpBtn.disabled = currentIndex === this.layers.length - 1; this.moveLayerDownBtn.disabled = currentIndex === 0; } }
+            renderLayersList() { this.layersDropdown.innerHTML = ''; [...this.layers].reverse().forEach(layer => { const option = document.createElement('option'); option.value = layer.id; option.textContent = layer.name; if (!layer.visible) { option.classList.add('hidden-layer'); } this.layersDropdown.appendChild(option); }); this.layersDropdown.value = this.activeLayerIndex; const activeLayer = this.getActiveLayer(); const currentIndex = this.layers.findIndex(l => l.id === this.activeLayerIndex); if (activeLayer) { this.visibilityBtn.innerHTML = activeLayer.visible ? '👁️' : '➖'; this.deleteLayerBtn.disabled = this.layers.length <= 1; this.moveLayerUpBtn.disabled = currentIndex >= this.layers.length - 1; this.moveLayerDownBtn.disabled = currentIndex <= 0; } }
             getActiveLayer() { return this.layers.find(l => l.id === this.activeLayerIndex); }
             setupCanvasWrapperSize() { this.canvasWrapper.style.width = `${this.canvasSize.width}px`; this.canvasWrapper.style.height = `${this.canvasSize.height}px`; this.previewCanvas.width = this.canvasSize.width; this.previewCanvas.height = this.canvasSize.height; }
             resizeAllCanvases() { this.updateTransform(); }
@@ -603,9 +630,36 @@
             getCanvasPosFromEvent(e) { const rect = this.previewCanvas.getBoundingClientRect(); const { clientX, clientY } = this.getEventCoordinates(e); return { x: (clientX - rect.left) / this.zoom, y: (clientY - rect.top) / this.zoom }; }
             getMousePosInContainer(e) { const rect = this.canvasContainer.getBoundingClientRect(); const { clientX, clientY } = this.getEventCoordinates(e); return { x: clientX - rect.left, y: clientY - rect.top }; }
             handleToolbarClick(e) { const target = e.target.closest('button'); if (!target) return; if (target.dataset.tool) { this.setActiveButton(target, '.tool-btn[data-tool]'); this.currentTool = target.dataset.tool; this.updateCursor(); } if (target.dataset.size) { this.setBrushSize(target.dataset.size); this.setActiveButton(target, '.size-preset-btn');} if (target.id === 'undo-btn') this.undo(); if (target.id === 'redo-btn') this.redo(); if (target.id === 'save-png-btn') this.saveAsPng(); if (target.id === 'clear-btn') this.clearCanvas(); }
-            setBrushColor(color) { this.brushColor = color; this.colorPicker.value = color; }
+            
+            // --- PEMBAIKAN FUNGSI WARNA ---
+            setBrushColor(color, updateHistory = true) {
+                const upperCaseColor = color.toUpperCase();
+                if (!color || upperCaseColor === this.brushColor.toUpperCase()) return;
+
+                const oldColor = this.brushColor;
+                
+                this.brushColor = upperCaseColor;
+                this.colorPicker.value = this.brushColor;
+                
+                if (updateHistory) {
+                    this.updatePreviousColors(oldColor);
+                }
+            }
+
+            updatePreviousColors(oldColor) {
+                // Jangan tambah warna yang sudah ada dalam sejarah
+                if (oldColor.toUpperCase() === this.previousColors[0].toUpperCase() || oldColor.toUpperCase() === this.previousColors[1].toUpperCase()) return;
+                
+                this.previousColors.unshift(oldColor); // Tambah warna lama ke hadapan
+                this.previousColors.pop(); // Kekalkan saiz tatasusunan kepada 2
+
+                this.prevColor1.style.backgroundColor = this.previousColors[0];
+                this.prevColor2.style.backgroundColor = this.previousColors[1];
+            }
+            // --- AKHIR PEMBAIKAN ---
+
             setBrushSize(size) { this.brushSize = size; this.sizeSlider.value = size; this.sizeDisplay.textContent = size; this.updateTransform(); }
-            updatePreviousColors(newColor) { if (newColor === this.previousColors[0]) return; this.previousColors.unshift(newColor); this.previousColors = this.previousColors.slice(0, 2); this.prevColor1.style.backgroundColor = this.previousColors[0]; this.prevColor2.style.backgroundColor = this.previousColors[1]; }
+            
             async saveAsPng() { const defaultName = `lukisan-${Date.now()}`; const filename = await this.promptDialog.show("Simpan sebagai PNG:", defaultName); if (!filename) return; const compositeCanvas = document.createElement('canvas'); compositeCanvas.width = this.canvasSize.width; compositeCanvas.height = this.canvasSize.height; const compositeCtx = compositeCanvas.getContext('2d'); if (this.projectBackground === 'white') { compositeCtx.fillStyle = 'white'; compositeCtx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height); } this.layers.forEach(layer => { if (layer.visible) { compositeCtx.drawImage(layer.canvas, 0, 0); } }); const link = document.createElement('a'); link.download = `${filename.replace(/\.png$/i, '')}.png`; link.href = compositeCanvas.toDataURL('image/png'); link.click(); }
             async saveProject() { const defaultName = `projek-${Date.now()}`; const filename = await this.promptDialog.show("Simpan sebagai Projek Jan:", defaultName); if (!filename) return; const projectData = { canvasSize: this.canvasSize, background: this.projectBackground, layers: this.layers.map(layer => ({ name: layer.name, visible: layer.visible, imageDataURL: layer.canvas.toDataURL() })) }; const jsonString = JSON.stringify(projectData); const blob = new Blob([jsonString], {type: 'application/json'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${filename.replace(/\.jan$/i, '')}.jan`; link.click(); }
             async clearCanvas() { const confirmed = await this.confirmDialog.show('Anda pasti mahu mengosongkan kandungan lapisan ini?'); if (confirmed) { const layer = this.getActiveLayer(); if (layer) { layer.ctx.clearRect(0, 0, this.canvasSize.width, this.canvasSize.height); this.saveState(); } } }
@@ -619,7 +673,7 @@
             async loadProject(event) {
                 const file = (event && event.target) ? event.target.files[0] : null;
                 if (!file) {
-                    this.showStartupDialog(); // If user cancels file picker, show startup again
+                    this.showStartupDialog();
                     return;
                 }
                 const reader = new FileReader();
@@ -634,6 +688,7 @@
                         this.canvasSize = projectData.canvasSize;
                         this.setupCanvasWrapperSize();
                         projectData.layers.forEach(layerData => this.addLayer(layerData));
+                        this.resetUIToDefaults();
                     } catch (err) {
                         alert('Gagal membuka fail projek. Fail mungkin rosak.');
                         console.error("Error parsing project file:", err);
@@ -646,11 +701,28 @@
             resetWorkspace() {
                 this.layers.forEach(layer => layer.canvas.remove());
                 this.initializeAppState();
+                this.resetUIToDefaults();
              }
+            resetUIToDefaults() {
+                this.setBrushColor('#000000', false);
+                this.setBrushSize(15);
+                this.opacitySlider.value = 1;
+                this.opacityDisplay.textContent = '100%';
+                this.brushOpacity = 1;
+                this.previousColors = ['#FFFFFF', '#FFFFFF'];
+                this.prevColor1.style.backgroundColor = this.previousColors[0];
+                this.prevColor2.style.backgroundColor = this.previousColors[1];
+                this.currentTool = 'brush';
+                this.setActiveButton(document.getElementById('brush-btn'), '.tool-btn[data-tool]');
+                this.setActiveButton(document.querySelector('.size-preset-btn[data-size="15"]'), '.size-preset-btn');
+                this.brushTypeSelect.value = 'round';
+                this.currentBrushType = 'round';
+            }
         }
         
         new DrawingApp();
     </script>
 </body>
 </html>
+
 
