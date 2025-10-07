@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Keluarga App: Lukisan Kreatif (V3.6.2 - Bar Alat Pantas Ditingkatkan)</title>
+    <title>Keluarga App: Lukisan Kreatif (V3.7.2 - Susun Lapisan)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700&display=swap');
 
@@ -67,21 +67,9 @@
         }
         #toolbar-toggle svg { transition: transform 0.3s ease; }
         
-        /* --- LOGIK BAR ALAT PANTAS BAHARU --- */
-        #toolbar-wrapper.hidden #toolbar {
-            justify-content: space-between; /* Sebarkan kumpulan alat pantas */
-            padding: 5px 20px; /* Kurangkan padding vertikal */
-            flex-wrap: nowrap; /* Pastikan ia kekal sebaris */
-        }
-        
-        #toolbar-wrapper.hidden .tool-group:not(.quick-tool) {
-            display: none; /* Sembunyikan semua kumpulan alat yang bukan alat pantas */
-        }
-
-        #toolbar-wrapper.hidden #toolbar-toggle svg {
-            transform: rotate(180deg);
-        }
-        /* --- TAMAT LOGIK BARU --- */
+        #toolbar-wrapper.hidden #toolbar { justify-content: space-between; padding: 5px 20px; flex-wrap: nowrap; }
+        #toolbar-wrapper.hidden .tool-group:not(.quick-tool) { display: none; }
+        #toolbar-wrapper.hidden #toolbar-toggle svg { transform: rotate(180deg); }
 
         .tool-group { display: flex; align-items: center; gap: 8px; }
         .tool-group label { font-weight: 700; font-size: 0.9em; }
@@ -96,24 +84,21 @@
         .tool-btn:disabled, .file-btn:disabled, .size-preset-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
         .tool-btn.active, .size-preset-btn.active { border-color: var(--primary-color); box-shadow: 0 0 10px var(--primary-color); }
         
-        #brush-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAABsUExURQAAAAAAM4c3RX45SAAAAFxye7pwfJs5RgAAAIuAYLWWZnp7fis3VXdzXcKeZsCCSlZGOWxsWraZZbV9TGlTRGZmVrKYZruDUHhaQxo0VY6BYcKLVIVgRXOEjqSjm3VaQwAASSFBW1tvfgAAQOkum4YAAAAkdFJOUwAPxJwHqv/kAZX/7Tx+//dQZv7+ZlD3/30n7f+Uh/+oB7FlCLV3R1kAAAAJcEhZcwAABuwAAAbsAR51ODUAAAA+SURBVBhXY2AAAUYmZjDNwsrGDqI5OLm4eUAMXj5+ARAtKCQsAqJFxcQlQLSklLQMB4ghKyevANaqqKQMpgFJxQJ/8w3zlQAAAABJRU5ErkJggg=='); }
-        #pan-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAMAAAAMCGV4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFBUExURQAAAAAgVQAjVl1seVNndwAARgAaWWlzfW12fr+ol6qbkRlDaR5GaAAZU6uckcKrmL+olaiZj7Ojl3yAhAAASwAAAERfdE5jdqGVjbymlb6nla2dkNO1nJSPigAUTgAASpONjNK1nqmbkLqllKyckM+zm5ONigAKUgAAR5WNiNGznLqklJKMiQAKTpSNis+ym6maj7ijlKqbkM6ym5OMidy6n8Colsqumc6xmt27oJGLiQAtYEhfdSpLbAAAAI+KiP7PqPfKpfbKpf/PqIODhX6AhPXMq1hpewAAIPnLpd67nvjLpsGqmBhBZ/vMpvnNqGNvfAAAOY+LiP7Pp7WilA88YwAAQ4SFh//QqvfLqF1regAAADxZcdm6of/Qqf/QqP/Rqp6VjgQyYAAPS0BZcXx+g4ODhYKChISDhW52gCFEaWHNafsAAABrdFJOUwAYO9fHCxTQ///4nEw08v/////eEQKP3fv/////5RoY5P//////5BkZ5v//5Rrl///////l///////hYJ9cAeX/////+PX/yQj/////Xv//xwnm//9VE9v//74Glf/////7SBGg+P///+Zm2pQq8wAAAAlwSFlzAAALqgAAC6oBCFjLVAAAAK1JREFUGFdjYGBgYGBkYmZhBTEggI2dg5OLmwfO5+XjFxAUEhaB8ETFxCUkpaRlZOUgfHkFRSVlKRVVNXUIX0NTS0VbSkVVRxfK19M3MJQ0MobLm5iamVuYWVpZ29jagfj2Do5Ojo7OLq5u7h5gvrOjo6Ojp5e3jy9Yvb0DiO/o5x8QCOYHQfjBIaFg88LCI8DqI6OiIRbExMbFx8cnJCZBuAzJKalp6RmZWWAOAFzVH7G37HMZAAAAAElFTSuQmCC'); }
-        #eraser-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAMAAADXT/YiAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAACrUExURQAAAAAAAFWFZidINAAAAGegfITnpmOyfyNAMmefe4Hjo3venWu/iFOWazlgRhQAFGegenzgnnfWmFOVaWKvfUiDXVePaoLmpXvennvdnX3fn3jXmVSWaylFMIuIiJy0pXLNknvgnn/kolqjdBcuH6urq//9/6e8rnHMkYDno1qhcxcfF1xcXMTExP/+/6O7rE+TZxkpGU9PT6mpqXJvcQAAAAAAAAAAAAAAALdn3z0AAAA5dFJOUwANhCcMr//VJLD////UKA2v/////6Kk///////RJWX7////0SHd/////9EhL97//8QfLaORNysvLrsTP0gAAAAJcEhZcwAAB2IAAAdiATh6mdsAAABZSURBVBhXY2BgYGBgZGIGUQwMLKxs7BxgEU4ubh5ePgYGfgEuQSFhEVEGBjFxCUkpaRlZBjl5BUUJJWUVBgZVNXUNTS1tBgYGHV09fQNDsBlGxiamZubmFgC1KgaXO0PTTQAAAABJRU5ErkJggg=='); }
-        
+        /* Icons */
+        #brush-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAJCAMAAAA4jZ0cAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAABsUExURQAAAAAAM4c3RX45SAAAAFxye7pwfJs5RgAAAIuAYLWWZnp7fis3VXdzXcKeZsCCSlZGOWxsWraZZbV9TGlTRGZmVrKYZruDUHhaQxo0VY6BYcKLVIVgRXOEjqSjm3VaQwAASSFBW1tvfgAAQOkum4YAAAAkdFJOUwAPxJwHqv/kAZX/7Tx+//dQZv7+ZlD3/30n7f+Uh/+oB7FlCLV3R1kAAAAJcEhLcwAABuwAAAbsAR51ODUAAAA+SURBVBhXY2AAAUYmZjDNwsrGDqI5OLm4eUAMXj5+ARAtKCQsAqJFxcQlQLSklLQMB4ghKyevANaqqKQMpgFJxQJ/8w3zlQAAAABJRU5ErkJggg=='); }
+        #pan-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAMAAAAMCGV4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFBUExURQAAAAAgVQAjVl1seVNndwAARgAaWWlzfW12fr+ol6qbkRlDaR5GaAAZU6uckcKrmL+olaiZj7Ojl3yAhAAASwAAAERfdE5jdqGVjbymlb6nla2dkNO1nJSPigAUTgAASpONjNK1nqmbkLqllKyckM+zm5ONigAKUgAAR5WNiNGznLqklJKMiQAKTpSNis+ym6maj7ijlKqbkM6ym5OMidy6n8Colsqumc6xmt27oJGLiQAtYEhfdSpLbAAAAI+KiP7PqPfKpfbKpf/PqIODhX6AhPXMq1hpewAAIPnLpd67nvjLpsGqmBhBZ/vMpvnNqGNvfAAAOY+LiP7Pp7WilA88YwAAQ4SFh//QqvfLqF1regAAADxZcdm6of/Qqf/QqP/Rqp6VjgQyYAAPS0BZcXx+g4ODhYKChISDhW52gCFEaWHNafsAAABrdFJOUwAYO9fHCxTQ///4nEw08v/////eEQKP3fv/////5RoY5P//////5BkZ5v//5Rrl///////l///////hYJ9cAeX/////+PX/yQj/////Xv//xwnm//9VE9v//74Glf/////7SBGg+P///+Zm2pQq8wAAAAlwSFlzAAALqgAAC6oBCFjLVAAAAK1JREFUGFdjYGBgYGBkYmZhBTEggI2dg5OLmwfO5+XjFxAUEhaB8ETFxCUkpaRlZOUgfHkFRSVlKRVVNXUIX0NTS0VbSkVVRxfK1T09fQNDsBlGxiamZubmFgC1KgaXO0PTTQAAAABJRU5ErkJggg=='); }
+        #eraser-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAMAAADXT/YiAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAACrUExURQAAAAAAAFWFZidINAAAAGegfITnpmOyfyNAMmefe4Hjo3venWu/iFOWazlgRhQAFGegenzgnnfWmFOVaWKvfUiDXVePaoLmpXvennvdnX3fn3jXmVSWaylFMIuIiJy0pXLNknvgnn/kolqjdBcuH6urq//9/6e8rnHMkYDno1qhcxcfF1xcXMTExP/+/6O7rE+TZxkpGU9PT6mpqXJvcQAAAAAAAAAAAAAAALdn3z0AAAA5dFJOUwANhCcMr//VJLD////UKA2v/////6Kk///////RJWX7////0SHd/////9EhL97//8QfLaORNysvLrsTP0gAAAAJcEhLcwAAB2IAAAdiATh6mdsAAABZSURBVBhXY2BgYGBgZGIGUQwMLKxs7BxgEU4ubh5ePgYGfgEuQSFhEVEGBjFxCUkpaRlZBjl5BUUJJWUVBgZVNXUNTS1tBgYGHV09fQNDsBlGxiamZubmFgC1KgaXO0PTTQAAAABJRU5ErkJggg=='); }
+        #bucket-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZGH0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXBhaW50LWJ1Y2tldCI+PHBhdGggZD0iTTggMmwyLTJoNC41bDItMiIvPjxwYXRoIGQ9Im0xMiA2IDUtMiIgc3R5bGU9ImZpbGw6IHJnYigyNTUsIDI1NSwgMjU1KTsiLz48cGF0aCBkPSJNMjIgMTRhNCA0IDAgMCAxLTQgNGgtOGE0IDQgMCAwIDEtNC00VjdoMTAuNSIvPjxwYXRoIGQ9Ik02IDdoMi4yIi8+PC9zdmc+'); }
         #undo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXVuZG8iPjxwYXRoIGQ9Ik0zIDdoNnY2Ii8+PHBhdGggZD0iTTIxIDE3QTkgOSAwIDAgMCA3LjM2IDdsLTMuMzYtNCIvPjwvc3ZnPg=='); }
         #redo-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlZG8iPjxwYXRoIGQ9Ik0yMSA3aC02VjEiLz48cGF0aCBkPSJNOSAxN0E5IDkgMCAwIDAgMTYuNjQgNy4zbDMuMzYtNCIvPjwvc3ZnPg=='); }
         #rect-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlY3RhbmdsZSI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiB4PSIzIiB5PSIzIiByeD0iMiIvPjwvc3ZnPg=='); }
-        
-        #save-png-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWRvd25sb2FkIj48cGF0aCBkPSJNMjEgMTV2NGMwIDEuMS0uOSAyLTIgMkg1Yy0xLjEgMC0yLS45LTItMlYxNSIvPjxwYXRoIGQ9Ik03IDEwbDUgNSA1LTUiLz48cGF0aCBkPSJNMTIgMTVWM20wIDAiLz48L3N2Zz4='); }
-        #clear-btn { background-color: #f44336; color: white; border-radius: 8px; width: auto; padding: 0 15px; font-weight: 700; height: 38px; }
-        
-        #open-bg-image-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWltYWdlIj48cmVjdCB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHg9IjMiIHk9IjMiIHJ4PSIyIiByeT0iMiIvPjxjaXJjbGUgY3g9IjguNSIgY3k9IjguNSIgcj0iMS41Ii8+PHBvbHlsaW5lIHBvaW50cz0iMjEgMTUgMTYgMTAgNSAyMSIvPjwvc3ZnPg=='); }
-        #save-project-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNhdmUiPjxwYXRoIGQ9Ik0xOSAyMUg1Yy0xLjEgMC0yLS45LTItMlY1YzAtMS4xLjktMiAyLTJoMTEubDUtNSIvPjxwYXRoIGQ9Ik0xNyAyMVYxM0g3djhoMTBaIi8+PHBhdGggZD0iTTcgM3Y1aDhsMi0ySDdaIi8+PC9zdmc+'); background-color: var(--primary-color);}
-        #open-project-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAMAAABFjsb+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFZUExURQAAAP/MZv/ge//he//gev/gev/hef+/gP/VgP/eev/of//qgP/pgP/tgf/kff/iev/geP/geP/heP/heP/he//hff/ol///gP/bbf/kfP/nfv/he//kfP/nf//riv/tj//uk//umP/tmv/rnf/pof/sof/dd//ifP/lff/hev/hff/hf//mkP/pov/qov/xpv/roP/fgP/he//ngv/lkv/nmP/onP/on//pof/rov/pof/on//hev/ni//po//so//qov/kofvcdv/mjf/upP/qof//qvHVc//okv/qo//wpv/poPLVc//ql//yp//poPHWdf/smf/xp//qovLXd//tnf/vpf/2qv/uovPae//voP/upf/pov/poP/poP/movbdgf/vov/qof/qof/ooP/oov/nnv//kvjjlv/pof/pof/qov/mn//tp///mf/ppv/rov/0pv+AgMK4JNIAAABzdFJOUwAFU3aUpzsEBlb/////3Fhke5eyzLIWAgfM/////////////etPD+H//////////04I0v/////////3LcX////mE7f//9YJqf///7eZ//+Ug///a3T///9NZv//9tKfHln/78yTWioHSeq8h1AdBRc/FwI1IU9QAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAx0lEQVQoU2NgIBYwMjGzsLKBmewcUDFOLm4eXj5+AUEhYRFRMXGQkISklLS0tIysnLyCopKyiipITE1dQ1NaS1tHFwT09A1AYoZGxiamZuYWYGBpZQ0SE7extdPVhQhZ2Ds4gu1wctaDilhYuLi6gcXcPTzhYl7eELf4+CLU+flDxAICYaZZWAQFQ8RCQmFilmHhERCxyCiQmH20n1dMbFw8RCwh0d7LzyUpOSU1LR0iwsCQYZmZlZ2Tmwfjg0B+QWERMp94AADkSSsJLrPYugAAAABJRU5ErkJggg=='); }
-        
         #line-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxsaW5lIHgxPSI1IiB5MT0iMTIiIHgyPSIxOSIgeTI9IjEyIj48L2xpbmU+PC9zdmc+'); }
         #circle-tool-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PC9zdmc+'); }
-        
+        #open-project-btn { background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAMAAABFjsb+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAFZUExURQAAAP/MZv/ge//he//gev/gev/hef+/gP/VgP/eev/of//qgP/pgP/tgf/kff/iev/geP/geP/heP/heP/he//hff/ol///gP/bbf/kfP/nfv/he//kfP/nf//riv/tj//uk//umP/tmv/rnf/pof/sof/dd//ifP/lff/hev/hff/hf//mkP/pov/qov/xpv/roP/fgP/he//ngv/lkv/nmP/onP/on//pof/rov/pof/on//hev/ni//po//so//qov/kofvcdv/mjf/upP/qof//qvHVc//okv/qo//wpv/poPLVc//ql//yp//poPHWdf/smf/xp//qovLXd//tnf/vpf/2qv/uovPae//voP/upf/pov/poP/poP/movbdgf/vov/qof/qof/ooP/oov/nnv//kvjjlv/pof/pof/qov/mn//tp///mf/ppv/rov/0pv+AgMK4JNIAAABzdFJOUwAFU3aUpzsEBlb/////3Fhke5eyzLIWAgfM/////////////etPD+H//////////04I0v/////////3LcX////mE7f//9YJqf///7eZ//+Ug///a3T///9NZv//9tKfHln/78yTWioHSeq8h1AdBRc/FwI1IU9QAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAx0lEQVQoU2NgIBYwMjGzsLKBmewcUDFOLm4eXj5+AUEhYRFRMXGQkISklLS0tIysnLyCopKyiipITE1dQ1NaS1tHFwT09A1AYoZGxiamZuYWYGBpZQ0SE7extdPVhQhZ2Ds4gu1wctaDilhYuLi6gcXcPTzhYl7eELf4+CLU+flDxAICYaZZWAQFQ8RCQmFilmHhERCxyCiQmH20n1dMbFw8RCwh0d7LzyUpOSU1LR0iwsCQYZmZlZ2Tmwfjg0B+QWERMp94AADkSSsJLrPYugAAAABJRU5ErkJggg==');}
+        #save-project-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNhdmUiPjxwYXRoIGQ9Ik0xOSAyMUg1Yy0xLjEgMC0yLS45LTItMlY1YzAtMS4xLjktMiAyLTJoMTEubDUtNSIvPjxwYXRoIGQ9Ik0xNyAyMVYxM0g3djhoMTBaIi8+PHBhdGggZD0iTTcgM3Y1aDhsMi0ySDdaIi8+PC9zdmc+');}
+        #open-bg-image-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWltYWdlIj48cmVjdCB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHg9IjMiIHk9IjMiIHJ4PSIyIiByeT0iMiIvPjxjaXJjbGUgY3g9IjguNSIgY3k9IjguNSIgcj0iMS41Ii8+PHBvbHlsaW5lIHBvaW50cz0iMjEgMTUgMTYgMTAgNSAyMSIvPjwvc3ZnPg==');}
+        #save-png-btn { background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZHRoPSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWRvd25sb2FkIj48cGF0aCBkPSJNMjEgMTV2NGMwIDEuMS0uOSAyLTIgMkg1Yy0xLjEgMC0yLS45LTItMlYxNSIvPjxwYXRoIGQ9Ik03IDEwbDUgNSA1LTUiLz48cGF0aCBkPSJNMTIgMTVWM20wIDAiLz48L3N2Zz4=');}
+
         #color-picker { width: 38px; height: 38px; border: none; padding: 0; border-radius: 50%; overflow: hidden; cursor: pointer; }
         #color-picker::-webkit-color-swatch-wrapper { padding: 0; }
         #color-picker::-webkit-color-swatch { border: none; }
@@ -128,7 +113,16 @@
         #canvas-container.panning { cursor: grabbing; }
         #canvas-container.drawing { cursor: none; }
 
-        #canvas-wrapper { position: relative; box-shadow: 0 0 15px var(--shadow-color); background-color: white; transform-origin: 0 0; }
+        #canvas-wrapper { position: relative; box-shadow: 0 0 15px var(--shadow-color); transform-origin: 0 0; }
+        .checkerboard-bg {
+            background-image:
+                linear-gradient(45deg, #ccc 25%, transparent 25%),
+                linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #ccc 75%),
+                linear-gradient(-45deg, transparent 75%, #ccc 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
         
         .canvas-layer, #preview-canvas { position: absolute; top: 0; left: 0; pointer-events: none; background-color: transparent; }
         #preview-canvas { pointer-events: auto; z-index: 100; }
@@ -140,35 +134,27 @@
         .layer-control-btn { width: 32px; height: 32px; border: none; background-color: #eee; border-radius: 5px; cursor: pointer; font-size: 1.2em; }
         #layers-dropdown option.hidden-layer { color: #999; }
 
-        #confirm-dialog-overlay, #prompt-dialog-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 200; animation: fade-in 0.3s ease; }
-        .dialog-box { background-color: white; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 8px 16px rgba(0,0,0,0.2); max-width: 350px; width: 90%; }
+        .dialog-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 200; animation: fade-in 0.3s ease; }
+        .dialog-box { background-color: white; padding: 30px; border-radius: 12px; text-align: center; box-shadow: 0 8px 16px rgba(0,0,0,0.2); max-width: 400px; width: 90%; }
         .dialog-message { font-size: 1.2em; margin-bottom: 20px; }
         .dialog-btn { padding: 10px 20px; font-size: 1em; font-weight: 700; cursor: pointer; border: none; border-radius: 8px; color: white; margin: 0 10px; }
-        #confirm-yes, #prompt-save { background-color: var(--primary-color); }
+        #confirm-yes, #prompt-save, .startup-btn { background-color: var(--primary-color); }
         #confirm-no, #prompt-cancel { background-color: #757575; }
+        #new-project-options { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
+        #new-project-options button { padding: 10px 15px; font-size: 1em; }
         
-        #prompt-input {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 1em;
-            margin-bottom: 20px;
-        }
-
+        #prompt-input { width: 100%; padding: 10px; box-sizing: border-box; border-radius: 8px; border: 1px solid #ccc; font-size: 1em; margin-bottom: 20px; }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
-    <div id="toolbar-wrapper">
+    <div id="toolbar-wrapper" style="visibility: hidden;"> <!-- Sembunyikan toolbar pada mulanya -->
         <div id="toolbar">
-            <div class="tool-group">
+            <div class="tool-group quick-tool">
                 <label>Alat:</label>
-            </div>
-			<div class="tool-group quick-tool">
-                <button  id="brush-btn" class="tool-btn active " data-tool="brush" title="Berus"></button>
-                <button  id="eraser-btn" class="tool-btn" data-tool="eraser" title="Pemadam"></button>
+                <button id="brush-btn" class="tool-btn active" data-tool="brush" title="Berus"></button>
+                <button id="bucket-btn" class="tool-btn" data-tool="bucket" title="Isian"></button>
+                <button id="eraser-btn" class="tool-btn" data-tool="eraser" title="Pemadam"></button>
             </div>
             <div class="tool-group">
                 <button id="line-tool-btn" class="tool-btn" data-tool="line" title="Garisan"></button>
@@ -191,11 +177,11 @@
                 <button id="open-bg-image-btn" class="file-btn" title="Buka Imej Panduan"></button>
                 <button id="save-png-btn" class="file-btn" title="Simpan sebagai PNG"></button>
             </div>
-            <div class="tool-group">
+            <div class="tool-group quick-tool">
                 <label>Warna:</label>
-            </div>
-			<div class="tool-group quick-tool">
                 <input type="color" id="color-picker" value="#000000">
+                <div id="prev-color-1" class="color-swatch" style="background-color: #ffffff;"></div>
+                <div id="prev-color-2" class="color-swatch" style="background-color: #ffffff;"></div>
             </div>
              <div class="tool-group">
                 <label>Lutsinar:</label>
@@ -212,17 +198,15 @@
             </div>
             <div class="tool-group">
                 <label>Lapisan:</label>
-				<button id="add-layer-btn" class="layer-control-btn" title="Tambah Lapisan">+</button>
-                <button id="delete-layer-btn" class="layer-control-btn" title="Padam Lapisan">-</button>
-			</div>
-			<div class="tool-group  quick-tool">
                 <select id="layers-dropdown"></select>
+                <button id="add-layer-btn" class="layer-control-btn" title="Tambah Lapisan">+</button>
+                <button id="delete-layer-btn" class="layer-control-btn" title="Padam Lapisan">-</button>
                 <button id="visibility-btn" class="layer-control-btn" title="Tukar Keterlihatan">👁️</button>
+                <button id="move-layer-up-btn" class="layer-control-btn" title="Naikkan Lapisan">↑</button>
+                <button id="move-layer-down-btn" class="layer-control-btn" title="Turunkan Lapisan">↓</button>
             </div>
-            <div class="tool-group">
+            <div class="tool-group quick-tool">
                  <label>Sejarah:</label>
-			</div>
-			<div class="tool-group quick-tool">
                 <button id="undo-btn" class="tool-btn" title="Buat Asal"></button>
                 <button id="redo-btn" class="tool-btn" title="Buat Semula"></button>
             </div>
@@ -242,7 +226,29 @@
             <div id="custom-cursor"></div>
         </div>
     </div>
-    <div id="confirm-dialog-overlay">
+
+    <!-- Dialog Boxes -->
+    <div id="startup-dialog-overlay" class="dialog-overlay">
+        <div id="startup-box" class="dialog-box">
+            <h2 class="dialog-message">Selamat Datang ke Lukisan Kreatif!</h2>
+            <p>Mulakan projek baru atau buka kerja anda yang sedia ada.</p>
+            <div id="new-project-options">
+                <button id="create-new-btn" class="dialog-btn startup-btn">Cipta Projek Baru</button>
+                <button id="load-existing-btn" class="dialog-btn startup-btn">Buka Projek (.jan)</button>
+            </div>
+        </div>
+    </div>
+    <div id="new-project-dialog-overlay" class="dialog-overlay" style="display: none;">
+        <div id="new-project-box" class="dialog-box">
+            <h2 class="dialog-message">Cipta Projek Baru</h2>
+            <p>Pilih jenis latar belakang:</p>
+             <div id="new-project-options">
+                <button id="create-white-bg-btn" class="dialog-btn startup-btn">Putih</button>
+                <button id="create-trans-bg-btn" class="dialog-btn startup-btn">Lutsinar</button>
+            </div>
+        </div>
+    </div>
+    <div id="confirm-dialog-overlay" class="dialog-overlay" style="display: none;">
         <div id="confirm-box" class="dialog-box">
             <p id="confirm-message" class="dialog-message"></p>
             <div>
@@ -251,7 +257,7 @@
             </div>
         </div>
     </div>
-    <div id="prompt-dialog-overlay">
+    <div id="prompt-dialog-overlay" class="dialog-overlay" style="display: none;">
         <div id="prompt-box" class="dialog-box">
             <p id="prompt-message" class="dialog-message"></p>
             <input type="text" id="prompt-input">
@@ -266,7 +272,7 @@
 
     <script>
         class CustomPrompt {
-             constructor() {
+            constructor() {
                 this.overlay = document.getElementById('prompt-dialog-overlay');
                 this.messageEl = document.getElementById('prompt-message');
                 this.inputEl = document.getElementById('prompt-input');
@@ -300,12 +306,97 @@
                 window.addEventListener('load', () => this.initApp());
             }
 
-            setupDOMReferences() { this.canvasContainer = document.getElementById('canvas-container'); this.canvasWrapper = document.getElementById('canvas-wrapper'); this.previewCanvas = document.getElementById('preview-canvas'); this.previewCtx = this.previewCanvas.getContext('2d'); this.toolbarWrapper = document.getElementById('toolbar-wrapper'); this.toolbar = document.getElementById('toolbar'); this.customCursor = document.getElementById('custom-cursor'); this.confirmDialog = new CustomConfirm(); this.promptDialog = new CustomPrompt(); this.sizeSlider = document.getElementById('size-slider'); this.sizeDisplay = document.getElementById('size-display'); this.opacitySlider = document.getElementById('opacity-slider'); this.opacityDisplay = document.getElementById('opacity-display'); this.colorPicker = document.getElementById('color-picker'); this.prevColor1 = document.getElementById('prev-color-1'); this.prevColor2 = document.getElementById('prev-color-2'); this.undoBtn = document.getElementById('undo-btn'); this.redoBtn = document.getElementById('redo-btn'); this.layersDropdown = document.getElementById('layers-dropdown'); this.addLayerBtn = document.getElementById('add-layer-btn'); this.deleteLayerBtn = document.getElementById('delete-layer-btn'); this.visibilityBtn = document.getElementById('visibility-btn'); this.bgImageInput = document.getElementById('bg-image-input'); this.projectInput = document.getElementById('project-input'); this.brushTypeSelect = document.getElementById('brush-type-select'); }
-            initializeAppState() { this.isDrawing = false; this.isPanning = false; this.middleClickPanning = false; this.isPinching = false; this.touchStartTimer = null; this.brushSize = 15; this.brushColor = '#000000'; this.brushOpacity = 1; this.currentTool = 'brush'; this.currentBrushType = 'round'; this.lastPoint = { x: 0, y: 0 }; this.startShapePoint = {x: 0, y: 0}; this.previousColors = ['#ffffff', '#ffffff']; this.zoom = 1; this.panOffset = { x: 0, y: 0 }; this.startPanPoint = { x: 0, y: 0 }; this.initialPanOffset = { x: 0, y: 0 }; this.canvasSize = { width: 1920, height: 1080 }; this.layers = []; this.activeLayerIndex = 0; this.layerCounter = 0; this.lastTouchDistance = null; this.lastTouchMidpoint = null; }
-            initApp() { this.setupEventListeners(); this.setupCanvasWrapperSize(); this.addLayer(); this.centerCanvas(); this.updateCursor(); window.addEventListener('resize', () => this.resizeAllCanvases()); }
+            setupDOMReferences() {
+                this.canvasContainer = document.getElementById('canvas-container');
+                this.canvasWrapper = document.getElementById('canvas-wrapper');
+                this.previewCanvas = document.getElementById('preview-canvas');
+                this.previewCtx = this.previewCanvas.getContext('2d');
+                this.toolbarWrapper = document.getElementById('toolbar-wrapper');
+                this.toolbar = document.getElementById('toolbar');
+                this.customCursor = document.getElementById('custom-cursor');
+                this.confirmDialog = new CustomConfirm();
+                this.promptDialog = new CustomPrompt();
+                this.sizeSlider = document.getElementById('size-slider');
+                this.sizeDisplay = document.getElementById('size-display');
+                this.opacitySlider = document.getElementById('opacity-slider');
+                this.opacityDisplay = document.getElementById('opacity-display');
+                this.colorPicker = document.getElementById('color-picker');
+                this.prevColor1 = document.getElementById('prev-color-1');
+                this.prevColor2 = document.getElementById('prev-color-2');
+                this.undoBtn = document.getElementById('undo-btn');
+                this.redoBtn = document.getElementById('redo-btn');
+                this.layersDropdown = document.getElementById('layers-dropdown');
+                this.addLayerBtn = document.getElementById('add-layer-btn');
+                this.deleteLayerBtn = document.getElementById('delete-layer-btn');
+                this.visibilityBtn = document.getElementById('visibility-btn');
+                this.moveLayerUpBtn = document.getElementById('move-layer-up-btn');
+                this.moveLayerDownBtn = document.getElementById('move-layer-down-btn');
+                this.bgImageInput = document.getElementById('bg-image-input');
+                this.projectInput = document.getElementById('project-input');
+                this.brushTypeSelect = document.getElementById('brush-type-select');
+            }
+            initializeAppState() { 
+                this.isDrawing = false; this.isPanning = false; this.middleClickPanning = false; 
+                this.isPinching = false; this.touchStartTimer = null; this.brushSize = 15; 
+                this.brushColor = '#000000'; this.brushOpacity = 1; this.currentTool = 'brush'; 
+                this.currentBrushType = 'round'; this.lastPoint = { x: 0, y: 0 }; 
+                this.startShapePoint = {x: 0, y: 0}; this.zoom = 1; 
+                this.panOffset = { x: 0, y: 0 }; this.startPanPoint = { x: 0, y: 0 }; 
+                this.initialPanOffset = { x: 0, y: 0 }; this.canvasSize = { width: 1920, height: 1080 }; 
+                this.layers = []; this.activeLayerIndex = 0; this.layerCounter = 0; 
+                this.lastTouchDistance = null; this.lastTouchMidpoint = null;
+                this.projectBackground = 'white';
+                this.previousColors = ['#ffffff', '#ffffff'];
+            }
+            initApp() {
+                this.setupEventListeners();
+                this.showStartupDialog();
+            }
+            
+            showStartupDialog() {
+                document.getElementById('startup-dialog-overlay').style.display = 'flex';
+                document.getElementById('create-new-btn').onclick = () => {
+                    document.getElementById('startup-dialog-overlay').style.display = 'none';
+                    this.showNewProjectDialog();
+                };
+                document.getElementById('load-existing-btn').onclick = () => {
+                     document.getElementById('startup-dialog-overlay').style.display = 'none';
+                     this.projectInput.click();
+                };
+            }
+
+            showNewProjectDialog() {
+                const dialog = document.getElementById('new-project-dialog-overlay');
+                dialog.style.display = 'flex';
+                document.getElementById('create-white-bg-btn').onclick = () => {
+                    dialog.style.display = 'none';
+                    this.createNewWorkspace('white');
+                };
+                document.getElementById('create-trans-bg-btn').onclick = () => {
+                    dialog.style.display = 'none';
+                    this.createNewWorkspace('transparent');
+                };
+            }
+
+            createNewWorkspace(backgroundType) {
+                this.projectBackground = backgroundType;
+                if (backgroundType === 'transparent') {
+                    this.canvasWrapper.classList.add('checkerboard-bg');
+                    this.canvasWrapper.style.backgroundColor = 'transparent';
+                } else {
+                    this.canvasWrapper.classList.remove('checkerboard-bg');
+                    this.canvasWrapper.style.backgroundColor = 'white';
+                }
+                this.setupCanvasWrapperSize();
+                this.addLayer();
+                this.centerCanvas();
+                this.updateCursor();
+                document.getElementById('toolbar-wrapper').style.visibility = 'visible';
+                window.addEventListener('resize', () => this.resizeAllCanvases());
+            }
             
             setupEventListeners() {
-                this.previewCanvas.addEventListener('mousedown', (e) => { if (e.button === 1) { e.preventDefault(); this.middleClickPanning = true; this.isPanning = true; const mousePos = this.getMousePosInContainer(e); this.startPanPoint = { x: mousePos.x, y: mousePos.y }; this.initialPanOffset = { x: this.panOffset.x, y: this.panOffset.y }; this.canvasContainer.classList.add('panning'); } });
+                 this.previewCanvas.addEventListener('mousedown', (e) => { if (e.button === 1) { e.preventDefault(); this.middleClickPanning = true; this.isPanning = true; const mousePos = this.getMousePosInContainer(e); this.startPanPoint = { x: mousePos.x, y: mousePos.y }; this.initialPanOffset = { x: this.panOffset.x, y: this.panOffset.y }; this.canvasContainer.classList.add('panning'); } });
                 window.addEventListener('mouseup', (e) => { if (e.button === 1 && this.middleClickPanning) { e.preventDefault(); this.isPanning = false; this.middleClickPanning = false; this.canvasContainer.classList.remove('panning'); } });
                 this.previewCanvas.addEventListener('mousedown', (e) => this.startAction(e));
                 this.previewCanvas.addEventListener('mousemove', (e) => this.moveAction(e));
@@ -320,14 +411,16 @@
                 this.toolbar.addEventListener('click', (e) => this.handleToolbarClick(e));
                 this.colorPicker.addEventListener('input', (e) => this.setBrushColor(e.target.value));
                 this.colorPicker.addEventListener('change', (e) => this.updatePreviousColors(e.target.value));
-                document.getElementById('toolbar-toggle').addEventListener('click', () => {
-                    this.toolbarWrapper.classList.toggle('hidden');
-                });
+                this.prevColor1.addEventListener('click', () => this.setBrushColor(this.previousColors[0]));
+                this.prevColor2.addEventListener('click', () => this.setBrushColor(this.previousColors[1]));
+                document.getElementById('toolbar-toggle').addEventListener('click', () => { this.toolbarWrapper.classList.toggle('hidden'); });
                 this.brushTypeSelect.addEventListener('change', (e) => { this.currentBrushType = e.target.value; });
                 this.addLayerBtn.addEventListener('click', () => this.addLayer());
                 this.deleteLayerBtn.addEventListener('click', () => this.deleteLayer());
                 this.layersDropdown.addEventListener('change', (e) => this.setActiveLayer(parseInt(e.target.value)));
                 this.visibilityBtn.addEventListener('click', () => this.toggleVisibility());
+                this.moveLayerUpBtn.addEventListener('click', () => this.moveLayer('up'));
+                this.moveLayerDownBtn.addEventListener('click', () => this.moveLayer('down'));
                 document.getElementById('open-bg-image-btn').addEventListener('click', () => this.bgImageInput.click());
                 this.bgImageInput.addEventListener('change', (e) => this.loadBackgroundImage(e));
                 document.getElementById('save-project-btn').addEventListener('click', () => this.saveProject());
@@ -369,6 +462,12 @@
                     if (!layer || !layer.visible) return;
                     this.isDrawing = true;
                     const canvasPos = this.getCanvasPosFromEvent(e);
+                    if (this.currentTool === 'bucket') {
+                        this.floodFill(Math.round(canvasPos.x), Math.round(canvasPos.y));
+                        this.saveState();
+                        this.isDrawing = false; // Stop drawing after one fill
+                        return;
+                    }
                     this.startShapePoint = canvasPos;
                     this.lastPoint = canvasPos;
                     this.prepareContext(layer.ctx);
@@ -436,11 +535,60 @@
                 this.isPanning = false;
                 this.canvasContainer.classList.remove('panning');
             }
-            addLayer(data = null) { this.layerCounter++; const layerId = this.layers.length; const canvas = document.createElement('canvas'); canvas.className = 'canvas-layer'; canvas.width = this.canvasSize.width; canvas.height = this.canvasSize.height; const ctx = canvas.getContext('2d'); this.canvasWrapper.insertBefore(canvas, this.previewCanvas); const layer = { id: layerId, name: data ? data.name : `Lapisan ${this.layerCounter}`, canvas: canvas, ctx: ctx, history: [], historyIndex: -1, visible: data ? data.visible : true }; this.layers.push(layer); this.setActiveLayer(layerId); if (data && data.imageDataURL) { const img = new Image(); img.onload = () => { layer.ctx.drawImage(img, 0, 0); this.saveState(); }; img.src = data.imageDataURL; } else { this.saveState(); } if (data && !data.visible) { layer.canvas.style.display = 'none'; } this.renderLayersList(); return layer; }
-            async deleteLayer() { if (this.layers.length <= 1) return; const confirmed = await this.confirmDialog.show('Anda pasti mahu memadam lapisan ini?'); if (confirmed) { const layerToRemove = this.layers.find(l => l.id === this.activeLayerIndex); layerToRemove.canvas.remove(); this.layers = this.layers.filter(l => l.id !== this.activeLayerIndex); this.setActiveLayer(this.layers[this.layers.length - 1].id); } }
+            floodFill(startX, startY) {
+                const layer = this.getActiveLayer();
+                if (!layer) return;
+                const ctx = layer.ctx;
+                const canvasWidth = layer.canvas.width;
+                const canvasHeight = layer.canvas.height;
+                const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+                const data = imageData.data;
+                const getPixelIndex = (x, y) => (y * canvasWidth + x) * 4;
+                const targetColorIndex = getPixelIndex(startX, startY);
+                const targetColor = [ data[targetColorIndex], data[targetColorIndex + 1], data[targetColorIndex + 2], data[targetColorIndex + 3] ];
+                const hexToRgba = (hex) => { const r = parseInt(hex.slice(1, 3), 16); const g = parseInt(hex.slice(3, 5), 16); const b = parseInt(hex.slice(5, 7), 16); return [r, g, b, Math.round(this.brushOpacity * 255)]; };
+                const fillColor = hexToRgba(this.brushColor);
+                if (targetColor.every((v, i) => v === fillColor[i])) return;
+                
+                const pixelsToCheck = [startX, startY];
+                while (pixelsToCheck.length > 0) {
+                    const y = pixelsToCheck.pop();
+                    const x = pixelsToCheck.pop();
+                    const currentIndex = getPixelIndex(x, y);
+                    if (data[currentIndex] === targetColor[0] && data[currentIndex + 1] === targetColor[1] && data[currentIndex + 2] === targetColor[2] && data[currentIndex + 3] === targetColor[3]) {
+                        data[currentIndex] = fillColor[0];
+                        data[currentIndex + 1] = fillColor[1];
+                        data[currentIndex + 2] = fillColor[2];
+                        data[currentIndex + 3] = fillColor[3];
+                        if (x > 0) pixelsToCheck.push(x - 1, y);
+                        if (x < canvasWidth - 1) pixelsToCheck.push(x + 1, y);
+                        if (y > 0) pixelsToCheck.push(x, y - 1);
+                        if (y < canvasHeight - 1) pixelsToCheck.push(x, y + 1);
+                    }
+                }
+                ctx.putImageData(imageData, 0, 0);
+            }
+            addLayer(data = null) { this.layerCounter++; const layerId = this.layers.length; const canvas = document.createElement('canvas'); canvas.className = 'canvas-layer'; canvas.width = this.canvasSize.width; canvas.height = this.canvasSize.height; const ctx = canvas.getContext('2d'); this.canvasWrapper.insertBefore(canvas, this.previewCanvas); const layer = { id: layerId, name: data ? data.name : `Lapisan ${this.layerCounter}`, canvas: canvas, ctx: ctx, history: [], historyIndex: -1, visible: data ? data.visible : true }; this.layers.push(layer); this.setActiveLayer(layer.id); if (data && data.imageDataURL) { const img = new Image(); img.onload = () => { layer.ctx.drawImage(img, 0, 0); this.saveState(); }; img.src = data.imageDataURL; } else { this.saveState(); } if (data && !data.visible) { layer.canvas.style.display = 'none'; } this.renderLayersList(); return layer; }
+            async deleteLayer() { if (this.layers.length <= 1) return; const confirmed = await this.confirmDialog.show('Anda pasti mahu memadam lapisan ini?'); if (confirmed) { const layerToRemoveIndex = this.layers.findIndex(l => l.id === this.activeLayerIndex); if(layerToRemoveIndex === -1) return; this.layers[layerToRemoveIndex].canvas.remove(); this.layers.splice(layerToRemoveIndex, 1); this.setActiveLayer(this.layers[this.layers.length - 1].id); } }
             setActiveLayer(id) { this.activeLayerIndex = id; this.renderLayersList(); this.updateHistoryButtons(); }
             toggleVisibility() { const layer = this.getActiveLayer(); if (!layer) return; layer.visible = !layer.visible; layer.canvas.style.display = layer.visible ? 'block' : 'none'; this.renderLayersList(); }
-            renderLayersList() { this.layersDropdown.innerHTML = ''; [...this.layers].reverse().forEach(layer => { const option = document.createElement('option'); option.value = layer.id; option.textContent = layer.name; if (!layer.visible) { option.classList.add('hidden-layer'); } this.layersDropdown.appendChild(option); }); this.layersDropdown.value = this.activeLayerIndex; const activeLayer = this.getActiveLayer(); if (activeLayer) { this.visibilityBtn.innerHTML = activeLayer.visible ? '👁️' : '➖'; this.deleteLayerBtn.disabled = this.layers.length <= 1; } }
+            moveLayer(direction) {
+                const currentIndex = this.layers.findIndex(l => l.id === this.activeLayerIndex);
+                if (currentIndex === -1) return;
+
+                if (direction === 'up' && currentIndex < this.layers.length - 1) {
+                    [this.layers[currentIndex], this.layers[currentIndex + 1]] = [this.layers[currentIndex + 1], this.layers[currentIndex]];
+                } else if (direction === 'down' && currentIndex > 0) {
+                    [this.layers[currentIndex], this.layers[currentIndex - 1]] = [this.layers[currentIndex - 1], this.layers[currentIndex]];
+                }
+                this.renderCanvasOrder();
+                this.renderLayersList();
+            }
+            renderCanvasOrder() {
+                this.layers.forEach(layer => this.canvasWrapper.appendChild(layer.canvas));
+                this.canvasWrapper.appendChild(this.previewCanvas);
+            }
+            renderLayersList() { this.layersDropdown.innerHTML = ''; [...this.layers].reverse().forEach(layer => { const option = document.createElement('option'); option.value = layer.id; option.textContent = layer.name; if (!layer.visible) { option.classList.add('hidden-layer'); } this.layersDropdown.appendChild(option); }); this.layersDropdown.value = this.activeLayerIndex; const activeLayer = this.getActiveLayer(); const currentIndex = this.layers.findIndex(l => l.id === this.activeLayerIndex); if (activeLayer) { this.visibilityBtn.innerHTML = activeLayer.visible ? '👁️' : '➖'; this.deleteLayerBtn.disabled = this.layers.length <= 1; this.moveLayerUpBtn.disabled = currentIndex === this.layers.length - 1; this.moveLayerDownBtn.disabled = currentIndex === 0; } }
             getActiveLayer() { return this.layers.find(l => l.id === this.activeLayerIndex); }
             setupCanvasWrapperSize() { this.canvasWrapper.style.width = `${this.canvasSize.width}px`; this.canvasWrapper.style.height = `${this.canvasSize.height}px`; this.previewCanvas.width = this.canvasSize.width; this.previewCanvas.height = this.canvasSize.height; }
             resizeAllCanvases() { this.updateTransform(); }
@@ -458,8 +606,8 @@
             setBrushColor(color) { this.brushColor = color; this.colorPicker.value = color; }
             setBrushSize(size) { this.brushSize = size; this.sizeSlider.value = size; this.sizeDisplay.textContent = size; this.updateTransform(); }
             updatePreviousColors(newColor) { if (newColor === this.previousColors[0]) return; this.previousColors.unshift(newColor); this.previousColors = this.previousColors.slice(0, 2); this.prevColor1.style.backgroundColor = this.previousColors[0]; this.prevColor2.style.backgroundColor = this.previousColors[1]; }
-            async saveAsPng() { const defaultName = `lukisan-${Date.now()}`; const filename = await this.promptDialog.show("Simpan sebagai PNG:", defaultName); if (!filename) return; const compositeCanvas = document.createElement('canvas'); compositeCanvas.width = this.canvasSize.width; compositeCanvas.height = this.canvasSize.height; const compositeCtx = compositeCanvas.getContext('2d'); compositeCtx.fillStyle = 'white'; compositeCtx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height); this.layers.forEach(layer => { if (layer.visible) { compositeCtx.drawImage(layer.canvas, 0, 0); } }); const link = document.createElement('a'); link.download = `${filename.replace(/\.png$/i, '')}.png`; link.href = compositeCanvas.toDataURL('image/png'); link.click(); }
-            async saveProject() { const defaultName = `projek-${Date.now()}`; const filename = await this.promptDialog.show("Simpan sebagai Projek Jan:", defaultName); if (!filename) return; const projectData = { canvasSize: this.canvasSize, layers: this.layers.map(layer => ({ name: layer.name, visible: layer.visible, imageDataURL: layer.canvas.toDataURL() })) }; const jsonString = JSON.stringify(projectData); const blob = new Blob([jsonString], {type: 'application/json'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${filename.replace(/\.jan$/i, '')}.jan`; link.click(); }
+            async saveAsPng() { const defaultName = `lukisan-${Date.now()}`; const filename = await this.promptDialog.show("Simpan sebagai PNG:", defaultName); if (!filename) return; const compositeCanvas = document.createElement('canvas'); compositeCanvas.width = this.canvasSize.width; compositeCanvas.height = this.canvasSize.height; const compositeCtx = compositeCanvas.getContext('2d'); if (this.projectBackground === 'white') { compositeCtx.fillStyle = 'white'; compositeCtx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height); } this.layers.forEach(layer => { if (layer.visible) { compositeCtx.drawImage(layer.canvas, 0, 0); } }); const link = document.createElement('a'); link.download = `${filename.replace(/\.png$/i, '')}.png`; link.href = compositeCanvas.toDataURL('image/png'); link.click(); }
+            async saveProject() { const defaultName = `projek-${Date.now()}`; const filename = await this.promptDialog.show("Simpan sebagai Projek Jan:", defaultName); if (!filename) return; const projectData = { canvasSize: this.canvasSize, background: this.projectBackground, layers: this.layers.map(layer => ({ name: layer.name, visible: layer.visible, imageDataURL: layer.canvas.toDataURL() })) }; const jsonString = JSON.stringify(projectData); const blob = new Blob([jsonString], {type: 'application/json'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${filename.replace(/\.jan$/i, '')}.jan`; link.click(); }
             async clearCanvas() { const confirmed = await this.confirmDialog.show('Anda pasti mahu mengosongkan kandungan lapisan ini?'); if (confirmed) { const layer = this.getActiveLayer(); if (layer) { layer.ctx.clearRect(0, 0, this.canvasSize.width, this.canvasSize.height); this.saveState(); } } }
             undo() { const layer = this.getActiveLayer(); if (layer && layer.historyIndex > 0) { layer.historyIndex--; layer.ctx.putImageData(layer.history[layer.historyIndex], 0, 0); this.updateHistoryButtons(); } }
             redo() { const layer = this.getActiveLayer(); if (layer && layer.historyIndex < layer.history.length - 1) { layer.historyIndex++; layer.ctx.putImageData(layer.history[layer.historyIndex], 0, 0); this.updateHistoryButtons(); } }
@@ -468,8 +616,37 @@
             updateCursor() { if (this.currentTool === 'pan' || this.middleClickPanning) { this.canvasContainer.style.cursor = 'grab'; this.customCursor.style.display = 'none'; } else { this.canvasContainer.style.cursor = 'none'; } this.updateTransform(); }
             setActiveButton(button, selector) { this.toolbar.querySelectorAll(selector).forEach(btn => btn.classList.remove('active')); button.classList.add('active'); }
             async loadBackgroundImage(event) { const file = event.target.files[0]; if (!file) return; const confirmed = await this.confirmDialog.show('Ini akan menggantikan kandungan pada lapisan paling bawah (Lapisan 1). Teruskan?'); if (!confirmed) { this.bgImageInput.value = ''; return; } const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const baseLayer = this.layers[0]; if (baseLayer) { const currentOpacity = baseLayer.ctx.globalAlpha; baseLayer.ctx.globalAlpha = 1.0; baseLayer.ctx.clearRect(0, 0, baseLayer.canvas.width, baseLayer.canvas.height); baseLayer.ctx.drawImage(img, 0, 0, baseLayer.canvas.width, baseLayer.canvas.height); baseLayer.ctx.globalAlpha = currentOpacity; const originalActiveLayerId = this.activeLayerIndex; this.activeLayerIndex = baseLayer.id; this.saveState(); this.setActiveLayer(originalActiveLayerId); } }; img.src = e.target.result; }; reader.readAsDataURL(file); this.bgImageInput.value = ''; }
-            async loadProject(event) { const file = event.target.files[0]; if (!file) return; const confirmed = await this.confirmDialog.show('Membuka projek baru akan memadam kerja semasa anda. Teruskan?'); if (!confirmed) { this.projectInput.value = ''; return; } const reader = new FileReader(); reader.onload = (e) => { try { const projectData = JSON.parse(e.target.result); this.resetWorkspace(); this.canvasSize = projectData.canvasSize; this.setupCanvasWrapperSize(); projectData.layers.forEach(layerData => this.addLayer(layerData)); } catch (err) { alert('Gagal membuka fail projek. Fail mungkin rosak.'); console.error("Error parsing project file:", err); } }; reader.readAsText(file); this.projectInput.value = ''; }
-            resetWorkspace() { this.layers.forEach(layer => layer.canvas.remove()); this.layers = []; this.layerCounter = 0; this.initializeAppState(); }
+            async loadProject(event) {
+                const file = (event && event.target) ? event.target.files[0] : null;
+                if (!file) {
+                    this.showStartupDialog(); // If user cancels file picker, show startup again
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const projectData = JSON.parse(e.target.result);
+                        this.resetWorkspace();
+                        this.createNewWorkspace(projectData.background || 'white');
+                        this.layers[0].canvas.remove();
+                        this.layers = [];
+                        this.layerCounter = 0;
+                        this.canvasSize = projectData.canvasSize;
+                        this.setupCanvasWrapperSize();
+                        projectData.layers.forEach(layerData => this.addLayer(layerData));
+                    } catch (err) {
+                        alert('Gagal membuka fail projek. Fail mungkin rosak.');
+                        console.error("Error parsing project file:", err);
+                        this.showStartupDialog();
+                    }
+                };
+                reader.readAsText(file);
+                if (this.projectInput) this.projectInput.value = '';
+            }
+            resetWorkspace() {
+                this.layers.forEach(layer => layer.canvas.remove());
+                this.initializeAppState();
+             }
         }
         
         new DrawingApp();
