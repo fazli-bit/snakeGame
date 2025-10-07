@@ -747,6 +747,7 @@
              }
             resetUIToDefaults() {
                 this.setBrushColor('#000000', false);
+                this.colorPicker.value = '#000000'; // FIX: Set UI value explicitly on reset
                 this.setBrushSize(15);
                 this.opacitySlider.value = 1;
                 this.opacityDisplay.textContent = '100%';
@@ -766,4 +767,5 @@
     </script>
 </body>
 </html>
+
 
