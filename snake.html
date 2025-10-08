@@ -130,11 +130,11 @@
             fill: #00ff00;
         }
         
-        #dpad-up    { grid-column: 2; grid-row: 1; border-top-left-radius: 10px; border-top-right-radius: 10px; }
-        #dpad-left  { grid-column: 1; grid-row: 2; border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
-        #dpad-right { grid-column: 3; grid-row: 2; border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
-        #dpad-down  { grid-column: 2; grid-row: 3; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; }
-        #dpad-center{ grid-column: 2; grid-row: 2; background: none; border: none; } /* Jadikan pusat lutsinar */
+        #dpad-up     { grid-column: 2; grid-row: 1; border-top-left-radius: 10px; border-top-right-radius: 10px; }
+        #dpad-left   { grid-column: 1; grid-row: 2; border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+        #dpad-right  { grid-column: 3; grid-row: 2; border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+        #dpad-down   { grid-column: 2; grid-row: 3; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; }
+        #dpad-center { grid-column: 2; grid-row: 2; background: none; border: none; } /* Jadikan pusat lutsinar */
 
         /* Hide D-pad on larger screens */
         @media (min-width: 768px) {
@@ -347,7 +347,7 @@
         // =================================================================
         // PEMBOLEH UBAH & TETAPAN UTAMA
         // =================================================================
-        const GAME_VERSION = "1.0.3"; // Version updated for mobile control fix
+        const GAME_VERSION = "1.0.5"; // Version updated for initial draw fix
         const PORTAL_REQUIREMENT_MULTIPLIER = 5;
         const OBSTACLE_REQUIREMENT = 20;
 
@@ -805,7 +805,7 @@
             }
             
             handleKeyPress(key) {
-                if (this.gameState !== 'playing') return;
+                if (this.gameState !== 'playing' || !this.snake) return;
 
                 const keyMap = {
                     'ArrowUp': { dx: 0, dy: -1 }, 'w': { dx: 0, dy: -1 },
@@ -816,15 +816,20 @@
 
                 if (keyMap[key]) {
                     const wasStationary = !this.isMoving;
+
+                    // Determine the last direction in the queue, or the snake's current direction
+                    let lastDirection = this.inputBuffer.length > 0 ? this.inputBuffer[this.inputBuffer.length - 1] : { dx: this.snake.dx, dy: this.snake.dy };
+
+                    const newMove = keyMap[key];
+                    const isOpposite = (lastDirection.dx === -newMove.dx && lastDirection.dx !== 0) || (lastDirection.dy === -newMove.dy && lastDirection.dy !== 0);
+
+                    // Only add if not opposite and buffer is not full
+                    if (!isOpposite && this.inputBuffer.length < 2) {
+                        this.inputBuffer.push(newMove);
+                    }
+
                     if (wasStationary) {
                         this.isMoving = true;
-                    }
-
-                    if (this.inputBuffer.length < 2) {
-                        this.inputBuffer.push(keyMap[key]);
-                    }
-
-                    if (wasStationary) {
                         clearTimeout(this.loopTimer);
                         this.gameLoop();
                     }
@@ -834,10 +839,10 @@
             startGame() {
                 clearTimeout(this.loopTimer);
                 this.initGameState();
-                this.loadStage();
                 this.gameState = 'playing';
-                this.uiManager.showGame();
-                // Don't call gameLoop here, it will be called by the first keypress
+                this.uiManager.showGame(); // Make board visible first
+                this.loadStage(); // Then call loadStage and the initial draw()
+                // Game loop is now started by the first keypress
             }
 
             loadStage() {
@@ -878,18 +883,8 @@
             
             processInput() {
                 if (this.inputBuffer.length > 0) {
-                    const nextMove = this.inputBuffer[0];
-                    
-                    const lastProcessedMove = this.lastMove || { dx: this.snake.dx, dy: this.snake.dy };
-                    const isOpposite = (lastProcessedMove.dx === -nextMove.dx && lastProcessedMove.dx !== 0) || (lastProcessedMove.dy === -nextMove.dy && lastProcessedMove.dy !== 0);
-
-                    if (!isOpposite) {
-                        this.snake.changeDirection(nextMove.dx, nextMove.dy);
-                        this.lastMove = nextMove;
-                        this.inputBuffer.shift();
-                    } else {
-                        this.inputBuffer.shift(); 
-                    }
+                    const nextMove = this.inputBuffer.shift();
+                    this.snake.changeDirection(nextMove.dx, nextMove.dy);
                 }
             }
 
@@ -907,7 +902,6 @@
                     }
 
                     this.snake.move();
-                    this.lastMove = null; // Reset last move after moving
                     const head = this.snake.body[0];
                     const scoreToAdd = this.currentSpeedLevel;
                     
