@@ -879,15 +879,17 @@
             // <-- LOGIK UPDATE DIPERBAIKI UNTUK MENGHAPUSKAN LENGAH MASA
             update() {
                 const currentStage = this.stages[this.currentStageIndex];
-
-                if (this.isMoving && currentStage instanceof NormalStage && this.food.timer <= 0) {
-                     this.food.spawn(this.snake.body, currentStage.obstacles, currentStage.level, false);
-                }
                 
                 this.processInput();
 
                 if (this.isMoving) {
-                    if(currentStage instanceof NormalStage) this.food.timer -= this.speedMap[this.currentSpeedLevel];
+                    if (currentStage instanceof NormalStage) {
+                        this.food.timer -= this.speedMap[this.currentSpeedLevel];
+                        if (this.food.timer <= 0) {
+                            this.food.spawn(this.snake.body, currentStage.obstacles, currentStage.level, false);
+                        }
+                    }
+
                     this.snake.move();
                     const head = this.snake.body[0];
                     const scoreToAdd = this.currentSpeedLevel;
