@@ -40,7 +40,7 @@
             background-size: cover, 150px, 120px;
             padding: 15px;
             box-sizing: border-box;
-            overflow: hidden;
+            /* overflow: hidden; <-- DIBUANG UNTUK MEMBETULKAN ISU SCROLL */
         }
 
         #app-container {
@@ -261,7 +261,6 @@
     </div>
 
     <script>
-        // ... (JavaScript tidak berubah dari versi sebelumnya, ia akan berfungsi dengan baik dengan CSS baharu) ...
         class MathGame {
             constructor() {
                 this.selectionScreen = document.getElementById('selection-screen');
