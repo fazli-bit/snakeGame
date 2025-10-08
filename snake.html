@@ -728,6 +728,7 @@
                 this.foodsEatenInStage = 0;
                 this.foodsEatenForObstacle = 0;
                 this.inputBuffer = []; 
+                this.loopTimer = null;
             }
 
             init() {
@@ -767,9 +768,8 @@
                 document.getElementById('speed-down-button').addEventListener('click', () => this.changeSpeed(-1));
                 document.addEventListener('keydown', e => this.handleKeyPress(e.key));
                 
-                // PEMBETULAN: Menggunakan 'touchstart' untuk D-pad
                 const dpadHandler = (e, key) => {
-                    e.preventDefault(); // Mencegah 'click' dan skrol
+                    e.preventDefault(); 
                     this.handleKeyPress(key);
                 };
                 document.getElementById('dpad-up').addEventListener('touchstart', (e) => dpadHandler(e, 'ArrowUp'), { passive: false });
@@ -815,21 +815,29 @@
                 };
 
                 if (keyMap[key]) {
-                    if (!this.isMoving) {
+                    const wasStationary = !this.isMoving;
+                    if (wasStationary) {
                         this.isMoving = true;
                     }
+
                     if (this.inputBuffer.length < 2) {
                         this.inputBuffer.push(keyMap[key]);
+                    }
+
+                    if (wasStationary) {
+                        clearTimeout(this.loopTimer);
+                        this.gameLoop();
                     }
                 }
             }
             
             startGame() {
+                clearTimeout(this.loopTimer);
                 this.initGameState();
                 this.loadStage();
                 this.gameState = 'playing';
                 this.uiManager.showGame();
-                this.gameLoop();
+                // Don't call gameLoop here, it will be called by the first keypress
             }
 
             loadStage() {
@@ -854,6 +862,7 @@
                     this.food.spawn(this.snake.body, currentStage.obstacles, currentStage.level);
                 }
                 this.uiManager.updateGameUI(this.totalScore, currentStage);
+                this.draw(); // Initial draw
             }
 
             gameLoop() {
@@ -864,19 +873,23 @@
                 this.update();
                 this.draw();
 
-                setTimeout(() => this.gameLoop(), loopTime);
+                this.loopTimer = setTimeout(() => this.gameLoop(), loopTime);
             }
             
             processInput() {
                 if (this.inputBuffer.length > 0) {
                     const nextMove = this.inputBuffer[0];
-                    const currentDirection = { dx: this.snake.dx, dy: this.snake.dy };
-                    const isOpposite = (currentDirection.dx === -nextMove.dx && currentDirection.dx !== 0) || (currentDirection.dy === -nextMove.dy && currentDirection.dy !== 0);
+                    
+                    const lastProcessedMove = this.lastMove || { dx: this.snake.dx, dy: this.snake.dy };
+                    const isOpposite = (lastProcessedMove.dx === -nextMove.dx && lastProcessedMove.dx !== 0) || (lastProcessedMove.dy === -nextMove.dy && lastProcessedMove.dy !== 0);
 
                     if (!isOpposite) {
                         this.snake.changeDirection(nextMove.dx, nextMove.dy);
+                        this.lastMove = nextMove;
+                        this.inputBuffer.shift();
+                    } else {
+                        this.inputBuffer.shift(); 
                     }
-                    this.inputBuffer.shift();
                 }
             }
 
@@ -894,6 +907,7 @@
                     }
 
                     this.snake.move();
+                    this.lastMove = null; // Reset last move after moving
                     const head = this.snake.body[0];
                     const scoreToAdd = this.currentSpeedLevel;
                     
@@ -991,6 +1005,7 @@
             draw() { this.uiManager.draw(this); }
 
             async gameOver() {
+                clearTimeout(this.loopTimer);
                 this.gameState = 'gameover';
                 const isNewHighScore = this.scoreManager.isHighScore(this.totalScore);
 
