@@ -104,9 +104,10 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            width: 150px;
-            height: 150px;
-            margin: 20px auto 0;
+            width: 180px;  /* Dibesarkan daripada 150px */
+            height: 180px; /* Dibesarkan daripada 150px */
+            margin: 25px auto 0; /* Menambah jarak dari atas */
+            gap: 5px; /* Menambah ruang antara butang */
         }
 
         .dpad-button {
@@ -133,7 +134,7 @@
         #dpad-left  { grid-column: 1; grid-row: 2; border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
         #dpad-right { grid-column: 3; grid-row: 2; border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
         #dpad-down  { grid-column: 2; grid-row: 3; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; }
-        #dpad-center{ grid-column: 2; grid-row: 2; }
+        #dpad-center{ grid-column: 2; grid-row: 2; background: none; border: none; } /* Jadikan pusat lutsinar */
 
         /* Hide D-pad on larger screens */
         @media (min-width: 768px) {
@@ -841,7 +842,7 @@
                     this.snake.initialPos = startPos || { x: Math.floor(this.gridSize / 2), y: Math.floor(this.gridSize / 2) };
                     this.snake.reset();
                 } else {
-                     this.snake = (snakeType === 'cobra') ? new CobraSnake(this.gridSize, startPos) : new ClassicSnake(this.gridSize, startPos);
+                    this.snake = (snakeType === 'cobra') ? new CobraSnake(this.gridSize, startPos) : new ClassicSnake(this.gridSize, startPos);
                 }
                 
                 if (currentStage instanceof NormalStage) {
@@ -950,9 +951,9 @@
                 if (previousStage instanceof BonusStage && isSuccess) {
                     const nextStageIndex = this.currentStageIndex + 1;
                     if(nextStageIndex < this.stages.length) {
-                         const nextStage = this.stages[nextStageIndex];
-                         const bonusPoints = this.score * 10 * nextStage.level;
-                         this.totalScore += bonusPoints;
+                        const nextStage = this.stages[nextStageIndex];
+                        const bonusPoints = this.score * 10 * nextStage.level;
+                        this.totalScore += bonusPoints;
                     }
                 }
                 
