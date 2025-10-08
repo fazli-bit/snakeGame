@@ -150,10 +150,12 @@
 <body>
     <div id="toolbar-wrapper" style="visibility: hidden;"> <!-- Sembunyikan toolbar pada mulanya -->
         <div id="toolbar">
-            <div class="tool-group quick-tool">
+            <div class="tool-group">
                 <label>Alat:</label>
-                <button id="brush-btn" class="tool-btn active" data-tool="brush" title="Berus"></button>
                 <button id="bucket-btn" class="tool-btn" data-tool="bucket" title="Isian"></button>
+            </div>
+            <div class="tool-group quick-tool">
+                <button id="brush-btn" class="tool-btn active" data-tool="brush" title="Berus"></button>
                 <button id="eraser-btn" class="tool-btn" data-tool="eraser" title="Pemadam"></button>
             </div>
             <div class="tool-group">
@@ -177,8 +179,10 @@
                 <button id="open-bg-image-btn" class="file-btn" title="Buka Imej Panduan"></button>
                 <button id="save-png-btn" class="file-btn" title="Simpan sebagai PNG"></button>
             </div>
-            <div class="tool-group quick-tool">
+            <div class="tool-group">
                 <label>Warna:</label>
+            </div>
+            <div class="tool-group quick-tool">
                 <input type="color" id="color-picker" value="#000000">
                 <div id="prev-color-1" class="color-swatch" style="background-color: #ffffff;"></div>
                 <div id="prev-color-2" class="color-swatch" style="background-color: #ffffff;"></div>
@@ -198,20 +202,26 @@
             </div>
             <div class="tool-group">
                 <label>Lapisan:</label>
-                <select id="layers-dropdown"></select>
-                <button id="add-layer-btn" class="layer-control-btn" title="Tambah Lapisan">+</button>
-                <button id="delete-layer-btn" class="layer-control-btn" title="Padam Lapisan">-</button>
-                <button id="visibility-btn" class="layer-control-btn" title="Tukar Keterlihatan">👁️</button>
                 <button id="move-layer-up-btn" class="layer-control-btn" title="Naikkan Lapisan">↑</button>
                 <button id="move-layer-down-btn" class="layer-control-btn" title="Turunkan Lapisan">↓</button>
             </div>
             <div class="tool-group quick-tool">
+                <select id="layers-dropdown"></select>
+                <button id="visibility-btn" class="layer-control-btn" title="Tukar Keterlihatan">👁️</button>
+            </div>
+            <div class="tool-group">
+                <button id="add-layer-btn" class="layer-control-btn" title="Tambah Lapisan">+</button>
+                <button id="delete-layer-btn" class="layer-control-btn" title="Padam Lapisan">-</button>                
+            </div>
+            <div class="tool-group">
                  <label>Sejarah:</label>
-                <button id="undo-btn" class="tool-btn" title="Buat Asal"></button>
-                <button id="redo-btn" class="tool-btn" title="Buat Semula"></button>
+            </div>
+            <div class="tool-group quick-tool">
+                <button id="undo-btn" class="tool-btn" title="Undo"></button>
+                <button id="redo-btn" class="tool-btn" title="Redo"></button>
             </div>
              <div class="tool-group">
-                <button id="clear-btn">Kosongkan</button>
+                <button id="clear-btn">Clear</button>
             </div>
         </div>
         <button id="toolbar-toggle">
