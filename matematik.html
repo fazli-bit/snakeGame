@@ -27,7 +27,7 @@
             font-family: 'Nunito', sans-serif;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start; /* Align to top */
             min-height: 100vh;
             margin: 0;
             background: linear-gradient(180deg, var(--bg-color-start), var(--bg-color-end));
@@ -38,9 +38,8 @@
             background-repeat: no-repeat, repeat-x, repeat-x;
             background-position: center, 20px 80px, 80px 250px;
             background-size: cover, 150px, 120px;
-            padding: 15px;
+            padding: 2rem 15px 15px 15px; /* Add top padding */
             box-sizing: border-box;
-            /* overflow: hidden; <-- DIBUANG UNTUK MEMBETULKAN ISU SCROLL */
         }
 
         #app-container {
@@ -126,7 +125,7 @@
             margin-bottom: 15px;
         }
 
-        #lazim-table { width: 100%; margin: 15px 0; font-family: 'Fredoka One', cursive; font-size: clamp(2.5em, 12vw, 3.5em); border-collapse: collapse; }
+        #lazim-table { width: 100%; margin: 5px 0 20px; font-family: 'Fredoka One', cursive; font-size: clamp(2.5em, 12vw, 3.5em); border-collapse: collapse; }
         #lazim-table td { text-align: center; width: 1.5em; height: 1.5em; padding: 3px; }
         .digit-box { 
             background-color: #E3F2FD; 
@@ -149,18 +148,21 @@
         }
 
         #feedback-message { font-size: 1.6em; font-weight: 700; min-height: 45px; margin-top: 15px; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 10px;}
-        .button-container { margin-top: 15px; margin-bottom: 20px; }
-        .action-button { padding: 15px 30px; font-size: 1.3em; font-weight: 700; cursor: pointer; border: none; border-radius: 20px; color: white; transition: all 0.1s ease; }
-        .action-button:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--shadow-color); }
-        #check-button { background-color: #42A5F5; box-shadow: 0 6px 0 #1976D2; --shadow-color: #1976D2;}
-        #next-button { background-color: var(--primary-color); box-shadow: 0 6px 0 var(--primary-dark); --shadow-color: var(--primary-dark); display: none; }
         
-        #back-button { position: absolute; top: -15px; right: -15px; padding: 10px 18px; font-size: 1em; background-color: #9E9E9E; box-shadow: 0 5px 0 #616161; --shadow-color: #616161; }
+        .action-button { 
+            font-weight: 700; 
+            cursor: pointer; 
+            color: white; 
+        }
         
+        #back-button { position: absolute; top: -15px; right: -15px; padding: 10px 18px; font-size: 1em; background-color: #9E9E9E; box-shadow: 0 5px 0 #616161; --shadow-color: #616161; border:none; border-radius: 20px; transition: all 0.1s ease;}
+        #back-button:active {transform: translateY(4px); box-shadow: 0 2px 0 #616161;}
+
         #numpad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
+            margin-top: 20px;
         }
         .numpad-btn {
             font-family: 'Fredoka One', cursive;
@@ -172,11 +174,16 @@
             box-shadow: 0 5px 0 var(--numpad-bg-dark);
             color: var(--text-color);
             transition: all 0.1s ease;
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
         }
         .numpad-btn:active {
             transform: translateY(3px);
             box-shadow: 0 2px 0 var(--numpad-bg-dark);
         }
+
+        #check-button { background-color: #42A5F5; box-shadow: 0 5px 0 #1976D2; --shadow-color: #1976D2;}
+        #next-button { background-color: var(--primary-color); box-shadow: 0 5px 0 var(--primary-dark); --shadow-color: var(--primary-dark); }
+
 
         .correct { color: var(--correct-color); transform: scale(1.1); }
         .wrong { color: var(--wrong-color); animation: shake 0.5s; }
@@ -242,10 +249,6 @@
             <div id="score-display"></div>
             <table id="lazim-table"></table>
             <div id="feedback-message"></div>
-            <div class="button-container">
-                <button id="check-button" class="action-button">Semak</button>
-                <button id="next-button" class="action-button">Seterusnya</button>
-            </div>
             <div id="numpad"></div>
         </div>
         <div id="final-score-screen">
@@ -268,13 +271,15 @@
                 this.scoreDisplay = document.getElementById('score-display');
                 this.lazimTable = document.getElementById('lazim-table');
                 this.feedbackMessage = document.getElementById('feedback-message');
-                this.checkButton = document.getElementById('check-button');
-                this.nextButton = document.getElementById('next-button');
                 this.backButton = document.getElementById('back-button');
                 this.finalScoreScreen = document.getElementById('final-score-screen');
                 this.finalScoreEl = document.getElementById('final-score');
                 this.playAgainMenuButton = document.getElementById('play-again-menu');
                 this.numpad = document.getElementById('numpad');
+
+                this.checkButton = null;
+                this.nextButton = null;
+
                 this.correctAnswer = 0;
                 this.answerDisplay = null;
                 this.currentDifficulty = 'very_easy';
@@ -283,19 +288,20 @@
                 this.score = 0;
                 this.questionCount = 0;
                 this.totalQuestions = 10;
+                
                 this.buildNumpad();
                 this.setupEventListeners();
             }
             setupEventListeners() {
                 document.querySelectorAll('button[data-selection="difficulty"]').forEach(b => { b.addEventListener('click', (e) => { this.currentDifficulty = e.target.dataset.value; document.querySelectorAll('button[data-selection="difficulty"]').forEach(btn => btn.classList.remove('selected')); e.target.classList.add('selected'); }); });
                 document.querySelectorAll('.operator-btn').forEach(b => { b.addEventListener('click', () => this.startGame(b.dataset.op)); });
-                this.checkButton.addEventListener('click', () => this.checkAnswer());
-                this.nextButton.addEventListener('click', () => this.nextQuestion());
                 this.backButton.addEventListener('click', () => this.showMenu());
                 this.playAgainMenuButton.addEventListener('click', () => this.showMenu());
             }
             buildNumpad() {
+                this.numpad.innerHTML = '';
                 const buttons = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Padam', '0' ];
+                
                 buttons.forEach(val => {
                     const btn = document.createElement('button');
                     btn.classList.add('numpad-btn');
@@ -307,6 +313,31 @@
                     }
                     this.numpad.appendChild(btn);
                 });
+                
+                // Create a container for the action buttons to manage toggling
+                const actionCell = document.createElement('div');
+                actionCell.style.position = 'relative'; // To stack buttons
+                
+                // Create Semak button
+                const checkBtn = document.createElement('button');
+                checkBtn.id = 'check-button';
+                checkBtn.classList.add('numpad-btn', 'action-button');
+                checkBtn.textContent = 'Semak';
+                checkBtn.addEventListener('click', () => this.checkAnswer());
+                this.checkButton = checkBtn;
+                actionCell.appendChild(checkBtn);
+                
+                // Create Seterusnya button
+                const nextBtn = document.createElement('button');
+                nextBtn.id = 'next-button';
+                nextBtn.classList.add('numpad-btn', 'action-button');
+                nextBtn.textContent = 'Next';
+                nextBtn.style.display = 'none'; // Initially hidden
+                nextBtn.addEventListener('click', () => this.nextQuestion());
+                this.nextButton = nextBtn;
+                actionCell.appendChild(nextBtn);
+
+                this.numpad.appendChild(actionCell);
             }
             appendNumber(num) { if (this.answerDisplay && this.checkButton.style.display !== 'none') this.answerDisplay.textContent += num; }
             deleteNumber() { if (this.answerDisplay) this.answerDisplay.textContent = this.answerDisplay.textContent.slice(0, -1); }
@@ -338,22 +369,50 @@
                 answerCell.appendChild(this.answerDisplay);
             }
             checkAnswer() {
+                if (!this.answerDisplay) return;
                 const userAnswer = parseInt(this.answerDisplay.textContent, 10);
                 this.feedbackMessage.classList.remove('correct', 'wrong');
+                
+                // Jika tiada nombor dimasukkan, paparkan mesej dan hentikan fungsi.
+                if (isNaN(userAnswer)) {
+                    this.feedbackMessage.textContent = 'Sila masukkan nombor!';
+                    this.feedbackMessage.classList.add('wrong');
+                    return; // Hentikan fungsi di sini, jangan tambah `questionCount`
+                }
+                
+                // Hanya tambah `questionCount` jika jawapan diberi.
                 this.questionCount++;
-                if (isNaN(userAnswer)) { this.feedbackMessage.textContent = 'Sila masukkan nombor!'; this.feedbackMessage.classList.add('wrong');
-                } else if (userAnswer === this.correctAnswer) { this.feedbackMessage.textContent = 'Bijak!'; this.feedbackMessage.classList.add('correct'); this.score++;
-                } else { this.feedbackMessage.textContent = `Jawapannya ${this.correctAnswer}`; this.feedbackMessage.classList.add('wrong'); }
+
+                if (userAnswer === this.correctAnswer) {
+                    this.feedbackMessage.textContent = 'Bijak!';
+                    this.feedbackMessage.classList.add('correct');
+                    this.score++;
+                } else {
+                    this.feedbackMessage.textContent = `Jawapannya ${this.correctAnswer}`;
+                    this.feedbackMessage.classList.add('wrong');
+                }
+
                 this.updateScore();
                 this.toggleButtons(true);
             }
             nextQuestion() { if (this.questionCount >= this.totalQuestions) { this.showFinalScore(); return; } this.generateQuestion(); this.feedbackMessage.textContent = ''; this.feedbackMessage.classList.remove('correct', 'wrong'); this.toggleButtons(false); this.updateScore(); }
             showFinalScore() { this.gameScreen.style.display = 'none'; this.finalScoreScreen.style.display = 'block'; this.finalScoreEl.textContent = `${this.score} / ${this.totalQuestions}`; }
             updateScore() { this.scoreDisplay.textContent = `Skor: ${this.score} | Soalan: ${this.questionCount + 1} / ${this.totalQuestions}`; }
-            toggleButtons(isAnswered) { if (isAnswered) { this.checkButton.style.display = 'none'; this.nextButton.style.display = 'inline-block'; this.nextButton.focus(); } else { this.checkButton.style.display = 'inline-block'; this.nextButton.style.display = 'none'; } }
+            toggleButtons(isAnswered) { 
+                if (!this.checkButton || !this.nextButton) return;
+                if (isAnswered) { 
+                    this.checkButton.style.display = 'none'; 
+                    this.nextButton.style.display = 'inline-block'; 
+                    this.nextButton.focus(); 
+                } else { 
+                    this.checkButton.style.display = 'inline-block'; 
+                    this.nextButton.style.display = 'none'; 
+                } 
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => new MathGame());
     </script>
 </body>
 </html>
+
