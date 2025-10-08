@@ -347,7 +347,7 @@
         // =================================================================
         // PEMBOLEH UBAH & TETAPAN UTAMA
         // =================================================================
-        const GAME_VERSION = "1.0.2"; // Version updated for control fix
+        const GAME_VERSION = "1.0.3"; // Version updated for mobile control fix
         const PORTAL_REQUIREMENT_MULTIPLIER = 5;
         const OBSTACLE_REQUIREMENT = 20;
 
@@ -727,7 +727,7 @@
                 this.isMoving = false;
                 this.foodsEatenInStage = 0;
                 this.foodsEatenForObstacle = 0;
-                this.inputBuffer = []; // <-- PULIHKAN PENIMBAL
+                this.inputBuffer = []; 
             }
 
             init() {
@@ -758,7 +758,7 @@
                     const name = this.uiManager.playerNameInput.value.trim().toUpperCase() || 'PEMAIN';
                     await this.scoreManager.saveUserScore(this.db, this.userId, name, this.totalScore);
                     this.uiManager.hideNameInputForm();
-                    await this.refreshHighScores(true); // Refresh and show game over scores
+                    await this.refreshHighScores(true); 
                 });
 
                 document.getElementById('refresh-scores-button').addEventListener('click', () => this.refreshHighScores());
@@ -766,11 +766,16 @@
                 document.getElementById('speed-up-button').addEventListener('click', () => this.changeSpeed(1));
                 document.getElementById('speed-down-button').addEventListener('click', () => this.changeSpeed(-1));
                 document.addEventListener('keydown', e => this.handleKeyPress(e.key));
-                // D-pad listeners
-                document.getElementById('dpad-up').addEventListener('click', () => this.handleKeyPress('ArrowUp'));
-                document.getElementById('dpad-down').addEventListener('click', () => this.handleKeyPress('ArrowDown'));
-                document.getElementById('dpad-left').addEventListener('click', () => this.handleKeyPress('ArrowLeft'));
-                document.getElementById('dpad-right').addEventListener('click', () => this.handleKeyPress('ArrowRight'));
+                
+                // PEMBETULAN: Menggunakan 'touchstart' untuk D-pad
+                const dpadHandler = (e, key) => {
+                    e.preventDefault(); // Mencegah 'click' dan skrol
+                    this.handleKeyPress(key);
+                };
+                document.getElementById('dpad-up').addEventListener('touchstart', (e) => dpadHandler(e, 'ArrowUp'), { passive: false });
+                document.getElementById('dpad-down').addEventListener('touchstart', (e) => dpadHandler(e, 'ArrowDown'), { passive: false });
+                document.getElementById('dpad-left').addEventListener('touchstart', (e) => dpadHandler(e, 'ArrowLeft'), { passive: false });
+                document.getElementById('dpad-right').addEventListener('touchstart', (e) => dpadHandler(e, 'ArrowRight'), { passive: false });
 
                 // Debug Panel Listeners
                 const stageSelect = document.getElementById('debug-stage-select');
@@ -799,7 +804,6 @@
                 document.getElementById('speed-display').textContent = this.currentSpeedLevel;
             }
             
-            // <-- KAWALAN DIPULIHKAN & DIPERBAIKI
             handleKeyPress(key) {
                 if (this.gameState !== 'playing') return;
 
@@ -863,11 +867,11 @@
                 setTimeout(() => this.gameLoop(), loopTime);
             }
             
-            // <-- PROSES INPUT DIPULIHKAN
             processInput() {
                 if (this.inputBuffer.length > 0) {
                     const nextMove = this.inputBuffer[0];
-                    const isOpposite = (this.snake.dx === -nextMove.dx && this.snake.dx !== 0) || (this.snake.dy === -nextMove.dy && this.snake.dy !== 0);
+                    const currentDirection = { dx: this.snake.dx, dy: this.snake.dy };
+                    const isOpposite = (currentDirection.dx === -nextMove.dx && currentDirection.dx !== 0) || (currentDirection.dy === -nextMove.dy && currentDirection.dy !== 0);
 
                     if (!isOpposite) {
                         this.snake.changeDirection(nextMove.dx, nextMove.dy);
@@ -876,7 +880,6 @@
                 }
             }
 
-            // <-- LOGIK UPDATE DIPERBAIKI UNTUK MENGHAPUSKAN LENGAH MASA
             update() {
                 const currentStage = this.stages[this.currentStageIndex];
                 
@@ -926,7 +929,7 @@
                                 if (this.foodsEatenForObstacle >= OBSTACLE_REQUIREMENT) {
                                     this.foodsEatenForObstacle = 0;
                                     const newObstacle = {};
-                                    this.food.spawn.call(newObstacle, this.snake.body, currentStage.obstacles); // Trick to reuse spawn logic
+                                    this.food.spawn.call(newObstacle, this.snake.body, currentStage.obstacles);
                                     currentStage.obstacles.push(newObstacle);
                                 }
                             }
