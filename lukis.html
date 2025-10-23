@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Lukisan Kreatif: Versi Akhir (Zum Dicubit Dibaikpulih)</title>
+    <title>Lukisan Kreatif: Versi Akhir (Lengkap Sepenuhnya)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
 
@@ -132,7 +132,7 @@
             white-space: nowrap;
         }
 
-        .icon-btn {
+        .icon-btn, .size-preset-btn {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -144,20 +144,21 @@
             cursor: pointer;
             color: var(--icon-color);
             transition: all 0.2s ease;
+            font-weight: bold;
         }
         
-        .icon-btn:hover {
+        .icon-btn:hover, .size-preset-btn:hover {
             background-color: var(--primary-color);
             color: white;
             border-color: var(--primary-color);
         }
         
-        .icon-btn.active {
+        .icon-btn.active, .size-preset-btn.active {
              background-color: var(--primary-color);
              color: white;
              box-shadow: 0 0 8px rgba(13, 110, 253, 0.5);
         }
-        .icon-btn:disabled {
+        .icon-btn:disabled, .size-preset-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             background-color: #eee;
@@ -385,6 +386,9 @@
                         <label>Saiz:</label>
                         <input type="range" id="size-slider" min="1" max="100" value="15">
                         <span id="size-display">15</span>
+                        <button class="size-preset-btn icon-btn" data-size="5">S</button>
+                        <button class="size-preset-btn icon-btn active" data-size="15">M</button>
+                        <button class="size-preset-btn icon-btn" data-size="30">L</button>
                     </div>
                      <div class="tool-group">
                         <label>Lutsinar:</label>
@@ -493,6 +497,7 @@
     <input type="file" id="project-input" accept=".jan" style="display: none;">
 
     <script>
+        // --- Full Integrated JavaScript ---
         class CustomPrompt {
             constructor() { this.overlay = document.getElementById('prompt-dialog-overlay'); this.messageEl = document.getElementById('prompt-message'); this.inputEl = document.getElementById('prompt-input'); this.saveBtn = document.getElementById('prompt-save'); this.cancelBtn = document.getElementById('prompt-cancel'); }
             show(message, defaultValue = '') { return new Promise((resolve) => { this.messageEl.textContent = message; this.inputEl.value = defaultValue; this.overlay.style.display = 'flex'; this.inputEl.focus(); this.inputEl.select(); const saveHandler = () => { this.overlay.style.display = 'none'; cleanup(); resolve(this.inputEl.value.trim()); }; const cancelHandler = () => { this.overlay.style.display = 'none'; cleanup(); resolve(null); }; const keydownHandler = (e) => { if (e.key === 'Enter') { saveHandler(); } else if (e.key === 'Escape') { cancelHandler(); } }; const cleanup = () => { this.saveBtn.removeEventListener('click', saveHandler); this.cancelBtn.removeEventListener('click', cancelHandler); document.removeEventListener('keydown', keydownHandler); }; this.saveBtn.addEventListener('click', saveHandler); this.cancelBtn.addEventListener('click', cancelHandler); document.addEventListener('keydown', keydownHandler); }); }
@@ -507,8 +512,7 @@
                 this.initializeAppState();
                 window.addEventListener('load', () => this.initApp());
             }
-
-            initApp() {
+             initApp() {
                 this.setupEventListeners();
                 this.showStartupDialog();
             }
@@ -584,6 +588,13 @@
                 document.getElementById('undo-btn').addEventListener('click', () => this.undo());
                 document.getElementById('redo-btn').addEventListener('click', () => this.redo());
                 
+                document.querySelectorAll('.size-preset-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        this.setBrushSize(e.currentTarget.dataset.size);
+                        this.setActiveButton(e.currentTarget, '.size-preset-btn');
+                    });
+                });
+
                 this.showToolbar('#file-tools'); this.updateThemeSwatches('asas'); this.setActiveButton(document.getElementById('brush-btn'), '.icon-btn[data-tool]');
 
                 document.getElementById('confirm-transform-btn').addEventListener('click', () => this.confirmImagePlacement());
@@ -591,6 +602,9 @@
                 this.imageTransformOverlay.addEventListener('mousedown', (e) => this.startTransform(e));
                 window.addEventListener('mousemove', (e) => this.doTransform(e));
                 window.addEventListener('mouseup', (e) => this.endTransform(e));
+                this.imageTransformOverlay.addEventListener('touchstart', (e) => this.startTransform(e), { passive: false });
+                this.imageTransformOverlay.addEventListener('touchmove', (e) => this.doTransform(e), { passive: false });
+                this.imageTransformOverlay.addEventListener('touchend', (e) => this.endTransform(e));
             }
             
             handleTouchStart(e) {
@@ -617,7 +631,9 @@
                         this.touchActionPending = false;
                         this.startAction(this.startTouchPoint);
                     }
-                    this.moveAction({ clientX: touches[0].clientX, clientY: touches[0].clientY });
+                    if(this.isDrawing) {
+                       this.moveAction({ clientX: touches[0].clientX, clientY: touches[0].clientY });
+                    }
                 } else if (touches.length >= 2 && this.isPinching) {
                     const newDist = this.getTouchDistance(touches);
                     const newMidpoint = this.getTouchMidpoint(touches);
@@ -629,8 +645,9 @@
             }
 
             handleTouchEnd(e) {
-                if (this.touchActionPending) {
+                if (this.touchActionPending) { // This is a tap
                     this.startAction(this.startTouchPoint);
+                    this.endAction(this.startTouchPoint);
                 }
                 if (this.isDrawing) {
                     this.endAction(e);
@@ -744,23 +761,48 @@
             zoomAtCenter(zoomMultiplier, event = null) { const containerRect = this.canvasContainer.getBoundingClientRect(); const center = event ? this.getMousePosInContainer(event) : { x: containerRect.width / 2, y: containerRect.height / 2 }; this.panOffset.x = center.x - (center.x - this.panOffset.x) * zoomMultiplier; this.panOffset.y = center.y - (center.y - this.panOffset.y) * zoomMultiplier; this.zoom *= zoomMultiplier; this.updateTransform(); }
             updateCursor() { if (this.currentTool === 'pan' || this.middleClickPanning) { this.canvasContainer.style.cursor = 'grab'; this.customCursor.style.display = 'none'; } else { this.canvasContainer.style.cursor = 'none'; } this.updateTransform(); }
             setActiveButton(button, selector) { this.toolbarContainer.querySelectorAll(selector).forEach(btn => btn.classList.remove('active')); if(button) button.classList.add('active'); }
-            async handleImageFileSelect(event) {
-                const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.transformImage.src = e.target.result;
-                    this.transformImage.onload = () => {
-                        const containerRect = this.canvasArea.getBoundingClientRect(); const imgAspectRatio = this.transformImage.naturalWidth / this.transformImage.naturalHeight;
-                        let initialWidth = containerRect.width * 0.5; let initialHeight = initialWidth / imgAspectRatio;
-                        if (initialHeight > containerRect.height * 0.5) { initialHeight = containerRect.height * 0.5; initialWidth = initialHeight * imgAspectRatio; }
-                        this.transformImageWrapper.style.width = `${initialWidth}px`; this.transformImageWrapper.style.height = `${initialHeight}px`;
-                        this.transformImageWrapper.style.left = `${(containerRect.width - initialWidth) / 2}px`; this.transformImageWrapper.style.top = `${(containerRect.height - initialHeight) / 2}px`;
-                        this.imageTransformOverlay.style.display = 'block';
-                    }
-                };
-                reader.readAsDataURL(file); this.bgImageInput.value = '';
+            async handleImageFileSelect(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { this.transformImage.src = e.target.result; this.transformImage.onload = () => { const containerRect = this.canvasArea.getBoundingClientRect(); const imgAspectRatio = this.transformImage.naturalWidth / this.transformImage.naturalHeight; let initialWidth = containerRect.width * 0.5; let initialHeight = initialWidth / imgAspectRatio; if (initialHeight > containerRect.height * 0.5) { initialHeight = containerRect.height * 0.5; initialWidth = initialHeight * imgAspectRatio; } this.transformImageWrapper.style.width = `${initialWidth}px`; this.transformImageWrapper.style.height = `${initialHeight}px`; this.transformImageWrapper.style.left = `${(containerRect.width - initialWidth) / 2}px`; this.transformImageWrapper.style.top = `${(containerRect.height - initialHeight) / 2}px`; this.imageTransformOverlay.style.display = 'block'; } }; reader.readAsDataURL(file); this.bgImageInput.value = ''; }
+            startTransform(e) {
+                e.preventDefault();
+                const eventCoord = this.getEventCoordinates(e);
+                this.transformState.active = true;
+                this.transformState.startX = eventCoord.clientX;
+                this.transformState.startY = eventCoord.clientY;
+                const wrapperRect = this.transformImageWrapper.getBoundingClientRect();
+                const containerRect = this.canvasArea.getBoundingClientRect(); this.transformState.startLeft = wrapperRect.left - containerRect.left; this.transformState.startTop = wrapperRect.top - containerRect.top; this.transformState.startWidth = wrapperRect.width; this.transformState.startHeight = wrapperRect.height;
+                if (e.target && e.target.classList.contains('resize-handle')) { this.transformState.type = 'resize'; this.transformState.handle = e.target.className.replace('resize-handle ', ''); }
+                else if (e.touches && e.touches.length === 2) { this.transformState.type = 'pinch'; this.transformState.startPinchDist = this.getTouchDistance(e.touches); }
+                else { this.transformState.type = 'move'; }
             }
-            startTransform(e) { e.preventDefault(); this.transformState.active = true; this.transformState.startX = e.clientX; this.transformState.startY = e.clientY; const wrapperRect = this.transformImageWrapper.getBoundingClientRect(); const containerRect = this.canvasArea.getBoundingClientRect(); this.transformState.startLeft = wrapperRect.left - containerRect.left; this.transformState.startTop = wrapperRect.top - containerRect.top; this.transformState.startWidth = wrapperRect.width; this.transformState.startHeight = wrapperRect.height; if (e.target.classList.contains('resize-handle')) { this.transformState.type = 'resize'; this.transformState.handle = e.target.className.replace('resize-handle ', ''); } else { this.transformState.type = 'move'; } }
-            doTransform(e) { if (!this.transformState.active) return; const dx = e.clientX - this.transformState.startX; const dy = e.clientY - this.transformState.startY; if (this.transformState.type === 'move') { this.transformImageWrapper.style.left = `${this.transformState.startLeft + dx}px`; this.transformImageWrapper.style.top = `${this.transformState.startTop + dy}px`; } else if (this.transformState.type === 'resize') { let newWidth = this.transformState.startWidth; let newHeight = this.transformState.startHeight; const aspectRatio = this.transformState.startWidth / this.transformState.startHeight; switch (this.transformState.handle) { case 'bottom-right': newWidth = this.transformState.startWidth + dx; newHeight = newWidth / aspectRatio; break; case 'bottom-left': newWidth = this.transformState.startWidth - dx; newHeight = newWidth / aspectRatio; this.transformImageWrapper.style.left = `${this.transformState.startLeft + dx}px`; break; case 'top-right': newWidth = this.transformState.startWidth + dx; newHeight = newWidth / aspectRatio; this.transformImageWrapper.style.top = `${this.transformState.startTop + dy}px`; break; case 'top-left': newWidth = this.transformState.startWidth - dx; newHeight = newWidth / aspectRatio; this.transformImageWrapper.style.left = `${this.transformState.startLeft + dx}px`; this.transformImageWrapper.style.top = `${this.transformState.startTop + dy}px`; break; } this.transformImageWrapper.style.width = `${Math.max(20, newWidth)}px`; this.transformImageWrapper.style.height = `${Math.max(20, newHeight)}px`; } }
+            doTransform(e) {
+                if (!this.transformState.active) return;
+                e.preventDefault();
+                const eventCoord = this.getEventCoordinates(e);
+                const dx = eventCoord.clientX - this.transformState.startX;
+                const dy = eventCoord.clientY - this.transformState.startY;
+
+                if (this.transformState.type === 'move') { this.transformImageWrapper.style.left = `${this.transformState.startLeft + dx}px`; this.transformImageWrapper.style.top = `${this.transformState.startTop + dy}px`; }
+                else if (this.transformState.type === 'resize') { let newWidth = this.transformState.startWidth; let newHeight = this.transformState.startHeight; const aspectRatio = this.transformState.startWidth / this.transformState.startHeight; switch (this.transformState.handle) { case 'bottom-right': newWidth = this.transformState.startWidth + dx; newHeight = newWidth / aspectRatio; break; case 'bottom-left': newWidth = this.transformState.startWidth - dx; newHeight = newWidth / aspectRatio; this.transformImageWrapper.style.left = `${this.transformState.startLeft + dx}px`; break; case 'top-right': newWidth = this.transformState.startWidth + dx; newHeight = newWidth / aspectRatio; this.transformImageWrapper.style.top = `${this.transformState.startTop + dy}px`; break; case 'top-left': newWidth = this.transformState.startWidth - dx; newHeight = newWidth / aspectRatio; this.transformImageWrapper.style.left = `${this.transformState.startLeft + dx}px`; this.transformImageWrapper.style.top = `${this.transformState.startTop + dy}px`; break; } this.transformImageWrapper.style.width = `${Math.max(20, newWidth)}px`; this.transformImageWrapper.style.height = `${Math.max(20, newHeight)}px`; }
+                else if (this.transformState.type === 'pinch' && e.touches && e.touches.length === 2) {
+                    const newDist = this.getTouchDistance(e.touches);
+                    const scale = newDist / this.transformState.startPinchDist;
+                    const newWidth = this.transformState.startWidth * scale;
+                    const newHeight = this.transformState.startHeight * scale;
+                    
+                    const midPoint = this.getTouchMidpoint(e.touches);
+                    const containerRect = this.canvasArea.getBoundingClientRect();
+                    const midX = midPoint.x - containerRect.left;
+                    const midY = midPoint.y - containerRect.top;
+
+                    const newLeft = midX - (midX - this.transformState.startLeft) * scale;
+                    const newTop = midY - (midY - this.transformState.startTop) * scale;
+
+                    this.transformImageWrapper.style.width = `${Math.max(20, newWidth)}px`;
+                    this.transformImageWrapper.style.height = `${Math.max(20, newHeight)}px`;
+                    this.transformImageWrapper.style.left = `${newLeft}px`;
+                    this.transformImageWrapper.style.top = `${newTop}px`;
+                }
+            }
             endTransform(e) { this.transformState.active = false; this.transformState.type = null; }
             confirmImagePlacement() { const baseLayer = this.layers[0]; if (!baseLayer) { this.cancelImagePlacement(); return; } const wrapperRect = this.transformImageWrapper.getBoundingClientRect(); const canvasRect = this.previewCanvas.getBoundingClientRect(); const destX = (wrapperRect.left - canvasRect.left) / this.zoom; const destY = (wrapperRect.top - canvasRect.top) / this.zoom; const destWidth = wrapperRect.width / this.zoom; const destHeight = wrapperRect.height / this.zoom; baseLayer.ctx.drawImage(this.transformImage, destX, destY, destWidth, destHeight); const originalActiveLayerId = this.activeLayerIndex; this.setActiveLayer(baseLayer.id); this.saveState(); this.setActiveLayer(originalActiveLayerId); this.cancelImagePlacement(); }
             cancelImagePlacement() { this.imageTransformOverlay.style.display = 'none'; this.transformImage.src = ''; this.endTransform(); }
@@ -773,6 +815,7 @@
                 this.previousColors = ['#6C757D', '#198754']; this.prevColor1.style.backgroundColor = this.previousColors[0]; this.prevColor2.style.backgroundColor = this.previousColors[1];
                 this.currentTool = 'brush'; this.setActiveButton(document.getElementById('brush-btn'), '.icon-btn[data-tool]');
                 this.brushTypeSelect.value = 'round'; this.currentBrushType = 'round';
+                this.setActiveButton(document.querySelector('.size-preset-btn[data-size="15"]'), '.size-preset-btn');
             }
             showToolbar(targetId) { this.secondaryToolbars.forEach(bar => { bar.style.display = 'none'; }); const targetToolbar = document.querySelector(targetId); if (targetToolbar) { targetToolbar.style.display = 'flex'; } }
             updateThemeSwatches(themeName) { const palette = this.colorThemes[themeName] || []; this.themeSwatchesContainer.innerHTML = ''; palette.forEach(color => { const swatch = document.createElement('div'); swatch.className = 'color-swatch theme-swatch'; swatch.style.backgroundColor = color; swatch.title = color; this.themeSwatchesContainer.appendChild(swatch); }); }
