@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ice Climber v1.1.2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="ice/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+</head>
+<body>
+    <div class="main-container">
+        <div id="debug-panel" class="side-controls">
+            <h3>Maklumat Asas</h3>
+            <p>Posisi X: <span id="debug-player-x">0</span></p>
+            <p>Posisi Y: <span id="debug-player-y">0</span></p>
+            <p>Halaju X: <span id="debug-player-dx">0</span></p>
+            <p>Halaju Y: <span id="debug-player-dy">0</span></p>
+            <p>Di Atas Tanah: <span id="debug-player-onground">false</span></p>
+            <p>Pelanggaran: <span id="debug-collision">Tidak</span></p>
+        </div>
+        <div class="game-column">
+            <div class="game-title-bar">
+                  <h1>Ice Climber</h1>
+                  <p class="version-info">v1.1.2 (Engine Rework)</p>
+            </div>
+            <div class="game-wrapper">
+                <canvas id="game-canvas" width="400" height="600"></canvas>
+                <div id="hud" style="display: none;">
+                    <div>
+                        <span>SCORE: <span id="score">0</span></span>
+                        <div id="hp-hearts"></div>
+                    </div>
+                    <span>STAGE: <span id="stage">1</span></span>
+                </div>
+                <div id="start-menu" class="menu">
+                    <div id="start-menu-highscore">
+                         <h4>HIGH SCORE <span id="refresh-highscore-btn">🔄</span></h4>
+                         <div id="start-highscore-display"><p>Loading...</p></div>
+                    </div>
+                    <h3>Pilih Watak:</h3>
+                    <div id="character-selection">
+                        <div class="char-select selected" data-char="ESKIMO">
+                            <canvas id="eskimo-preview" width="60" height="60"></canvas>
+                        </div>
+                        <div class="char-select" data-char="PENGUIN">
+                            <canvas id="penguin-preview" width="60" height="60"></canvas>
+                        </div>
+                        <div class="char-select" data-char="ESKIMO_FEMALE">
+                            <canvas id="eskimo-female-preview" width="60" height="60"></canvas>
+                        </div>
+                    </div>
+                    <button id="start-button">Start Game</button>
+                    <div id="instructions-button" class="menu-option">ARAHAN</div>
+                </div>
+                <div id="game-over-menu" class="menu" style="display: none;">
+                    <h2 style="color: #ff4136;">GAME OVER</h2>
+                    <p style="font-size: 1rem;">SCORE: <span id="final-score">0</span></p>
+                    <p style="font-size: 0.8rem;">REACHED STAGE: <span id="final-stage">1</span></p>
+                    <div id="highscore-list"><h4>Loading Scores...</h4></div>
+                    <div class="game-over-buttons">
+                        <button id="continue-button">Sambung</button>
+                        <button id="restart-button">Mula Semula</button>
+                    </div>
+                </div>
+                <div id="instructions-menu" class="menu" style="display: none;">
+                    <h2>ARAHAN</h2>
+                    <div class="instructions-text">
+                        <p><span>Anak Panah &#8592; &#8594;</span> : Bergerak</p>
+                        <p><span>D / &#8593;</span> : Lompat</p>
+                        <p><span>Anak Panah &#8595;</span> : Tunduk</p>
+                        <p><span>S</span> : Guna Item</p>
+                        <hr style="border-color: #555; margin: 15px 0;">
+                        <p><span>Kayu Bedik</span> : Bergerak/Tunduk</p>
+                        <p><span>Butang A</span> : Lompat</p>
+                        <p><span>Butang B</span> : Guna Item</p>
+                    </div>
+                    <button id="back-to-start-menu-button">KEMBALI</button>
+                </div>
+                <div id="debug-code-menu" class="menu" style="display: none;">
+                    <h3>Enter Debug Code</h3>
+                    <input type="password" id="debug-code-input" maxlength="4">
+                    <button id="debug-code-submit">Enter</button>
+                </div>
+                <div id="name-input-menu" class="menu" style="display: none;">
+                    <h3>New High Score!</h3>
+                    <p>Enter your name (3-8 chars):</p>
+                    <input type="text" id="name-input-field" maxlength="8">
+                    <button id="name-input-submit">Submit</button>
+                </div>
+            </div>
+            <div id="on-screen-controls">
+                <div id="joystick-zone" class="joystick-zone"></div>
+                <div class="action-buttons">
+                    <div id="btn-b" class="action-btn">B</div>
+                    <div id="btn-a" class="action-btn">A</div>
+                </div>
+            </div>
+        </div>
+        <div class="side-controls">
+            <div class="control-container">
+                <label>Peringkat:</label>
+                <div class="stage-presets">
+                    <button data-stage="1">1</button>
+                    <button data-stage="3">3</button>
+                    <button data-stage="7">7</button>
+                    <button data-stage="10">10</button>
+                    <button data-stage="15">15</button>
+                    <button data-stage="20">20</button>
+                    <button data-stage="31">31</button>
+                    <button data-stage="50">50</button>
+                    <button data-stage="90">90</button>
+                    <button data-stage="101">101</button>
+                    <button data-stage="102">102</button>
+                </div>
+            </div>
+            <div class="control-container">
+                <label for="decoration-slider">Kekerapan Hiasan:</label>
+                <input type="range" id="decoration-slider" min="0" max="50" value="50">
+                <span id="decoration-value">50%</span>
+            </div>
+             <div class="control-container">
+                <label>Musuh Ujian (102):</label>
+                <div id="enemy-selection" class="stage-presets" style="grid-template-columns: 1fr 1fr;">
+                    <button data-enemy="GROUND_MONSTER" class="selected">Monster</button>
+                    <button data-enemy="AWAN_HANTU">Hantu</button>
+                    <button data-enemy="ICICLE">Icicle</button>
+                    <button data-enemy="BAT">Kelawar</button>
+                </div>
+            </div>
+            <button id="reset-platforms-button">Reset Platforms</button>
+        </div>
+    </div>
+
+    <script type="module" src="ice/main.js"></script>
+</body>
+</html>
