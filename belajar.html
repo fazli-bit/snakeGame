@@ -1,0 +1,516 @@
+import React, { useState, useEffect } from 'react';
+import { Pencil, BookOpen, Shuffle, Star, PartyPopper, CheckCircle, AlertCircle, X, MousePointer2, Check } from 'lucide-react';
+
+// --- DATA DARI PDF (keja adik.pdf) ---
+
+const capitalizationData = [
+    { original: "today was a hot day.", corrected: "Today was a hot day." },
+    { original: "it is nice to meet you.", corrected: "It is nice to meet you." },
+    { original: "minki is a good dancer.", corrected: "Minki is a good dancer." },
+    { original: "is that a kingfisher?", corrected: "Is that a kingfisher?" },
+    { original: "she is seven years old.", corrected: "She is seven years old." },
+    { original: "they were playing cricket.", corrected: "They were playing cricket." }
+];
+
+const grammarData = [
+    { question: "We ___ at home.", options: ["am", "is", "are"], answer: "are" },
+    { question: "She ___ my mother.", options: ["am", "is", "are"], answer: "is" },
+    { question: "I ___ happy.", options: ["am", "is", "are"], answer: "am" },
+    { question: "The dog ___ black.", options: ["am", "is", "are"], answer: "is" },
+    { question: "You ___ a good boy.", options: ["am", "is", "are"], answer: "are" },
+    { question: "My parents ___ tired.", options: ["am", "is", "are"], answer: "are" }
+];
+
+const unscrambleData = [
+    { scrambled: ["Spain", "from", "is", "He"], answer: "He is from Spain" },
+    { scrambled: ["puppy", "a", "cute", "This", "is"], answer: "This is a cute puppy" },
+    { scrambled: ["sky", "is", "blue", "The"], answer: "The sky is blue" },
+    { scrambled: ["name", "is", "Her", "Suzan"], answer: "Her name is Suzan" }
+];
+
+const matchingData = [
+    { word: "Apple", icon: "🍎", category: "Buah" },
+    { word: "Cat", icon: "🐱", category: "Haiwan" },
+    { word: "Car", icon: "🚗", category: "Kenderaan" },
+    { word: "Elephant", icon: "🐘", category: "Haiwan" },
+    { word: "Milk", icon: "🥛", category: "Minuman" },
+    { word: "Book", icon: "📖", category: "Benda" }
+];
+
+// --- KOMPONEN UI ---
+
+const Button = ({ children, onClick, className, variant = "primary" }) => {
+    const baseStyle = "px-6 py-3 rounded-xl font-bold transition-all transform active:scale-95 shadow-md flex items-center justify-center gap-2 cursor-pointer";
+    const variants = {
+        primary: "bg-gradient-to-r from-blue-500 to-cyan-400 text-white hover:shadow-lg hover:shadow-blue-500/30 border-none",
+        secondary: "bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50",
+        success: "bg-gradient-to-r from-green-400 to-emerald-500 text-white hover:shadow-lg hover:shadow-green-500/30 border-none",
+        danger: "bg-gradient-to-r from-rose-400 to-red-500 text-white border-none",
+        ghost: "bg-transparent text-gray-600 hover:bg-gray-100 shadow-none border-none"
+    };
+    return (
+        <button onClick={onClick} className={`${baseStyle} ${variants[variant]} ${className}`}>
+            {children}
+        </button>
+    );
+};
+
+const Card = ({ children, className, colorClass, onClick }) => (
+    <div 
+        onClick={onClick}
+        className={`relative overflow-hidden rounded-3xl p-6 ${colorClass} ${className} border border-white/20 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group`}
+    >
+        <div className="absolute top-0 left-0 w-full h-full bg-white/10 z-0 pointer-events-none"></div>
+        <div className="relative z-10 h-full flex flex-col">
+            {children}
+        </div>
+    </div>
+);
+
+const Modal = ({ isOpen, onClose, title, children, colorTheme }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className={`bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 ${colorTheme} shadow-2xl`}>
+                <div className="flex justify-between items-center p-6 border-b border-gray-100 shrink-0">
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-3">
+                        {title}
+                    </h2>
+                    <Button variant="ghost" onClick={onClose} className="!p-2 rounded-full aspect-square w-12 h-12 flex items-center justify-center">
+                        <X size={24} />
+                    </Button>
+                </div>
+                <div className="p-6 flex-1 overflow-y-auto">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- GAME COMPONENTS ---
+
+const CapitalizationGame = ({ onComplete }) => {
+    const [index, setIndex] = useState(0);
+    const [input, setInput] = useState("");
+    const [status, setStatus] = useState("idle"); // idle, correct, incorrect
+
+    const current = capitalizationData[index];
+
+    const checkAnswer = () => {
+        if (input.trim() === current.corrected) {
+            setStatus("correct");
+            setTimeout(() => {
+                if (index < capitalizationData.length - 1) {
+                    setIndex(index + 1);
+                    setInput("");
+                    setStatus("idle");
+                } else {
+                    onComplete();
+                }
+            }, 1500);
+        } else {
+            setStatus("incorrect");
+        }
+    };
+
+    return (
+        <div className="space-y-8 text-center">
+            <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-100">
+                <p className="text-gray-500 text-lg mb-2 font-medium">Tulis semula ayat ini dengan huruf besar yang betul:</p>
+                <h3 className="text-3xl font-bold text-amber-600 lowercase tracking-wide">{current.original}</h3>
+            </div>
+            
+            <div className="space-y-4">
+                <input 
+                    type="text" 
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Taip jawapan di sini..."
+                    className={`w-full p-4 text-xl rounded-xl border-2 outline-none transition-all shadow-inner ${status === 'incorrect' ? 'border-red-400 bg-red-50 text-red-600' : 'border-gray-200 focus:border-blue-400 focus:bg-blue-50'}`}
+                    onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
+                />
+                {status === 'incorrect' && <p className="text-red-500 font-bold animate-pulse flex items-center justify-center gap-2"><AlertCircle size={20}/> Cuba lagi! Ingat huruf besar di awal ayat.</p>}
+                {status === 'correct' && <p className="text-green-500 font-bold text-xl flex items-center justify-center gap-2 animate-bounce"><Check size={24}/> Hebat! Betul!</p>}
+            </div>
+
+            <div className="flex justify-center">
+                    <Button onClick={checkAnswer} className="w-full md:w-auto min-w-[200px] text-xl py-4">
+                    Semak Jawapan <CheckCircle size={20} />
+                </Button>
+            </div>
+            
+            <p className="text-gray-400 font-medium">Soalan {index + 1} / {capitalizationData.length}</p>
+        </div>
+    );
+};
+
+const GrammarGame = ({ onComplete }) => {
+    const [index, setIndex] = useState(0);
+    const [selected, setSelected] = useState(null);
+    const [isCorrect, setIsCorrect] = useState(null);
+    
+    const handleSelect = (option) => {
+        setSelected(option);
+        if (option === grammarData[index].answer) {
+            setIsCorrect(true);
+            if (index < grammarData.length - 1) {
+                setTimeout(() => {
+                    setIndex(index + 1);
+                    setSelected(null);
+                    setIsCorrect(null);
+                }, 1000);
+            } else {
+                setTimeout(onComplete, 1000);
+            }
+        } else {
+            setIsCorrect(false);
+            setTimeout(() => {
+                setSelected(null);
+                setIsCorrect(null);
+            }, 800);
+        }
+    };
+
+    return (
+        <div className="space-y-8 text-center">
+            <div className="bg-blue-50 p-8 rounded-3xl border-2 border-blue-100 shadow-sm">
+                <h3 className="text-3xl md:text-4xl font-bold text-gray-800 leading-relaxed">
+                    {grammarData[index].question.split("___").map((part, i) => (
+                        <React.Fragment key={i}>
+                            {part}
+                            {i === 0 && <span className="inline-block min-w-[80px] px-2 border-b-4 border-blue-400 mx-2 text-blue-500 bg-white/50 rounded-t-lg text-center">?</span>}
+                        </React.Fragment>
+                    ))}
+                </h3>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+                {grammarData[index].options.map(opt => (
+                    <button 
+                        key={opt}
+                        onClick={() => handleSelect(opt)}
+                        className={`bg-white border-2 text-2xl md:text-3xl font-bold py-6 rounded-2xl transition-all shadow-sm hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer
+                            ${selected === opt 
+                                ? (isCorrect ? 'border-green-500 bg-green-50 text-green-600' : 'border-red-500 bg-red-50 text-red-600') 
+                                : 'border-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white'
+                            }
+                        `}
+                    >
+                        {opt}
+                    </button>
+                ))}
+            </div>
+            <p className="text-gray-400 font-medium">Soalan {index + 1} / {grammarData.length}</p>
+        </div>
+    );
+};
+
+const UnscrambleGame = ({ onComplete }) => {
+    const [index, setIndex] = useState(0);
+    const [selectedWords, setSelectedWords] = useState([]);
+    const current = unscrambleData[index];
+    const [isSuccess, setIsSuccess] = useState(false);
+
+    const toggleWord = (word) => {
+        if (selectedWords.includes(word)) {
+            setSelectedWords(selectedWords.filter(w => w !== word));
+        } else {
+            setSelectedWords([...selectedWords, word]);
+        }
+    };
+
+    const checkOrder = () => {
+        const formedSentence = selectedWords.join(" ");
+        if (formedSentence === current.answer) {
+            setIsSuccess(true);
+            if (index < unscrambleData.length - 1) {
+                setTimeout(() => {
+                    setIndex(index + 1);
+                    setSelectedWords([]);
+                    setIsSuccess(false);
+                }, 1500);
+            } else {
+                onComplete();
+            }
+        } else {
+            // Simple visual feedback for error
+            const container = document.getElementById('word-container');
+            if(container) {
+                container.classList.add('bg-red-50');
+                setTimeout(() => container.classList.remove('bg-red-50'), 300);
+            }
+        }
+    };
+
+    return (
+        <div className="space-y-8">
+            <div id="word-container" className={`p-6 rounded-2xl border-dashed border-2 min-h-[120px] flex items-center justify-center flex-wrap gap-3 transition-colors ${isSuccess ? 'bg-green-50 border-green-300' : 'bg-purple-50 border-purple-200'}`}>
+                {selectedWords.length === 0 ? (
+                    <span className="text-gray-400 italic flex items-center gap-2"><MousePointer2 size={16} /> Klik perkataan di bawah untuk menyusun ayat...</span>
+                ) : (
+                    selectedWords.map((word, i) => (
+                        <span key={i} onClick={() => toggleWord(word)} className="bg-purple-500 text-white px-4 py-2 rounded-lg font-bold cursor-pointer hover:bg-red-400 transition-colors animate-in zoom-in shadow-md hover:shadow-lg">
+                            {word}
+                        </span>
+                    ))
+                )}
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-3">
+                {current.scrambled.map((word, i) => (
+                    <button
+                        key={i}
+                        onClick={() => !selectedWords.includes(word) && toggleWord(word)}
+                        className={`px-6 py-3 rounded-xl font-bold text-xl transition-all border-b-4 cursor-pointer ${
+                            selectedWords.includes(word) 
+                            ? "bg-gray-100 text-gray-300 border-gray-200 cursor-default scale-95 shadow-inner" 
+                            : "bg-white text-purple-600 border-purple-200 hover:-translate-y-1 hover:shadow-md hover:border-purple-300"
+                        }`}
+                    >
+                        {word}
+                    </button>
+                ))}
+            </div>
+
+            <div className="flex justify-center">
+                <Button onClick={checkOrder} variant="success" className="w-full md:w-auto min-w-[200px] text-xl py-4">
+                    {isSuccess ? 'Betul!' : 'Semak Susunan'} <Check size={20} />
+                </Button>
+            </div>
+        </div>
+    );
+};
+
+const MatchingGame = ({ onComplete }) => {
+    const [cards, setCards] = useState([]);
+    const [flipped, setFlipped] = useState([]);
+    const [matched, setMatched] = useState([]);
+
+    useEffect(() => {
+        const gameItems = [...matchingData].sort(() => 0.5 - Math.random()).slice(0, 6); 
+        const deck = [
+            ...gameItems.map(item => ({ id: item.word + '-word', content: item.word, type: 'text', pairId: item.word })),
+            ...gameItems.map(item => ({ id: item.word + '-icon', content: item.icon, type: 'icon', pairId: item.word }))
+        ].sort(() => 0.5 - Math.random());
+        setCards(deck);
+    }, []);
+
+    const handleCardClick = (index) => {
+        if (flipped.length === 2 || matched.includes(cards[index].pairId) || flipped.includes(index)) return;
+
+        const newFlipped = [...flipped, index];
+        setFlipped(newFlipped);
+
+        if (newFlipped.length === 2) {
+            const card1 = cards[newFlipped[0]];
+            const card2 = cards[newFlipped[1]];
+
+            if (card1.pairId === card2.pairId) {
+                setMatched([...matched, card1.pairId]);
+                setFlipped([]);
+                if (matched.length + 1 === cards.length / 2) {
+                    setTimeout(() => {
+                        onComplete();
+                    }, 1000);
+                }
+            } else {
+                setTimeout(() => setFlipped([]), 1000);
+            }
+        }
+    };
+
+    return (
+        <div className="grid grid-cols-3 gap-3 md:gap-4">
+            {cards.map((card, index) => {
+                const isFlipped = flipped.includes(index) || matched.includes(card.pairId);
+                const isMatched = matched.includes(card.pairId);
+                return (
+                    <div 
+                        key={card.id} 
+                        onClick={() => handleCardClick(index)}
+                        className={`aspect-square rounded-xl flex items-center justify-center text-xl md:text-2xl font-bold cursor-pointer transition-all duration-500 transform shadow-sm ${
+                            isMatched ? 'bg-green-100 border-green-300 scale-95 opacity-50' :
+                            isFlipped ? 'bg-white border-b-4 border-pink-300 shadow-md' : 'bg-gradient-to-br from-pink-400 to-rose-400 text-white border-b-4 border-rose-600 hover:scale-105 hover:shadow-lg'
+                        }`}
+                    >
+                        {isFlipped || isMatched ? card.content : <span className="text-3xl opacity-50">?</span>}
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+// --- MAIN APP COMPONENT ---
+
+export default function App() {
+    const [activeGame, setActiveGame] = useState(null); 
+    
+    const closeGame = () => setActiveGame(null);
+
+    return (
+        <div className="min-h-screen p-4 md:p-8 max-w-6xl mx-auto font-sans bg-slate-50" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+            {/* Header */}
+            <header className="mb-10 text-center">
+                <div className="inline-block bg-white px-6 py-2 rounded-full shadow-sm mb-4 border border-blue-100">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500 font-bold tracking-wider uppercase text-sm md:text-base">
+                        Edisi Latihan PDF
+                    </span>
+                </div>
+                <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tight mb-2">
+                    Aplikasi <span className="text-blue-500 inline-block hover:scale-105 transition-transform">Belajar</span> Adik
+                </h1>
+                <p className="text-slate-500 text-lg md:text-xl font-medium">Seronok Belajar Bahasa Inggeris!</p>
+            </header>
+
+            {/* Bento Grid Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:auto-rows-[180px]">
+                
+                {/* Card 1: Capitalization (Large) */}
+                <div className="md:col-span-2 md:row-span-2">
+                    <Card 
+                        onClick={() => setActiveGame('capitalization')} 
+                        className="h-full hover:ring-4 hover:ring-amber-200" 
+                        colorClass="bg-gradient-to-br from-amber-200 to-orange-100"
+                    >
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="bg-white/40 p-3 rounded-2xl backdrop-blur-sm text-amber-600 shadow-sm">
+                                <Pencil size={32} strokeWidth={2.5} />
+                            </div>
+                            <span className="bg-white/60 px-3 py-1 rounded-full text-sm font-bold text-amber-800 shadow-sm">Tahap 1</span>
+                        </div>
+                        <h2 className="text-3xl font-bold text-amber-900 mb-2">Betulkan Huruf</h2>
+                        <p className="text-amber-800/80 text-lg leading-relaxed mb-4">Belajar guna Huruf Besar di tempat yang betul. <br/> <span className="text-sm opacity-75">Muka surat 1-4</span></p>
+                        <div className="mt-auto flex gap-2 flex-wrap">
+                            <div className="bg-white/50 px-3 py-1 rounded-lg text-sm font-mono text-amber-900 shadow-sm border border-white/20">today ➝ Today</div>
+                            <div className="bg-white/50 px-3 py-1 rounded-lg text-sm font-mono text-amber-900 shadow-sm border border-white/20">minki ➝ Minki</div>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* Card 2: Grammar (Tall) */}
+                <div className="md:col-span-1 md:row-span-2">
+                        <Card 
+                            onClick={() => setActiveGame('grammar')}
+                            className="h-full hover:ring-4 hover:ring-blue-200" 
+                            colorClass="bg-gradient-to-b from-blue-200 to-cyan-100"
+                        >
+                        <div className="flex flex-col items-center text-center h-full">
+                            <div className="bg-white/40 p-4 rounded-full backdrop-blur-sm text-blue-600 mb-6 group-hover:scale-110 transition-transform shadow-sm">
+                                <BookOpen size={40} strokeWidth={2.5} />
+                            </div>
+                            <h2 className="text-2xl font-bold text-blue-900 mb-2">Am / Is / Are</h2>
+                            <p className="text-blue-800/80 mb-6">Pilih kata kerja yang betul.</p>
+                            
+                            <div className="mt-auto w-full space-y-2">
+                                <div className="w-full bg-white/40 py-2 rounded-lg text-blue-900 font-bold text-sm shadow-sm">He <span className="text-blue-600">is</span>...</div>
+                                <div className="w-full bg-white/40 py-2 rounded-lg text-blue-900 font-bold text-sm shadow-sm">They <span className="text-blue-600">are</span>...</div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* Card 3: Matching (Wide) */}
+                <div className="md:col-span-1 md:row-span-1">
+                        <Card 
+                            onClick={() => setActiveGame('matching')}
+                            className="h-full hover:ring-4 hover:ring-pink-200" 
+                            colorClass="bg-gradient-to-br from-pink-200 to-rose-100"
+                        >
+                        <div className="flex items-center gap-4 h-full">
+                            <div className="bg-white/40 p-3 rounded-2xl text-pink-600 shadow-sm">
+                                <Shuffle size={28} strokeWidth={2.5} />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-pink-900">Padankan</h2>
+                                <p className="text-pink-800/70 text-sm">Gambar & Kata</p>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* Card 4: Unscramble (Wide) */}
+                <div className="md:col-span-1 md:row-span-1">
+                        <Card 
+                            onClick={() => setActiveGame('unscramble')}
+                            className="h-full hover:ring-4 hover:ring-purple-200" 
+                            colorClass="bg-gradient-to-br from-violet-200 to-purple-100"
+                        >
+                        <div className="flex flex-col h-full justify-between">
+                            <div className="flex justify-between items-start">
+                                <h2 className="text-xl font-bold text-purple-900">Susun Ayat</h2>
+                                <Star className="text-purple-500 fill-purple-500" size={20} />
+                            </div>
+                            <div className="flex gap-1 mt-2 flex-wrap">
+                                <span className="bg-white/50 text-xs p-1 rounded border border-white/30 shadow-sm">Blue</span>
+                                <span className="bg-white/50 text-xs p-1 rounded border border-white/30 shadow-sm">is</span>
+                                <span className="bg-white/50 text-xs p-1 rounded border border-white/30 shadow-sm">Sky</span>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* Decorative / Info Card */}
+                <div className="md:col-span-4 bg-white rounded-3xl p-6 border border-slate-200 flex items-center justify-between shadow-sm">
+                    <div className="flex gap-4 items-center">
+                        <div className="bg-green-100 p-3 rounded-full text-green-600 shrink-0">
+                            <PartyPopper size={24} />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-slate-700 text-lg">Teruskan Usaha!</h3>
+                            <p className="text-slate-400 text-sm">Siapkan semua latihan untuk jadi juara.</p>
+                        </div>
+                    </div>
+                    <div className="flex -space-x-2 pl-4">
+                        <div className="w-8 h-8 rounded-full bg-yellow-400 border-2 border-white flex items-center justify-center text-xs font-bold shadow-sm">A</div>
+                        <div className="w-8 h-8 rounded-full bg-blue-400 border-2 border-white flex items-center justify-center text-xs font-bold text-white shadow-sm">B</div>
+                        <div className="w-8 h-8 rounded-full bg-red-400 border-2 border-white flex items-center justify-center text-xs font-bold text-white shadow-sm">C</div>
+                    </div>
+                </div>
+
+            </div>
+
+            {/* Modals for Games */}
+            <Modal 
+                isOpen={activeGame === 'capitalization'} 
+                onClose={closeGame} 
+                title="Betulkan Huruf"
+                colorTheme="border-amber-200"
+            >
+                <CapitalizationGame onComplete={closeGame} />
+            </Modal>
+
+            <Modal 
+                isOpen={activeGame === 'grammar'} 
+                onClose={closeGame} 
+                title="Pilih Jawapan (Am/Is/Are)"
+                colorTheme="border-blue-200"
+            >
+                <GrammarGame onComplete={closeGame} />
+            </Modal>
+
+            <Modal 
+                isOpen={activeGame === 'unscramble'} 
+                onClose={closeGame} 
+                title="Susun Ayat"
+                colorTheme="border-purple-200"
+            >
+                <UnscrambleGame onComplete={closeGame} />
+            </Modal>
+
+            <Modal 
+                isOpen={activeGame === 'matching'} 
+                onClose={closeGame} 
+                title="Padankan Gambar"
+                colorTheme="border-pink-200"
+            >
+                <MatchingGame onComplete={closeGame} />
+            </Modal>
+
+            <footer className="mt-12 text-center text-slate-400 text-sm font-medium">
+                <p>© 2024 Aplikasi Belajar Adik. Berdasarkan Lembaran Kerja KİDLID / sheets-db.</p>
+            </footer>
+        </div>
+    );
+}
