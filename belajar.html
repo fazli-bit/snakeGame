@@ -1,380 +1,458 @@
-<!DOCTYPE html>
-<html lang="ms">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Belajar Adik - Ceria & Pintar</title>
-    
-    <!-- React & ReactDOM (Enjin Aplikasi) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
-    <!-- Babel (Untuk memproses kod React dalam browser) -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Tailwind CSS (Untuk Design Cantik) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Fonts (Tulisan Comel) -->
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Confetti (Kesan Mercun Kertas) -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    
-    <!-- Lucide Icons (Ikon) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+import React, { useState, useEffect, useCallback } from 'react';
+import { Pencil, BookOpen, Shuffle, Star, PartyPopper, CheckCircle, AlertCircle, X, MousePointer2, Check, RefreshCcw, ArrowRight } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
-    <style>
-        body {
-            font-family: 'Fredoka', sans-serif;
-            background-color: #f0f9ff;
-            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        .bento-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .bento-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-        }
-        .animate-bounce-short {
-            animation: bounce-short 0.5s infinite alternate;
-        }
+// --- PANGKALAN DATA LENGKAP (Dari PDF) ---
+
+const capitalizationMaster = [
+    { original: "today was a hot day.", corrected: "Today was a hot day." },
+    { original: "it is nice to meet you.", corrected: "It is nice to meet you." },
+    { original: "we want to have ice cream.", corrected: "We want to have ice cream." },
+    { original: "minki is a good dancer.", corrected: "Minki is a good dancer." },
+    { original: "is that a kingfisher?", corrected: "Is that a kingfisher?" },
+    { original: "she is seven years old.", corrected: "She is seven years old." },
+    { original: "he is a shy and quiet boy.", corrected: "He is a shy and quiet boy." },
+    { original: "this is my car.", corrected: "This is my car." },
+    { original: "they were playing cricket.", corrected: "They were playing cricket." },
+    { original: "he heard a strange sound.", corrected: "He heard a strange sound." },
+    { original: "the ships are in the harbour.", corrected: "The ships are in the harbour." },
+    { original: "jay tells us funny jokes.", corrected: "Jay tells us funny jokes." },
+    { original: "tia is reading a story.", corrected: "Tia is reading a story." },
+    { original: "this story is funny.", corrected: "This story is funny." },
+    { original: "the shop sells pencils.", corrected: "The shop sells pencils." },
+    { original: "seema can cook fish.", corrected: "Seema can cook fish." },
+    { original: "it is a lovely day.", corrected: "It is a lovely day." },
+    { original: "my mom likes to cook.", corrected: "My mom likes to cook." },
+    { original: "why are you late to school?", corrected: "Why are you late to school?" },
+    { original: "rupa is a tall girl.", corrected: "Rupa is a tall girl." },
+    { original: "she kicks the ball.", corrected: "She kicks the ball." },
+    { original: "the girl is singing.", corrected: "The girl is singing." },
+    { original: "we will watch a film.", corrected: "We will watch a film." },
+    { original: "they are coming to our house.", corrected: "They are coming to our house." },
+    { original: "hena is reading a book.", corrected: "Hena is reading a book." },
+    { original: "she will eat a pizza tonight.", corrected: "She will eat a pizza tonight." },
+    { original: "is the bike dirty?", corrected: "Is the bike dirty?" },
+    { original: "it is dark at night?", corrected: "It is dark at night?" }
+];
+
+const grammarMaster = [
+    { question: "We ___ at home.", options: ["am", "is", "are"], answer: "are" },
+    { question: "Lucy ___ happy.", options: ["am", "is", "are"], answer: "is" },
+    { question: "They ___ bored.", options: ["am", "is", "are"], answer: "are" },
+    { question: "My parents ___ tired.", options: ["am", "is", "are"], answer: "are" },
+    { question: "My cousin ___ 9.", options: ["am", "is", "are"], answer: "is" },
+    { question: "Adam and I ___ friends.", options: ["am", "is", "are"], answer: "are" },
+    { question: "It ___ hot and sunny.", options: ["am", "is", "are"], answer: "is" },
+    { question: "It ___ cold and rainy.", options: ["am", "is", "are"], answer: "is" },
+    { question: "His dolls ___ new.", options: ["am", "is", "are"], answer: "are" },
+    { question: "She ___ in the park.", options: ["am", "is", "are"], answer: "is" },
+    { question: "You ___ cute.", options: ["am", "is", "are"], answer: "are" },
+    { question: "Your old bike ___ red.", options: ["am", "is", "are"], answer: "is" },
+    { question: "The windows ___ clean.", options: ["am", "is", "are"], answer: "are" },
+    { question: "Our neighbours ___ nice.", options: ["am", "is", "are"], answer: "are" },
+    { question: "My brother and I ___ angry.", options: ["am", "is", "are"], answer: "are" },
+    { question: "There ___ a black board.", options: ["am", "is", "are"], answer: "is" },
+    { question: "My bedroom ___ small.", options: ["am", "is", "are"], answer: "is" },
+    { question: "These shoes ___ too big.", options: ["am", "is", "are"], answer: "are" },
+    { question: "I ___ happy.", options: ["am", "is", "are"], answer: "am" },
+    { question: "She ___ my mother.", options: ["am", "is", "are"], answer: "is" },
+    { question: "We ___ friends.", options: ["am", "is", "are"], answer: "are" },
+    { question: "The dog ___ black.", options: ["am", "is", "are"], answer: "is" },
+    { question: "You ___ a good boy.", options: ["am", "is", "are"], answer: "are" },
+    { question: "Emmy and I ___ strong.", options: ["am", "is", "are"], answer: "are" },
+    { question: "He ___ 8 years old.", options: ["am", "is", "are"], answer: "is" },
+    { question: "Tom and Sue ___ cousins.", options: ["am", "is", "are"], answer: "are" },
+    { question: "The frogs ___ jumping.", options: ["am", "is", "are"], answer: "are" },
+    { question: "It ___ a cute kitten.", options: ["am", "is", "are"], answer: "is" },
+    { question: "Anna ___ at the mall.", options: ["am", "is", "are"], answer: "is" },
+    { question: "Children ___ happy.", options: ["am", "is", "are"], answer: "are" },
+    { question: "Peter ___ late.", options: ["am", "is", "are"], answer: "is" },
+    { question: "The sky ___ blue.", options: ["am", "is", "are"], answer: "is" },
+    { question: "Alan's friends ___ farmers.", options: ["am", "is", "are"], answer: "are" },
+    { question: "Monkeys ___ brown.", options: ["am", "is", "are"], answer: "are" },
+    { question: "The little girl ___ sleeping.", options: ["am", "is", "are"], answer: "is" },
+    { question: "We ___ at the park.", options: ["am", "is", "are"], answer: "are" },
+    { question: "My cat ___ white.", options: ["am", "is", "are"], answer: "is" },
+    { question: "I ___ in grade one.", options: ["am", "is", "are"], answer: "am" },
+    { question: "Molly and Jane ___ sisters.", options: ["am", "is", "are"], answer: "are" },
+    { question: "Kim ___ my classmate.", options: ["am", "is", "are"], answer: "is" },
+    { question: "It ___ my pet rabbit.", options: ["am", "is", "are"], answer: "is" },
+    { question: "My bike ___ blue.", options: ["am", "is", "are"], answer: "is" },
+    { question: "Our house ___ very tidy.", options: ["am", "is", "are"], answer: "is" },
+    { question: "You ___ handsome.", options: ["am", "is", "are"], answer: "are" },
+    { question: "Lisa ___ a vet.", options: ["am", "is", "are"], answer: "is" },
+    { question: "I ___ hungry.", options: ["am", "is", "are"], answer: "am" },
+    { question: "It ___ so hot.", options: ["am", "is", "are"], answer: "is" },
+    { question: "Ron ___ my classmate.", options: ["am", "is", "are"], answer: "is" },
+    { question: "He ___ a policeman.", options: ["am", "is", "are"], answer: "is" },
+    { question: "Pizza ___ so yummy.", options: ["am", "is", "are"], answer: "is" },
+    { question: "She ___ my new teacher.", options: ["am", "is", "are"], answer: "is" }
+];
+
+const unscrambleMaster = [
+    { scrambled: ["from", "is", "Spain", "He"], answer: "He is from Spain" },
+    { scrambled: ["is", "This", "puppy", "a", "cute"], answer: "This is a cute puppy" },
+    { scrambled: ["name", "is", "Suzan", "Her"], answer: "Her name is Suzan" },
+    { scrambled: ["and", "Jack", "twins", "Erick", "are"], answer: "Erick and Jack are twins" }, // Or Jack and Erick
+    { scrambled: ["blue", "The", "sky", "is"], answer: "The sky is blue" }
+];
+
+const matchingMaster = [
+    // Objects
+    { word: "Coke", icon: "🥤" }, { word: "Scissor", icon: "✂️" },
+    { word: "Milk", icon: "🥛" }, { word: "Globe", icon: "🌍" },
+    { word: "Coffee", icon: "☕" }, { word: "Pencil", icon: "✏️" },
+    { word: "Juice", icon: "🧃" }, { word: "Chalk", icon: "🖍️" },
+    { word: "Tea", icon: "🍵" }, { word: "Ruler", icon: "📏" },
+    // Fruits
+    { word: "Banana", icon: "🍌" }, { word: "Orange", icon: "🍊" },
+    { word: "Apple", icon: "🍎" }, { word: "Grape", icon: "🍇" },
+    { word: "Melon", icon: "🍈" }, { word: "Pineapple", icon: "🍍" },
+    { word: "Coconut", icon: "🥥" }, { word: "Avocado", icon: "🥑" },
+    { word: "Kiwi", icon: "🥝" }, { word: "Lemon", icon: "🍋" },
+    // Animals
+    { word: "Bee", icon: "🐝" }, { word: "Zebra", icon: "🦓" },
+    { word: "Lion", icon: "🦁" }, { word: "Elephant", icon: "🐘" },
+    { word: "Horse", icon: "🐎" }, { word: "Rabbit", icon: "🐇" },
+    { word: "Cat", icon: "🐱" }, { word: "Dog", icon: "🐶" },
+    { word: "Fish", icon: "🐟" }, { word: "Monkey", icon: "🐒" },
+    // Places/Vehicles
+    { word: "Car", icon: "🚗" }, { word: "Ship", icon: "🚢" },
+    { word: "Plane", icon: "✈️" }, { word: "Bike", icon: "🚲" },
+    { word: "Train", icon: "🚂" }, { word: "School", icon: "🏫" },
+    { word: "Hospital", icon: "🏥" }, { word: "Bank", icon: "🏦" },
+    { word: "Park", icon: "🌳" }, { word: "Cinema", icon: "🎬" }
+];
+
+// --- HELPER FUNCTION: SHUFFLE ARRAY ---
+const shuffleArray = (array) => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+};
+
+// --- Styles Injection ---
+const GlobalStyles = () => (
+    <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;700&display=swap');
+        body { font-family: 'Fredoka', sans-serif; }
         @keyframes bounce-short {
             from { transform: translateY(0); }
             to { transform: translateY(-5px); }
         }
-        /* Scrollbar untuk modal */
-        .modal-scroll::-webkit-scrollbar {
-            width: 8px;
+        .animate-bounce-short { animation: bounce-short 0.5s infinite alternate; }
+        .modal-scroll::-webkit-scrollbar { width: 8px; }
+        .modal-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .modal-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .modal-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    `}</style>
+);
+
+// --- KOMPONEN UI ---
+
+const Button = ({ children, onClick, className, variant = "primary" }) => {
+    const variants = {
+        primary: "bg-gradient-to-r from-blue-500 to-cyan-400 text-white hover:shadow-lg hover:shadow-blue-500/30 border-none",
+        secondary: "bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50",
+        success: "bg-gradient-to-r from-green-400 to-emerald-500 text-white hover:shadow-lg hover:shadow-green-500/30 border-none",
+        danger: "bg-gradient-to-r from-rose-400 to-red-500 text-white border-none",
+        ghost: "bg-transparent text-gray-600 hover:bg-gray-100 shadow-none border-none"
+    };
+    return <button onClick={onClick} className={`px-6 py-3 rounded-xl font-bold transition-all transform active:scale-95 shadow-md flex items-center justify-center gap-2 cursor-pointer ${variants[variant]} ${className}`}>{children}</button>;
+};
+
+const Card = ({ children, className, colorClass, onClick }) => (
+    <div onClick={onClick} className={`relative overflow-hidden rounded-3xl p-6 ${colorClass} ${className} border border-white/20 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group`}>
+        <div className="absolute top-0 left-0 w-full h-full bg-white/10 z-0 pointer-events-none"></div>
+        <div className="relative z-10 h-full flex flex-col">{children}</div>
+    </div>
+);
+
+const Modal = ({ isOpen, onClose, title, children, colorTheme }) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans">
+            <div className={`bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 ${colorTheme} shadow-2xl`}>
+                <div className="flex justify-between items-center p-6 border-b border-gray-100 shrink-0">
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-3">{title}</h2>
+                    <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors"><X size={24} className="text-gray-500" /></button>
+                </div>
+                <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">{children}</div>
+            </div>
+        </div>
+    );
+};
+
+// --- GAME COMPONENTS ---
+
+const CapitalizationGame = ({ onComplete }) => {
+    const [questions, setQuestions] = useState([]);
+    const [index, setIndex] = useState(0);
+    const [input, setInput] = useState("");
+    const [status, setStatus] = useState("idle");
+
+    useEffect(() => {
+        // Shuffle and take first 5 for a quick session
+        setQuestions(shuffleArray(capitalizationMaster).slice(0, 5));
+    }, []);
+
+    if (questions.length === 0) return <div>Loading...</div>;
+    const current = questions[index];
+
+    const checkAnswer = () => {
+        if (input.trim() === current.corrected) {
+            setStatus("correct");
+            confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+            setTimeout(() => {
+                if (index < questions.length - 1) {
+                    setIndex(index + 1);
+                    setInput("");
+                    setStatus("idle");
+                } else {
+                    onComplete();
+                }
+            }, 1500);
+        } else {
+            setStatus("incorrect");
         }
-        .modal-scroll::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
+    };
+
+    return (
+        <div className="space-y-8 text-center">
+            <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-100">
+                <p className="text-gray-500 text-lg mb-2 font-medium">Tulis semula ayat ini:</p>
+                <h3 className="text-2xl md:text-3xl font-bold text-amber-600 lowercase tracking-wide">{current.original}</h3>
+            </div>
+            <div className="space-y-4">
+                <input 
+                    type="text" value={input} onChange={(e) => setInput(e.target.value)}
+                    placeholder="Taip jawapan..."
+                    className={`w-full p-4 text-xl rounded-xl border-2 outline-none transition-all shadow-inner ${status === 'incorrect' ? 'border-red-400 bg-red-50 text-red-600' : 'border-gray-200 focus:border-blue-400'}`}
+                    onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
+                />
+                {status === 'incorrect' && <p className="text-red-500 font-bold flex items-center justify-center gap-2"><AlertCircle size={20}/> Salah. Cuba lagi!</p>}
+                {status === 'correct' && <p className="text-green-500 font-bold text-xl flex items-center justify-center gap-2"><Check size={24}/> Betul!</p>}
+            </div>
+            <div className="flex justify-center"><Button onClick={checkAnswer} className="w-full md:w-auto min-w-[200px] text-xl py-4">Semak <CheckCircle size={20} /></Button></div>
+            <p className="text-gray-400 font-medium">Soalan {index + 1} / {questions.length}</p>
+        </div>
+    );
+};
+
+const GrammarGame = ({ onComplete }) => {
+    const [questions, setQuestions] = useState([]);
+    const [index, setIndex] = useState(0);
+    const [selected, setSelected] = useState(null);
+    const [isCorrect, setIsCorrect] = useState(null);
+
+    useEffect(() => {
+        setQuestions(shuffleArray(grammarMaster).slice(0, 10));
+    }, []);
+
+    if (questions.length === 0) return <div>Loading...</div>;
+    const current = questions[index];
+
+    const handleSelect = (option) => {
+        setSelected(option);
+        if (option === current.answer) {
+            setIsCorrect(true);
+            confetti({ particleCount: 30, spread: 50, colors: ['#4ade80', '#22c55e'] });
+            if (index < questions.length - 1) {
+                setTimeout(() => {
+                    setIndex(index + 1);
+                    setSelected(null);
+                    setIsCorrect(null);
+                }, 1000);
+            } else {
+                setTimeout(onComplete, 1000);
+            }
+        } else {
+            setIsCorrect(false);
+            setTimeout(() => { setSelected(null); setIsCorrect(null); }, 800);
         }
-        .modal-scroll::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
+    };
+
+    return (
+        <div className="space-y-8 text-center">
+            <div className="bg-blue-50 p-8 rounded-3xl border-2 border-blue-100 shadow-sm">
+                <h3 className="text-3xl md:text-4xl font-bold text-gray-800 leading-relaxed">
+                    {current.question.split("___").map((part, i) => (
+                        <React.Fragment key={i}>{part}{i === 0 && <span className="inline-block min-w-[80px] px-2 border-b-4 border-blue-400 mx-2 text-blue-500 bg-white/50 rounded-t-lg text-center">?</span>}</React.Fragment>
+                    ))}
+                </h3>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+                {current.options.map(opt => (
+                    <button key={opt} onClick={() => handleSelect(opt)} className={`bg-white border-2 text-2xl md:text-3xl font-bold py-6 rounded-2xl transition-all shadow-sm hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer ${selected === opt ? (isCorrect ? 'border-green-500 bg-green-50 text-green-600' : 'border-red-500 bg-red-50 text-red-600') : 'border-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white'}`}>{opt}</button>
+                ))}
+            </div>
+            <p className="text-gray-400 font-medium">Soalan {index + 1} / {questions.length}</p>
+        </div>
+    );
+};
+
+const UnscrambleGame = ({ onComplete }) => {
+    const [questions, setQuestions] = useState([]);
+    const [index, setIndex] = useState(0);
+    const [selectedWords, setSelectedWords] = useState([]);
+    const [isSuccess, setIsSuccess] = useState(false);
+
+    useEffect(() => {
+        setQuestions(shuffleArray(unscrambleMaster)); // Use all questions since only 5 exist
+    }, []);
+
+    if (questions.length === 0) return <div>Loading...</div>;
+    const current = questions[index];
+
+    const toggleWord = (word) => {
+        if (selectedWords.includes(word)) setSelectedWords(selectedWords.filter(w => w !== word));
+        else setSelectedWords([...selectedWords, word]);
+    };
+
+    const checkOrder = () => {
+        if (selectedWords.join(" ") === current.answer) {
+            setIsSuccess(true);
+            confetti({ shapes: ['star'], colors: ['#FFE400', '#FFBD00', '#E80C4E'] });
+            if (index < questions.length - 1) {
+                setTimeout(() => { setIndex(index + 1); setSelectedWords([]); setIsSuccess(false); }, 1500);
+            } else {
+                onComplete();
+            }
+        } else {
+            const container = document.getElementById('word-container');
+            if(container) { container.classList.add('bg-red-50'); setTimeout(() => container.classList.remove('bg-red-50'), 300); }
         }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
+    };
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+    return (
+        <div className="space-y-8">
+            <div id="word-container" className={`p-6 rounded-2xl border-dashed border-2 min-h-[120px] flex items-center justify-center flex-wrap gap-3 transition-colors ${isSuccess ? 'bg-green-50 border-green-300' : 'bg-purple-50 border-purple-200'}`}>
+                {selectedWords.length === 0 ? <span className="text-gray-400 italic flex items-center gap-2"><MousePointer2 size={16} /> Klik perkataan...</span> : 
+                selectedWords.map((word, i) => <span key={i} onClick={() => toggleWord(word)} className="bg-purple-500 text-white px-4 py-2 rounded-lg font-bold cursor-pointer hover:bg-red-400 transition-colors shadow-md animate-in zoom-in">{word}</span>)}
+            </div>
+            <div className="flex flex-wrap justify-center gap-3">
+                {current.scrambled.map((word, i) => (
+                    <button key={i} onClick={() => !selectedWords.includes(word) && toggleWord(word)} className={`px-6 py-3 rounded-xl font-bold text-xl border-b-4 transition-all cursor-pointer ${selectedWords.includes(word) ? "bg-gray-100 text-gray-300 border-gray-200 scale-95" : "bg-white text-purple-600 border-purple-200 hover:-translate-y-1 hover:shadow-md"}`}>{word}</button>
+                ))}
+            </div>
+            <div className="flex justify-center"><Button onClick={checkOrder} variant="success" className="w-full md:w-auto min-w-[200px] text-xl py-4">{isSuccess ? 'Betul!' : 'Semak'} <Check size={20} /></Button></div>
+        </div>
+    );
+};
 
-        // --- DATA DARI PDF ---
-        const capitalizationData = [
-            { original: "today was a hot day.", corrected: "Today was a hot day." },
-            { original: "it is nice to meet you.", corrected: "It is nice to meet you." },
-            { original: "minki is a good dancer.", corrected: "Minki is a good dancer." },
-            { original: "is that a kingfisher?", corrected: "Is that a kingfisher?" },
-            { original: "she is seven years old.", corrected: "She is seven years old." },
-            { original: "they were playing cricket.", corrected: "They were playing cricket." }
+const MatchingGame = ({ onComplete }) => {
+    const [cards, setCards] = useState([]);
+    const [flipped, setFlipped] = useState([]);
+    const [matched, setMatched] = useState([]);
+
+    const initializeGame = useCallback(() => {
+        const gameItems = shuffleArray(matchingMaster).slice(0, 6); 
+        const deck = [
+            ...gameItems.map(item => ({ id: item.word + '-word', content: item.word, type: 'text', pairId: item.word })),
+            ...gameItems.map(item => ({ id: item.word + '-icon', content: item.icon, type: 'icon', pairId: item.word }))
         ];
+        setCards(shuffleArray(deck));
+        setFlipped([]);
+        setMatched([]);
+    }, []);
 
-        const grammarData = [
-            { question: "We ___ at home.", options: ["am", "is", "are"], answer: "are" },
-            { question: "She ___ my mother.", options: ["am", "is", "are"], answer: "is" },
-            { question: "I ___ happy.", options: ["am", "is", "are"], answer: "am" },
-            { question: "The dog ___ black.", options: ["am", "is", "are"], answer: "is" },
-            { question: "You ___ a good boy.", options: ["am", "is", "are"], answer: "are" },
-            { question: "My parents ___ tired.", options: ["am", "is", "are"], answer: "are" }
-        ];
+    useEffect(() => {
+        initializeGame();
+    }, [initializeGame]);
 
-        const unscrambleData = [
-            { scrambled: ["Spain", "from", "is", "He"], answer: "He is from Spain" },
-            { scrambled: ["puppy", "a", "cute", "This", "is"], answer: "This is a cute puppy" },
-            { scrambled: ["sky", "is", "blue", "The"], answer: "The sky is blue" },
-            { scrambled: ["name", "is", "Her", "Suzan"], answer: "Her name is Suzan" }
-        ];
+    const handleCardClick = (index) => {
+        if (flipped.length === 2 || matched.includes(cards[index].pairId) || flipped.includes(index)) return;
+        const newFlipped = [...flipped, index];
+        setFlipped(newFlipped);
+        if (newFlipped.length === 2) {
+            const card1 = cards[newFlipped[0]];
+            const card2 = cards[newFlipped[1]];
+            if (card1.pairId === card2.pairId) {
+                setMatched([...matched, card1.pairId]);
+                setFlipped([]);
+                if (matched.length + 1 === cards.length / 2) {
+                    setTimeout(() => {
+                        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                        onComplete();
+                    }, 1000);
+                }
+            } else setTimeout(() => setFlipped([]), 1000);
+        }
+    };
 
-        const matchingData = [
-            { word: "Apple", icon: "🍎", category: "Buah" },
-            { word: "Cat", icon: "🐱", category: "Haiwan" },
-            { word: "Car", icon: "🚗", category: "Kenderaan" },
-            { word: "Elephant", icon: "🐘", category: "Haiwan" },
-            { word: "Milk", icon: "🥛", category: "Minuman" },
-            { word: "Book", icon: "📖", category: "Benda" }
-        ];
+    return (
+        <div>
+            <div className="grid grid-cols-3 gap-3 md:gap-4">
+                {cards.map((card, index) => {
+                    const isFlipped = flipped.includes(index) || matched.includes(card.pairId);
+                    const isMatched = matched.includes(card.pairId);
+                    return (
+                        <div key={card.id} onClick={() => handleCardClick(index)} className={`aspect-square rounded-xl flex items-center justify-center text-xl md:text-2xl font-bold cursor-pointer transition-all duration-500 transform shadow-sm ${isMatched ? 'bg-green-100 border-green-300 scale-95 opacity-50' : isFlipped ? 'bg-white border-b-4 border-pink-300 shadow-md' : 'bg-gradient-to-br from-pink-400 to-rose-400 text-white border-b-4 border-rose-600 hover:scale-105'}`}>
+                            {isFlipped || isMatched ? card.content : <span className="text-3xl opacity-50">?</span>}
+                        </div>
+                    );
+                })}
+            </div>
+            <div className="mt-6 text-center">
+                <button onClick={initializeGame} className="text-pink-500 hover:text-pink-700 font-bold flex items-center justify-center gap-2 mx-auto"><RefreshCcw size={16}/> Kocok Semula Kad</button>
+            </div>
+        </div>
+    );
+};
 
-        // --- KOMPONEN UI ---
+// --- KOMPONEN UTAMA ---
 
-        // Komponen Khas untuk Ikon Lucide dalam mod Standalone
-        const Icon = ({ name, size = 24, className }) => {
-            return <i data-lucide={name} width={size} height={size} className={className}></i>;
-        };
+export default function App() {
+    const [activeGame, setActiveGame] = useState(null); 
+    const closeGame = () => setActiveGame(null);
 
-        const Button = ({ children, onClick, className, variant = "primary" }) => {
-            const baseStyle = "px-6 py-3 rounded-xl font-bold transition-all transform active:scale-95 shadow-md flex items-center justify-center gap-2 cursor-pointer";
-            const variants = {
-                primary: "bg-gradient-to-r from-blue-500 to-cyan-400 text-white hover:shadow-lg hover:shadow-blue-500/30 border-none",
-                secondary: "bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50",
-                success: "bg-gradient-to-r from-green-400 to-emerald-500 text-white hover:shadow-lg hover:shadow-green-500/30 border-none",
-                danger: "bg-gradient-to-r from-rose-400 to-red-500 text-white border-none",
-                ghost: "bg-transparent text-gray-600 hover:bg-gray-100 shadow-none border-none"
-            };
-            return (
-                <button onClick={onClick} className={`${baseStyle} ${variants[variant]} ${className}`}>
-                    {children}
-                </button>
-            );
-        };
+    return (
+        <div className="min-h-screen p-4 md:p-8 max-w-6xl mx-auto font-sans bg-slate-50" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+            <GlobalStyles />
+            <header className="mb-10 text-center">
+                <div className="inline-block bg-white px-6 py-2 rounded-full shadow-sm mb-4 border border-blue-100"><span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500 font-bold tracking-wider uppercase text-sm md:text-base">Edisi Latihan PDF</span></div>
+                <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tight mb-2">Aplikasi <span className="text-blue-500 inline-block hover:scale-105 transition-transform">Belajar</span> Adik</h1>
+                <p className="text-slate-500 text-lg md:text-xl font-medium">Seronok Belajar Bahasa Inggeris!</p>
+            </header>
 
-        const Card = ({ children, className, colorClass, onClick }) => (
-            <div 
-                onClick={onClick}
-                className={`relative overflow-hidden rounded-3xl p-6 ${colorClass} ${className} border border-white/20 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer group bento-card`}
-            >
-                <div className="absolute top-0 left-0 w-full h-full bg-white/10 z-0 pointer-events-none"></div>
-                <div className="relative z-10 h-full flex flex-col">
-                    {children}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:auto-rows-[180px]">
+                <div className="md:col-span-2 md:row-span-2">
+                    <Card onClick={() => setActiveGame('capitalization')} className="h-full hover:ring-4 hover:ring-amber-200" colorClass="bg-gradient-to-br from-amber-200 to-orange-100">
+                        <div className="flex justify-between items-start mb-4"><div className="bg-white/40 p-3 rounded-2xl text-amber-600"><Pencil size={32} strokeWidth={2.5} /></div><span className="bg-white/60 px-3 py-1 rounded-full text-sm font-bold text-amber-800">20+ Soalan</span></div>
+                        <h2 className="text-3xl font-bold text-amber-900 mb-2">Betulkan Huruf</h2>
+                        <p className="text-amber-800/80 text-lg mb-4">Belajar guna Huruf Besar.</p>
+                        <div className="mt-auto flex gap-2"><span className="bg-white/50 px-2 rounded text-sm border border-white/20">today ➝ Today</span></div>
+                    </Card>
+                </div>
+                <div className="md:col-span-1 md:row-span-2">
+                     <Card onClick={() => setActiveGame('grammar')} className="h-full hover:ring-4 hover:ring-blue-200" colorClass="bg-gradient-to-b from-blue-200 to-cyan-100">
+                        <div className="flex flex-col items-center text-center h-full"><div className="bg-white/40 p-4 rounded-full text-blue-600 mb-6"><BookOpen size={40} strokeWidth={2.5} /></div><h2 className="text-2xl font-bold text-blue-900 mb-2">Am / Is / Are</h2><p className="text-blue-800/80">50+ Soalan Random</p></div>
+                    </Card>
+                </div>
+                <div className="md:col-span-1 md:row-span-1">
+                     <Card onClick={() => setActiveGame('matching')} className="h-full hover:ring-4 hover:ring-pink-200" colorClass="bg-gradient-to-br from-pink-200 to-rose-100">
+                        <div className="flex items-center gap-4 h-full"><div className="bg-white/40 p-3 rounded-2xl text-pink-600"><Shuffle size={28} strokeWidth={2.5} /></div><div><h2 className="text-xl font-bold text-pink-900">Padankan</h2><p className="text-xs text-pink-800">Buah & Objek</p></div></div>
+                    </Card>
+                </div>
+                <div className="md:col-span-1 md:row-span-1">
+                     <Card onClick={() => setActiveGame('unscramble')} className="h-full hover:ring-4 hover:ring-purple-200" colorClass="bg-gradient-to-br from-violet-200 to-purple-100">
+                        <div className="flex flex-col h-full justify-between"><div className="flex justify-between"><h2 className="text-xl font-bold text-purple-900">Susun Ayat</h2><Star className="text-purple-500" size={20} /></div><div className="flex gap-1 mt-2"><span className="bg-white/50 text-xs p-1 rounded">Sky</span><span className="bg-white/50 text-xs p-1 rounded">Blue</span></div></div>
+                    </Card>
+                </div>
+                <div className="md:col-span-4 bg-white rounded-3xl p-6 border border-slate-200 flex items-center justify-between shadow-sm">
+                    <div className="flex gap-4 items-center"><div className="bg-green-100 p-3 rounded-full text-green-600"><PartyPopper size={24} /></div><div><h3 className="font-bold text-slate-700 text-lg">Teruskan Usaha!</h3><p className="text-slate-400 text-sm">Soalan sentiasa bertukar setiap kali anda main.</p></div></div>
                 </div>
             </div>
-        );
 
-        const Modal = ({ isOpen, onClose, title, children, colorTheme }) => {
-            if (!isOpen) return null;
-            return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className={`bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 border-4 ${colorTheme} shadow-2xl`}>
-                        <div className="flex justify-between items-center p-6 border-b border-gray-100 shrink-0">
-                            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-3">
-                                {title}
-                            </h2>
-                            <Button variant="ghost" onClick={onClose} className="!p-2 rounded-full aspect-square w-12 h-12 flex items-center justify-center">
-                                <Icon name="x" size={24} />
-                            </Button>
-                        </div>
-                        <div className="p-6 flex-1 overflow-y-auto modal-scroll">
-                            {children}
-                        </div>
-                    </div>
-                </div>
-            );
-        };
+            <Modal isOpen={activeGame === 'capitalization'} onClose={closeGame} title="Betulkan Huruf" colorTheme="border-amber-200"><CapitalizationGame onComplete={closeGame} /></Modal>
+            <Modal isOpen={activeGame === 'grammar'} onClose={closeGame} title="Am / Is / Are" colorTheme="border-blue-200"><GrammarGame onComplete={closeGame} /></Modal>
+            <Modal isOpen={activeGame === 'unscramble'} onClose={closeGame} title="Susun Ayat" colorTheme="border-purple-200"><UnscrambleGame onComplete={closeGame} /></Modal>
+            <Modal isOpen={activeGame === 'matching'} onClose={closeGame} title="Padankan Gambar" colorTheme="border-pink-200"><MatchingGame onComplete={closeGame} /></Modal>
 
-        // --- GAME LOGIC ---
-
-        const CapitalizationGame = ({ onComplete }) => {
-            const [index, setIndex] = useState(0);
-            const [input, setInput] = useState("");
-            const [status, setStatus] = useState("idle");
-            const current = capitalizationData[index];
-
-            const checkAnswer = () => {
-                if (input.trim() === current.corrected) {
-                    setStatus("correct");
-                    confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
-                    setTimeout(() => {
-                        if (index < capitalizationData.length - 1) {
-                            setIndex(index + 1);
-                            setInput("");
-                            setStatus("idle");
-                        } else {
-                            onComplete();
-                        }
-                    }, 1500);
-                } else {
-                    setStatus("incorrect");
-                }
-            };
-
-            return (
-                <div className="space-y-8 text-center">
-                    <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-100">
-                        <p className="text-gray-500 text-lg mb-2 font-medium">Tulis semula dengan Huruf Besar yang betul:</p>
-                        <h3 className="text-3xl font-bold text-amber-600 lowercase tracking-wide">{current.original}</h3>
-                    </div>
-                    <div className="space-y-4">
-                        <input 
-                            type="text" value={input} onChange={(e) => setInput(e.target.value)}
-                            placeholder="Taip jawapan di sini..."
-                            className={`w-full p-4 text-xl rounded-xl border-2 outline-none transition-all shadow-inner ${status === 'incorrect' ? 'border-red-400 bg-red-50 text-red-600' : 'border-gray-200 focus:border-blue-400'}`}
-                            onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
-                        />
-                        {status === 'incorrect' && <p className="text-red-500 font-bold animate-bounce flex items-center justify-center gap-2"><Icon name="alert-circle" size={20}/> Cuba lagi!</p>}
-                        {status === 'correct' && <p className="text-green-500 font-bold text-xl flex items-center justify-center gap-2"><Icon name="check" size={24}/> Betul!</p>}
-                    </div>
-                    <div className="flex justify-center">
-                         <Button onClick={checkAnswer} className="w-full md:w-auto text-xl py-4">Semak <Icon name="check-circle" size={20} /></Button>
-                    </div>
-                </div>
-            );
-        };
-
-        const GrammarGame = ({ onComplete }) => {
-            const [index, setIndex] = useState(0);
-            const handleSelect = (option) => {
-                if (option === grammarData[index].answer) {
-                    confetti({ particleCount: 30, spread: 50, colors: ['#4ade80', '#22c55e'] });
-                    if (index < grammarData.length - 1) setTimeout(() => setIndex(index + 1), 800);
-                    else setTimeout(onComplete, 1000);
-                } else {
-                    const btn = document.getElementById(`btn-${option}`);
-                    if(btn) { btn.classList.add('animate-bounce'); setTimeout(() => btn.classList.remove('animate-bounce'), 500); }
-                }
-            };
-            return (
-                <div className="space-y-8 text-center">
-                    <div className="bg-blue-50 p-8 rounded-3xl border-2 border-blue-100 shadow-sm">
-                        <h3 className="text-3xl md:text-4xl font-bold text-gray-800 leading-relaxed">
-                            {grammarData[index].question.split("___").map((part, i) => (
-                                <React.Fragment key={i}>{part}{i === 0 && <span className="inline-block min-w-[80px] border-b-4 border-blue-400 mx-2 text-blue-500 text-center">?</span>}</React.Fragment>
-                            ))}
-                        </h3>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                        {grammarData[index].options.map(opt => (
-                            <button key={opt} id={`btn-${opt}`} onClick={() => handleSelect(opt)} className="bg-white border-2 border-blue-100 text-blue-600 text-2xl font-bold py-6 rounded-2xl hover:bg-blue-500 hover:text-white transition-all hover:scale-105 shadow-sm cursor-pointer">{opt}</button>
-                        ))}
-                    </div>
-                </div>
-            );
-        };
-
-        const UnscrambleGame = ({ onComplete }) => {
-            const [index, setIndex] = useState(0);
-            const [selectedWords, setSelectedWords] = useState([]);
-            const current = unscrambleData[index];
-
-            const toggleWord = (word) => {
-                if (selectedWords.includes(word)) setSelectedWords(selectedWords.filter(w => w !== word));
-                else setSelectedWords([...selectedWords, word]);
-            };
-
-            const checkOrder = () => {
-                if (selectedWords.join(" ") === current.answer) {
-                    confetti({ shapes: ['star'], colors: ['#FFE400', '#E80C4E'] });
-                    if (index < unscrambleData.length - 1) {
-                        setTimeout(() => { setIndex(index + 1); setSelectedWords([]); }, 1500);
-                    } else onComplete();
-                } else {
-                    const el = document.getElementById('word-container');
-                    if(el) { el.classList.add('bg-red-50'); setTimeout(() => el.classList.remove('bg-red-50'), 300); }
-                }
-            };
-
-            return (
-                <div className="space-y-8">
-                    <div id="word-container" className="bg-purple-50 p-6 rounded-2xl border-dashed border-2 border-purple-200 min-h-[120px] flex items-center justify-center flex-wrap gap-3 transition-colors">
-                        {selectedWords.length === 0 ? <span className="text-gray-400 italic flex gap-2"><Icon name="mouse-pointer-2" size={16}/> Klik perkataan di bawah...</span> : 
-                        selectedWords.map((word, i) => <span key={i} onClick={() => toggleWord(word)} className="bg-purple-500 text-white px-4 py-2 rounded-lg font-bold cursor-pointer hover:bg-red-400 shadow-md animate-in zoom-in">{word}</span>)}
-                    </div>
-                    <div className="flex flex-wrap justify-center gap-3">
-                        {current.scrambled.map((word, i) => (
-                            <button key={i} onClick={() => !selectedWords.includes(word) && toggleWord(word)} className={`px-6 py-3 rounded-xl font-bold text-xl border-b-4 transition-all cursor-pointer ${selectedWords.includes(word) ? "bg-gray-100 text-gray-300 border-gray-200 scale-95" : "bg-white text-purple-600 border-purple-200 hover:-translate-y-1 hover:shadow-md"}`}>{word}</button>
-                        ))}
-                    </div>
-                    <div className="flex justify-center"><Button onClick={checkOrder} variant="success" className="w-full md:w-auto text-xl py-4">Semak <Icon name="check" size={20} /></Button></div>
-                </div>
-            );
-        };
-
-        const MatchingGame = ({ onComplete }) => {
-            const [cards, setCards] = useState([]);
-            const [flipped, setFlipped] = useState([]);
-            const [matched, setMatched] = useState([]);
-
-            useEffect(() => {
-                const gameItems = [...matchingData].sort(() => 0.5 - Math.random()).slice(0, 6);
-                const deck = [...gameItems.map(i => ({ id: i.word+'-word', content: i.word, pairId: i.word })), ...gameItems.map(i => ({ id: i.word+'-icon', content: i.icon, pairId: i.word }))].sort(() => 0.5 - Math.random());
-                setCards(deck);
-            }, []);
-
-            const handleCardClick = (index) => {
-                if (flipped.length === 2 || matched.includes(cards[index].pairId) || flipped.includes(index)) return;
-                const newFlipped = [...flipped, index];
-                setFlipped(newFlipped);
-                if (newFlipped.length === 2) {
-                    if (cards[newFlipped[0]].pairId === cards[newFlipped[1]].pairId) {
-                        setMatched([...matched, cards[newFlipped[0]].pairId]);
-                        setFlipped([]);
-                        if (matched.length + 1 === cards.length / 2) setTimeout(onComplete, 1000);
-                    } else setTimeout(() => setFlipped([]), 1000);
-                }
-            };
-
-            return (
-                <div className="grid grid-cols-3 gap-3 md:gap-4">
-                    {cards.map((card, index) => {
-                        const isFlipped = flipped.includes(index) || matched.includes(card.pairId);
-                        return (
-                            <div key={card.id} onClick={() => handleCardClick(index)} className={`aspect-square rounded-xl flex items-center justify-center text-2xl font-bold cursor-pointer transition-all duration-500 transform shadow-sm ${matched.includes(card.pairId) ? 'bg-green-100 border-green-300 scale-95 opacity-50' : isFlipped ? 'bg-white border-b-4 border-pink-300 rotate-y-180 shadow-md' : 'bg-gradient-to-br from-pink-400 to-rose-400 text-white border-b-4 border-rose-600 hover:scale-105'}`}>
-                                {isFlipped || matched.includes(card.pairId) ? card.content : <span className="text-3xl opacity-50">?</span>}
-                            </div>
-                        );
-                    })}
-                </div>
-            );
-        };
-
-        // --- MAIN APP ---
-
-        const App = () => {
-            const [activeGame, setActiveGame] = useState(null);
-            const closeGame = () => setActiveGame(null);
-
-            // Render Ikon Lucide setiap kali render berlaku
-            useEffect(() => {
-                lucide.createIcons();
-            });
-
-            return (
-                <div className="min-h-screen p-4 md:p-8 max-w-6xl mx-auto">
-                    <header className="mb-10 text-center">
-                        <div className="inline-block bg-white px-6 py-2 rounded-full shadow-sm mb-4 animate-bounce-short border border-blue-100"><span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500 font-bold uppercase text-sm">Edisi Latihan PDF</span></div>
-                        <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tight mb-2">Aplikasi <span className="text-blue-500 inline-block hover:scale-105 transition-transform">Belajar</span> Adik</h1>
-                        <p className="text-slate-500 text-lg font-medium">Seronok Belajar Bahasa Inggeris!</p>
-                    </header>
-
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:auto-rows-[180px]">
-                        <div className="md:col-span-2 md:row-span-2">
-                            <Card onClick={() => setActiveGame('capitalization')} className="h-full hover:ring-4 hover:ring-amber-200" colorClass="bg-gradient-to-br from-amber-200 to-orange-100">
-                                <div className="flex justify-between items-start mb-4"><div className="bg-white/40 p-3 rounded-2xl text-amber-600"><Icon name="pencil" size={32} /></div><span className="bg-white/60 px-3 py-1 rounded-full text-sm font-bold text-amber-800">Tahap 1</span></div>
-                                <h2 className="text-3xl font-bold text-amber-900 mb-2">Betulkan Huruf</h2>
-                                <p className="text-amber-800/80 text-lg mb-4">Belajar guna Huruf Besar.</p>
-                                <div className="mt-auto flex gap-2"><span className="bg-white/50 px-2 rounded text-sm">today ➝ Today</span></div>
-                            </Card>
-                        </div>
-
-                        <div className="md:col-span-1 md:row-span-2">
-                             <Card onClick={() => setActiveGame('grammar')} className="h-full hover:ring-4 hover:ring-blue-200" colorClass="bg-gradient-to-b from-blue-200 to-cyan-100">
-                                <div className="flex flex-col items-center text-center h-full"><div className="bg-white/40 p-4 rounded-full text-blue-600 mb-6"><Icon name="book-open" size={40} /></div><h2 className="text-2xl font-bold text-blue-900 mb-2">Am / Is / Are</h2><p className="text-blue-800/80">Pilih kata kerja.</p></div>
-                            </Card>
-                        </div>
-
-                        <div className="md:col-span-1 md:row-span-1">
-                             <Card onClick={() => setActiveGame('matching')} className="h-full hover:ring-4 hover:ring-pink-200" colorClass="bg-gradient-to-br from-pink-200 to-rose-100">
-                                <div className="flex items-center gap-4 h-full"><div className="bg-white/40 p-3 rounded-2xl text-pink-600"><Icon name="shuffle" size={28} /></div><div><h2 className="text-xl font-bold text-pink-900">Padankan</h2></div></div>
-                            </Card>
-                        </div>
-
-                        <div className="md:col-span-1 md:row-span-1">
-                             <Card onClick={() => setActiveGame('unscramble')} className="h-full hover:ring-4 hover:ring-purple-200" colorClass="bg-gradient-to-br from-violet-200 to-purple-100">
-                                <div className="flex flex-col h-full justify-between"><div className="flex justify-between"><h2 className="text-xl font-bold text-purple-900">Susun Ayat</h2><Icon name="star" className="text-purple-500" size={20} /></div><div className="flex gap-1 mt-2"><span className="bg-white/50 text-xs p-1 rounded">Blue</span><span className="bg-white/50 text-xs p-1 rounded">Sky</span></div></div>
-                            </Card>
-                        </div>
-
-                        <div className="md:col-span-4 bg-white rounded-3xl p-6 border border-slate-200 flex items-center justify-between shadow-sm">
-                            <div className="flex gap-4 items-center"><div className="bg-green-100 p-3 rounded-full text-green-600"><Icon name="party-popper" size={24} /></div><div><h3 className="font-bold text-slate-700 text-lg">Teruskan Usaha!</h3></div></div>
-                        </div>
-                    </div>
-
-                    <Modal isOpen={activeGame === 'capitalization'} onClose={closeGame} title="Betulkan Huruf" colorTheme="border-amber-200"><CapitalizationGame onComplete={closeGame} /></Modal>
-                    <Modal isOpen={activeGame === 'grammar'} onClose={closeGame} title="Am / Is / Are" colorTheme="border-blue-200"><GrammarGame onComplete={closeGame} /></Modal>
-                    <Modal isOpen={activeGame === 'unscramble'} onClose={closeGame} title="Susun Ayat" colorTheme="border-purple-200"><UnscrambleGame onComplete={closeGame} /></Modal>
-                    <Modal isOpen={activeGame === 'matching'} onClose={closeGame} title="Padankan Gambar" colorTheme="border-pink-200"><MatchingGame onComplete={closeGame} /></Modal>
-
-                    <footer className="mt-12 text-center text-slate-400 text-sm"><p>© 2024 Aplikasi Belajar Adik.</p></footer>
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+            <footer className="mt-12 text-center text-slate-400 text-sm"><p>© 2024 Aplikasi Belajar Adik. Versi Penuh.</p></footer>
+        </div>
+    );
+}
